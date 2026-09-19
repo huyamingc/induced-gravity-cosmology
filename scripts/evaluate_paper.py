@@ -6,8 +6,10 @@ import re
 from collections import Counter
 from pathlib import Path
 
-TEX = Path(r"D:\work\papers\llun\paper_prd_merged.tex")
-OUT = Path(r"D:\work\papers\llun\scripts\paper_eval_report.md")
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+TEX = ROOT / "paper_prd_merged.tex"
+OUT = HERE / "paper_eval_report.md"
 
 t = TEX.read_text(encoding="utf-8")
 lines = t.splitlines()
@@ -176,7 +178,7 @@ A("")
 # --- scripts coverage ---
 A("## 6. 脚本覆盖 vs 论文主张")
 A("")
-scripts = list(Path(r"D:\work\papers\llun\scripts").glob("*.py"))
+scripts = list(HERE.glob("*.py"))
 A("现有脚本：" + ", ".join(sorted(p.name for p in scripts)))
 A("")
 A("| 论文主张 | 对应脚本 | 状态 |")
