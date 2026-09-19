@@ -52,7 +52,8 @@ figure script in order and regenerates the reports (`scripts/*.md`, `*.json`)
 and the three figures. Measured end-to-end runtime on the author's machine
 (Python 3.13, numpy 2.4 / scipy 1.18 / matplotlib 3.11) is about **25 minutes**
 in total, of which `psi_abundance_oscillating.py` takes ~5.5 min and
-`dm_gap_closure_test.py` ~19 min. On a Windows console, either run through
+`dm_gap_closure_test.py` ~19 min; `treh_error_band.py` finishes in under a
+second. On a Windows console, either run through
 `run_all.py` (it reconfigures the output streams to UTF-8) or set
 `$env:PYTHONIOENCODING='utf-8'` before running a single script.
 
@@ -69,6 +70,7 @@ Key result scripts:
 | `psi_production_bogoliubov.py` | de Sitter exponent 2 pi audit, g matching |
 | `psi_abundance_oscillating.py` | cross-transition mode equation (power-law spectrum) |
 | `dm_gap_closure_test.py` | small-g light branch and free-streaming length |
+| `treh_error_band.py` | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
 | `residual_quintessence.py` | two-fluid integration, Delta w budget |
 
 ## Dark-matter convention (paper Sec. V)
@@ -77,6 +79,13 @@ With the true mode-equation spectrum, the abundance matching lands on the
 **light branch**: g ~ 1.0e-7, m_psi ~ 7.5e10 GeV (cold dark matter). The heavy
 branch of the exponential closed form overproduces at the model's own T_reh.
 The absolute normalization awaits a lattice/Floquet computation.
+
+`treh_error_band.py` shows that this matching point is a window, not a number:
+on the light branch g and m_psi scale as T_reh^(-1/2), so a factor-100 band in
+T_reh moves them by a factor 10, while it moves n_s by only ~1.1e-3 and r by
+~5.5 percent. The branch stays cold dark matter across the whole band. The same
+script verifies the exact relation m_psi/H_inf = (g/sqrt(xi)) (M_Pl/H_inf),
+which ties the dark-matter mass to the inflationary scale through the shared VEV.
 
 ## Submission packaging
 

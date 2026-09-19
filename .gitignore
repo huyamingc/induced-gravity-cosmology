@@ -22,3 +22,6 @@ Thumbs.db
 figures/*.png
 scripts/*.md
 scripts/*.json
+
+# Local process records (CLAUDE.md 6.6 modification logs); not part of the submission
+review_workspace/

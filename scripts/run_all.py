@@ -50,6 +50,9 @@ SCRIPTS = [
     # imports psi_abundance_oscillating, so it runs after it.
     "psi_abundance_oscillating.py",
     "dm_gap_closure_test.py",          # light-branch abundance matching + free-streaming check
+    # Reads dm_gap_closure_test.json, so it must run after it.  Cheap (analytic + one
+    # small brentq scan), and it is the script behind the T_reh error-band table of Sec. V.
+    "treh_error_band.py",              # T_reh uncertainty -> (N, n_s, r) and (g, m_psi) band
 ]
 
 
