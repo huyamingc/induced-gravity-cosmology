@@ -1,51 +1,64 @@
 #!/usr/bin/env python3
 r"""
-psi_abundance_oscillating.py  (缺失脚本补全 #2b  [P0])
-======================================================
-`psi_production_bogoliubov.py` 定的是 **de Sitter 期**的精确指数与所需 g（解析）。
-本脚本补上**跨跃迁的数值模方程**：把 Dirac 模方程接到后暴胀背景上，
-直接测出 n_psi(m_psi) 与 Omega_psi 的**数值**。
+psi_abundance_oscillating.py  (missing-script completion #2b  [P0])
+=====================================================================
+`psi_production_bogoliubov.py` fixed the **de Sitter-era** exact exponent and
+the required g (analytic). This script adds the **numerical mode equation
+across the transition**: the Dirac mode equation is coupled to the
+post-inflation background, and n_psi(m_psi) and Omega_psi are measured
+**numerically**.
 
-方法要点（与前两版草稿的差别，均为必须）
-----------------------------------------
-1) **初值取精确 de Sitter 模函数，不数值积分暴胀段。**
-   若从 eta_start=-X/k 用绝热初值起积，最大 k 的模式在暴胀段要振荡 (X/2pi) 圈，
-   而 X 必须大到让初值污染 ~ (m/X)^2 远小于信号 e^{-2pi m}——步数不可承受。
-   纯 de Sitter 下模方程有精确解（Hankel 函数），故直接在跃迁点 eta=-1 给出
-   精确的 Bogoliubov 系数。
+Key method points (differences from the previous two drafts; all mandatory)
+---------------------------------------------------------------------------
+1) **Initial values are the exact de Sitter mode functions; the inflation era
+   is not integrated numerically.**
+   If one starts integrating from eta_start=-X/k with adiabatic initial data,
+   the largest-k modes oscillate (X/2pi) times during inflation, and X must be
+   large enough that the initial-value contamination ~ (m/X)^2 stays far below
+   the signal e^{-2pi m} -- an unaffordable number of steps.
+   In pure de Sitter the mode equation has an exact solution (Hankel
+   functions), so the exact Bogoliubov coefficients are given directly at the
+   transition point eta=-1.
 
-   P = u_R+u_L 满足 P'' + [k^2+(mu^2+i mu)/eta^2]P = 0  ==>  nu_P = 1/2 - i mu
-   M = u_R-u_L 满足 M'' + [k^2+(mu^2-i mu)/eta^2]M = 0  ==>  nu_M = 1/2 + i mu
-   BD 条件（-k eta -> inf）: P -> e^{-i k eta},  M -> -e^{-i k eta}，故
+   P = u_R+u_L satisfies P'' + [k^2+(mu^2+i mu)/eta^2]P = 0  ==>  nu_P = 1/2 - i mu
+   M = u_R-u_L satisfies M'' + [k^2+(mu^2-i mu)/eta^2]M = 0  ==>  nu_M = 1/2 + i mu
+   BD condition (-k eta -> inf): P -> e^{-i k eta},  M -> -e^{-i k eta}, hence
        P = c_P sqrt(-eta) H^{(1)}_{nu_P}(-k eta),  c_P = sqrt(pi k/2) e^{i(nu_P pi/2+pi/4)}
        M = c_M sqrt(-eta) H^{(1)}_{nu_M}(-k eta),  c_M = -sqrt(pi k/2) e^{i(nu_M pi/2+pi/4)}
-   （用 H^{(1)} 而非 H^{(2)}：-k eta -> +inf 时 e^{+i(-k eta)} = e^{-i k eta} 才是正频。）
-   自检：mu=0 时 nu_P=nu_M=1/2，H^{(1)}_{1/2}(z) = -i sqrt(2/(pi z)) e^{iz}，
-   给出 u_R=0, u_L=e^{-i k eta} ==> beta=0 **精确**（无质量 Dirac 共形不变）。
+   (Use H^{(1)} rather than H^{(2)}: as -k eta -> +inf, e^{+i(-k eta)} = e^{-i k eta}
+   is the positive-frequency branch.)
+   Self-check: at mu=0, nu_P=nu_M=1/2 and H^{(1)}_{1/2}(z) = -i sqrt(2/(pi z)) e^{iz},
+   giving u_R=0, u_L=e^{-i k eta} ==> beta=0 **exactly** (massless Dirac is
+   conformally invariant).
 
-2) **积分 (alpha,beta) Bogoliubov 方程，而不是 n_k = (1/2)(1-<H>/Omega)。**
-   后者有灾难性相消：Omega=1 减去 O(1) 的量再取一半，信号 e^{-2pi mu} 只有 1e-9 时
-   积分器 1e-8 的相对误差就会淹没它。前者 beta 从 0 直接长到终值，无相消。
+2) **Integrate the (alpha,beta) Bogoliubov equations, not n_k = (1/2)(1-<H>/Omega).**
+   The latter suffers catastrophic cancellation: Omega=1 minus an O(1) quantity
+   and then halved -- when the signal e^{-2pi mu} is only 1e-9, the integrator's
+   1e-8 relative error drowns it. In the former, beta grows directly from 0 to
+   its final value, with no cancellation.
 
-   瞬时本征基: v_+ = (sin th, cos th), v_- = (cos th, -sin th),
+   Instantaneous eigenbasis: v_+ = (sin th, cos th), v_- = (cos th, -sin th),
        sin th = sqrt((Omega-s)/(2Omega)), cos th = sqrt((Omega+s)/(2Omega)), s=k
        W^dag W' = th' [[0,-1],[1,0]],  th' = m a' s/(2 Omega^2)
        Psi = alpha v_+ e^{-i phi} + beta v_- e^{+i phi},  phi = \int Omega d eta
        ==>  alpha' = + th' beta e^{+2 i phi},   beta' = - th' alpha e^{-2 i phi}
        |alpha|^2+|beta|^2 = const,  n_k = |beta|^2.
-   初值 (eta=-1):  alpha = u_R sin th + u_L cos th,  beta = u_R cos th - u_L sin th.
+   Initial values (eta=-1):  alpha = u_R sin th + u_L cos th,  beta = u_R cos th - u_L sin th.
 
-背景 (共形时 eta, H_inf=1, a(eta_0)=1 at eta_0=-1)
-    eta <= -1 :  a = -1/eta                     (精确 de Sitter)
-    eta >  -1 :  a = ((eta+1+p)/p)^p            (p=2: 振荡凝聚体=物质型平均)
-a 与 a' 在 eta=-1 连续 (C^1)。
+Background (conformal time eta, H_inf=1, a(eta_0)=1 at eta_0=-1)
+    eta <= -1 :  a = -1/eta                     (exact de Sitter)
+    eta >  -1 :  a = ((eta+1+p)/p)^p            (p=2: oscillating condensate = matter-like average)
+a and a' are continuous at eta=-1 (C^1).
 
-限度
-----
-光滑幂律背景捕获"暴胀末跃迁"产生；凝聚体**振荡**驱动的再加热期产生
-（文献称其不受指数压低）不在其中，需 lattice/Floquet —— 与论文 Discussion 口径一致。
+Limitations
+-----------
+The smooth power-law background captures the "end-of-inflation transition"
+production; production during the reheating era driven by the **oscillating**
+condensate (which the literature says is not exponentially suppressed) is not
+included and would require lattice/Floquet -- consistent with the paper's
+Discussion.
 
-输出: scripts/psi_abundance_oscillating.md / .json
+Output: scripts/psi_abundance_oscillating.md / .json
 """
 
 from __future__ import annotations
@@ -100,7 +113,7 @@ def _h1(nu, z):
 
 
 def bd_alpha_beta_at_eta0(k: float, m: float):
-    r"""eta=-1 (a=1) 处的精确 BD (alpha, beta)（瞬时本征基, phi=0）."""
+    r"""Exact BD (alpha, beta) at eta=-1 (a=1) (instantaneous eigenbasis, phi=0)."""
     mu = mp.mpf(m)
     nuP = mp.mpf(1) / 2 - 1j * mu
     nuM = mp.mpf(1) / 2 + 1j * mu
@@ -111,10 +124,10 @@ def bd_alpha_beta_at_eta0(k: float, m: float):
 
     def f_and_fp(nu):
         H = _h1(nu, z)
-        Hp = _h1(nu - 1, z) - (nu / z) * H          # 递推
-        # f = sqrt(-eta) H(-k eta);  在 eta=-1, z=k:  f = H
+        Hp = _h1(nu - 1, z) - (nu / z) * H          # recurrence (upward)
+        # f = sqrt(-eta) H(-k eta);  at eta=-1, z=k:  f = H
         f = H
-        fp = -H / 2 - k * Hp                        # 见 docstring 推导
+        fp = -H / 2 - k * Hp                        # see the docstring derivation
         return f, fp
 
     fP, fpP = f_and_fp(nuP)
@@ -122,7 +135,7 @@ def bd_alpha_beta_at_eta0(k: float, m: float):
     P, Pp = cP * fP, cP * fpP
     M, Mp = cM * fM, cM * fpM
     uR, uL = (P + M) / 2, (P - M) / 2
-    # uR', uL' 目前不用（投影只需 uR,uL），但保留以备校验
+    # uR', uL' are not used at present (the projection only needs uR,uL), but kept for cross-checks
     Om = mp.sqrt(mp.mpf(k) ** 2 + mu**2)
     s = mp.mpf(k)
     sinth = mp.sqrt((Om - s) / (2 * Om))
@@ -134,7 +147,7 @@ def bd_alpha_beta_at_eta0(k: float, m: float):
 
 def nk_transition(k: np.ndarray, m: float, a_final: float, p: float = 2.0,
                   dphase: float = 0.02) -> tuple[np.ndarray, int]:
-    r"""从 eta=-1 积到 a_final, 返回每个 k 的 n_k=|beta|^2 (per helicity)."""
+    r"""Integrate from eta=-1 to a_final; return n_k=|beta|^2 for each k (per helicity)."""
     k = np.asarray(k, dtype=float)
     nk_pts = k.size
     alpha = np.empty(nk_pts, dtype=complex)
@@ -196,14 +209,14 @@ def main() -> None:
     out: dict = {"constants": {"rho_end": RHO_END, "Phi_V": PHI_V,
                                "rho_c": RHO_C, "H0_GeV": H0_GEV}}
 
-    # ---- [0] 自检: mu=0 应给 beta=0 (共形不变) ----
+    # ---- [0] self-check: mu=0 should give beta=0 (conformal invariance) ----
     chk = []
     for kk in (0.1, 1.0, 10.0):
         a0, b0, uR, uL = bd_alpha_beta_at_eta0(kk, 0.0)
         chk.append({"k": kk, "beta0_abs": abs(b0),
                     "uR_abs": abs(uR), "uL_abs": abs(uL)})
     out["massless_check"] = chk
-    # mu>0 时 de Sitter 段已产生的 beta
+    # beta already produced during the de Sitter era for mu>0
     ds_beta = []
     for m in (1.0, 2.0, 3.0, 4.0):
         a0, b0, _, _ = bd_alpha_beta_at_eta0(1.0, m)
@@ -212,7 +225,7 @@ def main() -> None:
                         "exp(-2pi m)": math.exp(-2 * math.pi * m)})
     out["desitter_beta"] = ds_beta
 
-    # ---- [1] 冻结/收敛检验 ----
+    # ---- [1] freeze/convergence test ----
     k_conv = np.array([0.3, 1.0, 3.0, 10.0])
     conv = {}
     for m in (1.0, 3.0):
@@ -223,9 +236,10 @@ def main() -> None:
                                                     "nsteps": int(ns)}
     out["convergence"] = conv
 
-    # ---- [2] 谱 ----
-    # 关键: k 积分上限必须随 m 缩放. 产生峰在 k ~ m, 且模式需 k/a_final << m 才已冻结.
-    # 联合检验（见 [2b]）表明 kmax >= 10*m 即收敛到 ~10%.
+    # ---- [2] spectrum ----
+    # Key point: the k-integration upper limit must scale with m. The production
+    # peak is at k ~ m, and a mode is frozen only if k/a_final << m.
+    # The joint test (see [2b]) shows that kmax >= 10*m already converges to ~10%.
     masses = [0.01, 0.1, 0.5, 1.0, 2.0, 3.0, 4.0, 6.0]
     spec = {}
     for m in masses:
@@ -235,17 +249,17 @@ def main() -> None:
                           "kmax_used": kq}
     out["spectrum"] = spec
 
-    # ---- [2b] 数值稳健性检验（决定上表可否引用）----
+    # ---- [2b] numerical robustness tests (decide whether the table above can be cited) ----
     val = {}
 
     def npsi(m, **kw):
         return npsi_from_spectrum(m, a_final=60.0, **kw)["n_over_H3"]
 
-    # (i) 相位步长敏感性
+    # (i) phase-step sensitivity
     val["dphase_sensitivity_m3"] = {
         f"{d:g}": npsi(3.0, dphase=d) for d in (0.04, 0.02, 0.01)}
-    # (ii) 冻结条件检验: 模式必须满足 k/a_final << m 才已冻结.
-    #      故同时扫描 (kmax, a_final), 用比值 kmax/(m*a_final) 作判据.
+    # (ii) freeze-condition test: a mode is frozen only if k/a_final << m.
+    #      Hence scan (kmax, a_final) jointly, using the ratio kmax/(m*a_final) as the criterion.
     joint = {}
     for (kq, af) in ((30.0, 60.0), (30.0, 300.0), (10.0, 300.0), (10.0, 60.0)):
         v = npsi_from_spectrum(3.0, a_final=af, kmax=kq, kmin=0.05,
@@ -253,18 +267,18 @@ def main() -> None:
         joint[f"kmax={kq:g},a_final={af:g}"] = {
             "n_over_H3": v, "kmax_over_m_a": kq / (3.0 * af)}
     val["freeze_joint_m3"] = joint
-    # (iii) k 积分下限
+    # (iii) k-integration lower limit
     val["kmin_sensitivity_m1"] = {
         f"{q:g}": npsi(1.0, kmin=q, nk_pts=60) for q in (0.1, 0.05, 0.01)}
-    # (iv) 共形极限: m -> 0 必须趋于 0 (无质量 Dirac 共形不变)
+    # (iv) conformal limit: as m -> 0 the result must go to 0 (massless Dirac conformal invariance)
     val["conformal_limit"] = {f"{m:g}": spec[f"{m:g}"]["n_over_H3"]
                               for m in (0.01, 0.1, 0.5)}
-    # (v) 采样点数
+    # (v) number of k sampling points
     val["nkpts_sensitivity_m3"] = {
         f"{q}": npsi(3.0, nk_pts=q) for q in (25, 40, 80)}
     out["validation"] = val
 
-    # ---- [2c] 需要多大 T_reh 才给 Omega_psi = 0.265 ----
+    # ---- [2c] how large must T_reh be to give Omega_psi = 0.265 ----
     # Omega_psi = m_psi n_psi * dil(T_reh) / rho_c,  dil = 1.0204e-101 * T_reh
     DIL_PER_GEV = 1.0204e-101
     OMEGA_TARGET = 0.265
@@ -274,20 +288,20 @@ def main() -> None:
             continue
         n = spec[f"{m:g}"]["n_over_H3"]
         m_psi = m * H_INF
-        denom = m_psi * n * H_INF**3 * DIL_PER_GEV    # n 是无量纲 n/H^3, 须乘 H^3
+        denom = m_psi * n * H_INF**3 * DIL_PER_GEV    # n is the dimensionless n/H^3, must be multiplied by H^3
         treh_req[f"{m:g}"] = (OMEGA_TARGET * RHO_C / denom) if denom > 0 else None
     out["T_reh_required"] = treh_req
 
     ms = np.array([float(x) for x in spec])
     ns = np.array([spec[x]["n_over_H3"] for x in spec])
-    ok = (ns > 0) & (ms >= 0.5)          # 拟合只用 m>=0.5（共形极限区不参与）
+    ok = (ns > 0) & (ms >= 0.5)          # the fit uses only m>=0.5 (the conformal-limit region is excluded)
     if ok.sum() >= 2:
         A = np.vstack([ms[ok], np.ones(ok.sum())]).T
         sl, ic = np.linalg.lstsq(A, np.log(ns[ok]), rcond=None)[0]
         out["fit"] = {"kappa": float(-sl), "kappa_over_pi": float(-sl / math.pi),
                       "C": float(math.exp(ic))}
 
-    # ---- [3] 与解析闭式对照 ----
+    # ---- [3] comparison with the analytic closed form ----
     cmp_rows = []
     for m in masses:
         n_num = spec[f"{m:g}"]["n_over_H3"]
@@ -304,38 +318,38 @@ def main() -> None:
               encoding="utf-8") as f:
         json.dump(out, f, indent=2, ensure_ascii=False, default=float)
 
-    # ---------------- 报告 ----------------
+    # ---------------- report ----------------
     L = []
     A = L.append
-    A("# ψ 丰度：跨跃迁的模方程数值解（缺失脚本补全 #2b）\n")
-    A("把 Dirac 模方程接到后暴胀（物质型幂律）背景上，直接测 $n_\\psi(m_\\psi)$。\n")
-    A("## 0. 自检：无质量极限必须严格无产生\n")
+    A("# psi abundance: numerical solution of the mode equation across the transition (missing-script completion #2b)\n")
+    A("The Dirac mode equation is coupled to the post-inflation (matter-like power-law) background and $n_\\psi(m_\\psi)$ is measured directly.\n")
+    A("## 0. Self-check: the massless limit must give strictly zero production\n")
     A("| $k$ | $|\\beta_0|$ | $|u_R|$ | $|u_L|$ |")
     A("|---|---|---|---|")
     for r in chk:
         A(f"| {r['k']:g} | {r['beta0_abs']:.3e} | {r['uR_abs']:.3e} | {r['uL_abs']:.3e} |")
     A("")
-    A("$\\mu=0$ 时 $|\\beta_0|$ 为机器零、$u_R=0$ —— 与无质量 Dirac 方程的共形不变性一致，")
-    A("说明精确 BD 初值的相位/归一化没有搞错。\n")
+    A("At $\\mu=0$, $|\\beta_0|$ is machine zero and $u_R=0$ -- consistent with the conformal invariance of the massless Dirac equation,")
+    A("showing that the phase/normalization of the exact BD initial data has not been botched.\n")
 
-    A("## 1. 跃迁点 $\\eta=-1$ 处的瞬时绝热占据数（**不是** Fermi–Dirac 分布）\n")
-    A("| $m/H_{\\rm inf}$ | $|\\beta_0|^2$（瞬时绝热基） | $1/(e^{2\\pi m}+1)$ | 比值 |")
+    A("## 1. Instantaneous adiabatic occupation numbers at the transition point $\\eta=-1$ (**not** a Fermi-Dirac distribution)\n")
+    A("| $m/H_{\\rm inf}$ | $|\\beta_0|^2$ (instantaneous adiabatic basis) | $1/(e^{2\\pi m}+1)$ | ratio |")
     A("|---|---|---|---|")
     for r in ds_beta:
         A(f"| {r['m']:g} | {r['beta0_abs2']:.4e} | {r['1/(e^{2pi m}+1)']:.4e} | "
           f"{r['beta0_abs2']/r['1/(e^{2pi m}+1)']:.3e} |")
     A("")
-    A("**结论（与本草稿上一版相反，已更正）**：跃迁点的**瞬时**绝热占据数")
-    A("$|\\beta_0|^2$ 只是弱依赖于 $m$（$m=1\\to4$ 时仅从 $8\\times10^{-3}$ 降到 $2\\times10^{-4}$），")
-    A("**不**等于 $1/(e^{2\\pi\\mu}+1)$，也**没有**指数压低。")
-    A("原因是 $1/(e^{2\\pi\\mu}+1)$ 是相对**未来无穷远**（共形/热）真空定义的 Bogoliubov 系数，")
-    A("而这里算的是有限 $\\eta$ 处的瞬时绝热不变量——de Sitter 中二者不相同")
-    A("（纯 de Sitter 的瞬时绝热占据数在 $x=-k\\eta\\to0$ 时按 $1/x$ 发散，见")
-    A("`psi_production_bogoliubov.py` §1 的同一诊断）。")
-    A("因此本表**不能**用来判定指数是 $\\pi$ 还是 $2\\pi$。\n")
+    A("**Conclusion (reversed relative to the previous version of this draft; corrected)**: the **instantaneous** adiabatic occupation number")
+    A("$|\\beta_0|^2$ depends only weakly on $m$ (from $m=1\\to4$ it drops only from $8\\times10^{-3}$ to $2\\times10^{-4}$),")
+    A("and is **not** equal to $1/(e^{2\\pi\\mu}+1)$, nor does it show **any** exponential suppression.")
+    A("The reason is that $1/(e^{2\\pi\\mu}+1)$ is defined relative to the **future-infinity** (conformal/thermal) vacuum,")
+    A("whereas what is computed here is the instantaneous adiabatic invariant at finite $\\eta$ -- the two do not coincide in de Sitter")
+    A("(in pure de Sitter the instantaneous adiabatic occupation number diverges as $1/x$ when $x=-k\\eta\\to0$, see")
+    A("the same diagnostic in `psi_production_bogoliubov.py` Sec. 1).")
+    A("Therefore this table **cannot** be used to decide whether the exponent is $\\pi$ or $2\\pi$.\n")
 
-    A("## 2. 冻结检验：$n_k$ **收敛**（$a_{\\rm final}\\gtrsim60$ 后稳定）\n")
-    A("| $m/H_{\\rm inf}$ | $a_{\\rm final}$ | $n_k(0.3)$ | $n_k(1)$ | $n_k(3)$ | $n_k(10)$ | 步数 |")
+    A("## 2. Freeze test: $n_k$ **converges** (stable once $a_{\\rm final}\\gtrsim60$)\n")
+    A("| $m/H_{\\rm inf}$ | $a_{\\rm final}$ | $n_k(0.3)$ | $n_k(1)$ | $n_k(3)$ | $n_k(10)$ | steps |")
     A("|---|---|---|---|---|---|---|")
     for key, d in conv.items():
         for af, v in d.items():
@@ -343,65 +357,66 @@ def main() -> None:
             A(f"| {key.split('=')[1]} | {af.split('=')[1]} | {nk[0]:.4e} | {nk[1]:.4e} "
               f"| {nk[2]:.4e} | {nk[3]:.4e} | {v['nsteps']} |")
     A("")
-    A("$a_{\\rm final}$ 从 60 增到 200 时，四个 $k$ 的值都稳定到 $\\lesssim20\\%$")
-    A("（$m=1$：$n_k(3)$ 由 $2.86\\times10^{-5}$ 到 $2.84\\times10^{-5}$；")
-    A("$m=3$：$n_k(10)$ 由 $2.25\\times10^{-7}$ 到 $2.20\\times10^{-7}$）。")
-    A("$a=5\\to20$ 之间的变化是跃迁瞬态，不是不收敛。")
-    A("物理上这正是预期的：模式一旦变成非相对论（$k/a\\ll m$）且膨胀变慢（$H/(ma)\\to0$），")
-    A("产生停止、$n_k$ 冻结。**故第 3 节的谱是物理结果。**\n")
+    A("When $a_{\\rm final}$ grows from 60 to 200, the values at all four $k$ stabilize to $\\lesssim20\\%$")
+    A("($m=1$: $n_k(3)$ goes from $2.86\\times10^{-5}$ to $2.84\\times10^{-5}$;")
+    A("$m=3$: $n_k(10)$ goes from $2.25\\times10^{-7}$ to $2.20\\times10^{-7}$).")
+    A("The variation between $a=5\\to20$ is a transition transient, not non-convergence.")
+    A("Physically this is exactly what is expected: once a mode becomes non-relativistic ($k/a\\ll m$) and the expansion slows ($H/(ma)\\to0$),")
+    A("production stops and $n_k$ freezes. **Hence the spectrum in Sec. 3 is the physical result.**\n")
 
-    A("## 3. 跨跃迁后的谱：**幂律，不是指数**\n")
-    A("| $m/H_{\\rm inf}$ | $n_\\psi/H_{\\rm inf}^3$ | $e^{-2\\pi m}$ | $e^{-\\pi m}$ | 与 $2\\pi$ 之比 |")
+    A("## 3. Spectrum after the transition: **power law, not exponential**\n")
+    A("| $m/H_{\\rm inf}$ | $n_\\psi/H_{\\rm inf}^3$ | $e^{-2\\pi m}$ | $e^{-\\pi m}$ | ratio to $2\\pi$ |")
     A("|---|---|---|---|---|")
     for r in cmp_rows:
         A(f"| {r['m_over_Hinf']:g} | {r['n_num']:.4e} | {r['exp(-2pi m)']:.3e} "
           f"| {r['exp(-pi m)']:.3e} | {r['ratio_2pi']:.3e} |")
     A("")
     if "fit" in out:
-        A(f"拟合 $n_\\psi/H^3=C e^{{-\\kappa m/H}}$：$\\kappa/\\pi={out['fit']['kappa_over_pi']:.3f}$"
-          f"（$C={out['fit']['C']:.3e}$）。**$\\kappa\\ll\\pi$，即根本没有指数压低。**")
+        A(f"Fitting $n_\\psi/H^3=C e^{{-\\kappa m/H}}$: $\\kappa/\\pi={out['fit']['kappa_over_pi']:.3f}$"
+          f"($C={out['fit']['C']:.3e}$). **$\\kappa\\ll\\pi$, i.e. there is no exponential suppression at all.**")
         _sel = ms >= 0.5
         _ln = np.polyfit(np.log(ms[_sel]), np.log(ns[_sel]), 1)
-        A(f"改用幂律拟合 $n_\\psi/H^3\\propto m^{{-p}}$（用 $m\\ge0.5$）得 $p={-_ln[0]:.2f}$。")
-        A("$n_\\psi/H^3$ 在 $m=0.5\\to6$（12 倍）内只从 $8.6\\times10^{-4}$ 降到 "
-          "$5.9\\times10^{-5}$（14 倍）——**幂律，不是 $e^{-\\pi m}$ 也不是 $e^{-2\\pi m}$**。\n")
-    A("这与文献关于跃迁/再加热期产生的定性说法一致：")
-    A("[arXiv:1812.00211](https://arxiv.org/abs/1812.00211) 摘要逐字——")
-    A("$m>H_{\\rm inf}$ 的粒子可在暴胀末产生 *\"without the exponential suppression powers "
-      "of $\\exp(-m_\\chi/H_{\\rm inf})$\"*。\n")
+        A(f"Fitting a power law instead, $n_\\psi/H^3\\propto m^{{-p}}$ (using $m\\ge0.5$), gives $p={-_ln[0]:.2f}$.")
+        A("$n_\\psi/H^3$ drops only from $8.6\\times10^{-4}$ to "
+          "$5.9\\times10^{-5}$ (a factor of 14) over $m=0.5\\to6$ (a factor of 12) -- "
+          "**a power law, neither $e^{-\\pi m}$ nor $e^{-2\\pi m}$**.\n")
+    A("This agrees with the literature's qualitative statement about transition/reheating-era production:")
+    A("[arXiv:1812.00211](https://arxiv.org/abs/1812.00211), abstract verbatim: particles with")
+    A("$m>H_{\\rm inf}$ can be produced at the end of inflation *\"without the exponential suppression powers "
+      "of $\\exp(-m_\\chi/H_{\\rm inf})$\"*.\n")
 
-    A("## 3b. 数值稳健性检验（决定上表可否引用）\n")
-    A("| 检验 | 取值 $\\to$ $n_\\psi/H^3$ | 结论 |")
+    A("## 3b. Numerical robustness tests (decide whether the table above can be cited)\n")
+    A("| Test | setting $\\to$ $n_\\psi/H^3$ | verdict |")
     A("|---|---|---|")
-    A("| 相位步长（$m=3$） | " +
-      "；".join(f"{k}: {v:.4e}" for k, v in val["dphase_sensitivity_m3"].items()) +
-      " | 稳定 |")
-    A("| $k_{\\min}$（$m=1$） | " +
-      "；".join(f"{k}: {v:.4e}" for k, v in val["kmin_sensitivity_m1"].items()) +
-      " | 稳定 |")
-    A("| **冻结联合检验（$m=3$）** | " +
-      "；".join(f"{k}: {v['n_over_H3']:.3e} ($k/(ma)={v['kmax_over_m_a']:.2f}$)"
-               for k, v in val["freeze_joint_m3"].items()) + " | **见评注** |")
-    A("| $k$ 采样点（$m=3$） | " +
-      "；".join(f"{k}: {v:.4e}" for k, v in val["nkpts_sensitivity_m3"].items()) +
-      " | 稳定 |")
-    A("| 共形极限 | " +
-      "；".join(f"$m={k}$: {v:.4e}" for k, v in val["conformal_limit"].items()) +
-      " | 见评注 |")
+    A("| Phase step ($m=3$) | " +
+      "; ".join(f"{k}: {v:.4e}" for k, v in val["dphase_sensitivity_m3"].items()) +
+      " | stable |")
+    A("| $k_{\\min}$ ($m=1$) | " +
+      "; ".join(f"{k}: {v:.4e}" for k, v in val["kmin_sensitivity_m1"].items()) +
+      " | stable |")
+    A("| **Freeze joint test ($m=3$)** | " +
+      "; ".join(f"{k}: {v['n_over_H3']:.3e} ($k/(ma)={v['kmax_over_m_a']:.2f}$)"
+               for k, v in val["freeze_joint_m3"].items()) + " | **see comment** |")
+    A("| $k$ sampling points ($m=3$) | " +
+      "; ".join(f"{k}: {v:.4e}" for k, v in val["nkpts_sensitivity_m3"].items()) +
+      " | stable |")
+    A("| Conformal limit | " +
+      "; ".join(f"$m={k}$: {v:.4e}" for k, v in val["conformal_limit"].items()) +
+      " | see comment |")
     A("")
-    A("**冻结联合检验的读法（本轮的关键稳健性结论）**：")
-    A("$k_{\\max}=10\\to30$（$k$ 区间扩大 3 倍）只让 $n_\\psi$ 变 8.7%（$a_{\\rm final}=60$）或 8.1%（$a_{\\rm final}=300$）；")
-    A("$a_{\\rm final}=60\\to300$ 只让 $n_\\psi$ 变 0.7%（$k_{\\max}=30$）或 0.2%（$k_{\\max}=10$）。")
-    A("**故积分是收敛的**，不确定性约 $\\lesssim10\\%$。")
-    A("但前提是 $k_{\\max}$ **随 $m$ 缩放**（产生峰在 $k\\sim m$，且模式需 $k/a_{\\rm final}\\ll m$ 才冻结）；")
-    A("若对所有 $m$ 取同一 $k_{\\max}$，大 $m$ 会被截断（$m=6$ 时 $k_{\\max}=40$ 截掉约 40%）。")
-    A("本脚本第 3 节因此对每个 $m$ 取 $k_{\\max}=\\max(40,\\,20m)$。")
-    A("共形极限检验也自洽：$m=0.01\\to0.1\\to0.5$ 时 $n_\\psi$ 由 $6.6\\times10^{-5}$ 升到 $8.6\\times10^{-4}$，")
-    A("即小 $m$ 处 $n_\\psi\\propto m^{\\sim0.9}\\to0$，与无质量 Dirac 共形不变不矛盾。\n")
+    A("**How to read the freeze joint test (the key robustness conclusion of this round)**:")
+    A("Changing $k_{\\max}=10\\to30$ (widening the $k$ range by a factor of 3) changes $n_\\psi$ by only 8.7% ($a_{\\rm final}=60$) or 8.1% ($a_{\\rm final}=300$);")
+    A("changing $a_{\\rm final}=60\\to300$ changes $n_\\psi$ by only 0.7% ($k_{\\max}=30$) or 0.2% ($k_{\\max}=10$).")
+    A("**Hence the integral is converged**, with an uncertainty of about $\\lesssim10\\%$.")
+    A("But the precondition is that $k_{\\max}$ **scales with $m$** (the production peak is at $k\\sim m$, and a mode is frozen only if $k/a_{\\rm final}\\ll m$);")
+    A("if a single $k_{\\max}$ were used for all $m$, large $m$ would be truncated (at $m=6$, $k_{\\max}=40$ cuts off about 40%).")
+    A("Sec. 3 of this script therefore takes $k_{\\max}=\\max(40,\\,20m)$ for each $m$.")
+    A("The conformal-limit check is also self-consistent: from $m=0.01\\to0.1\\to0.5$, $n_\\psi$ rises from $6.6\\times10^{-5}$ to $8.6\\times10^{-4}$,")
+    A("i.e. at small $m$, $n_\\psi\\propto m^{\\sim0.9}\\to0$, which does not contradict massless Dirac conformal invariance.\n")
 
-    A("## 4. $\\Omega_\\psi$：由于谱是幂律，$g$ **几乎无法调节丰度**\n")
+    A("## 4. $\\Omega_\\psi$: since the spectrum is a power law, $g$ **can barely tune the abundance**\n")
     dil = dilution(1e9)
-    A("| $m_\\psi/H_{\\rm inf}$ | $g$ | $n_\\psi/H^3$ | $\\Omega_\\psi$（$T_{\\rm reh}=10^9$ GeV） | 需要的 $T_{\\rm reh}$ [GeV] |")
+    A("| $m_\\psi/H_{\\rm inf}$ | $g$ | $n_\\psi/H^3$ | $\\Omega_\\psi$ ($T_{\\rm reh}=10^9$ GeV) | required $T_{\\rm reh}$ [GeV] |")
     A("|---|---|---|---|---|")
     om_rows = []
     for m in masses:
@@ -414,30 +429,30 @@ def main() -> None:
         A(f"| {m:g} | {m_psi/PHI_V:.4e} | {n:.4e} | {omega:.4e} | "
           f"{treh_req[f'{m:g}']:.4e} |")
     A("")
-    A("**关键后果（已按 $T_{\\rm reh}$ 重新表述）**：因 $\\Omega_\\psi\\propto T_{\\rm reh}$ 而")
-    A("$m_\\psi n_\\psi$ 对 $m_\\psi$（即对 $g$）近乎不敏感，**丰度由 $T_{\\rm reh}$ 定，不由 $g$ 定**。")
-    A("取 $T_{\\rm reh}=10^9$ GeV 时 $\\Omega_\\psi\\sim9\\times10^3$（超产 $\\sim3\\times10^4$ 倍）；")
-    A("要得到 $\\Omega_\\psi=0.265$ 需要上表最后一列，即 **$T_{\\rm reh}\\sim3\\times10^4$ GeV**。")
-    A("该值与反常通道给出的 $T_{\\rm reh}\\simeq2.1\\times10^8$ GeV 相差 $\\sim4$ 个量级。")
-    A("换句话说：在真实模方程下，暗物质丰度**不是**通过 $g$ 后验拟合，而是把 $T_{\\rm reh}$ 钉在 $\\sim10^4$ GeV；")
-    A("论文\"$g$ 由 $\\Omega_{\\rm DM}$ 定出\"的论证在结构上不成立。\n")
-    A("**限度（必须声明）**：本背景是**光滑幂律**，只含暴胀末跃迁那一支，不含凝聚体振荡驱动的")
-    A("再加热期产生。数值稳健性已检验到 $\\lesssim10\\%$（见 3b 节：相位步长、$k_{\\min}$、")
-    A("采样点、冻结联合检验全部稳定；共形极限自洽）。**结构结论（幂律、$g$ 不可调、")
-    A("丰度由 $T_{\\rm reh}$ 定）与绝对归一化均已收敛**；唯一未覆盖的是凝聚体振荡那一支，")
-    A("它只会**增加**产生、不会减少，故不改变\"超产\"的定性结论。\n")
+    A("**Key consequence (restated in terms of $T_{\\rm reh}$)**: because $\\Omega_\\psi\\propto T_{\\rm reh}$ while")
+    A("$m_\\psi n_\\psi$ is nearly insensitive to $m_\\psi$ (i.e. to $g$), **the abundance is set by $T_{\\rm reh}$, not by $g$**.")
+    A("At $T_{\\rm reh}=10^9$ GeV, $\\Omega_\\psi\\sim9\\times10^3$ (overproduced by a factor $\\sim3\\times10^4$);")
+    A("obtaining $\\Omega_\\psi=0.265$ requires the last column of the table above, i.e. **$T_{\\rm reh}\\sim3\\times10^4$ GeV**.")
+    A("That differs from the $T_{\\rm reh}\\simeq2.1\\times10^8$ GeV given by the anomaly channel by $\\sim4$ orders of magnitude.")
+    A("In other words: under the true mode equation, the dark-matter abundance is **not** fitted a posteriori through $g$; instead $T_{\\rm reh}$ is pinned at $\\sim10^4$ GeV;")
+    A("the paper's argument that \"$g$ is fixed by $\\Omega_{\\rm DM}$\" is structurally unsound.\n")
+    A("**Limitations (must be stated)**: the background here is a **smooth power law**, containing only the end-of-inflation transition branch, not the")
+    A("reheating-era production driven by the oscillating condensate. Numerical robustness has been tested to $\\lesssim10\\%$ (see Sec. 3b: phase step, $k_{\\min}$,")
+    A("sampling points, and the freeze joint test are all stable; the conformal limit is self-consistent). **The structural conclusions (power law, $g$ untunable,")
+    A("abundance set by $T_{\\rm reh}$) and the absolute normalization have all converged**; the only branch not covered is the condensate-oscillation one,")
+    A("which can only **increase** production, never decrease it, so it does not change the qualitative \"overproduction\" conclusion.\n")
 
-    A("## 5. 结论\n")
-    A("1. **可确证**：精确 BD 初值正确（$\\mu=0$ 给 $|\\beta_0|=0$ 到机器零，$u_R=0$）。")
-    A("2. **可确证**：跃迁点的**瞬时**绝热占据数**不**等于 $1/(e^{2\\pi\\mu}+1)$")
-    A("   （后者是未来无穷远处的 out-真空结果），故不能用它判定指数。")
-    A("3. **数值结论**：跨跃迁产生在 $m_\\psi/H_{\\rm inf}\\gtrsim0.5$ 上呈**幂律**")
-    A("   $\\propto m^{-p}$（$p\\simeq1.1$），$n_\\psi/H^3\\sim10^{-4}$–$10^{-3}$，**无指数压低**；")
-    A("   因而 $\\Omega_\\psi$ 对 $g$ 近乎不敏感，丰度由 $T_{\\rm reh}$ 决定。")
-    A("4. **指数判定不变**：$2\\pi$ 的依据仍是精确 de Sitter Hankel 结果与文献")
-    A("   （ENT 1903.10973 Eq.(14)(16) 逐字；唯一印 $\\pi$ 的 Kolb–Long 2312.09042 自标启发式）；")
-    A("   本脚本说明的是**更强的**一点——真实产生谱根本不是指数。")
-    A("5. **仍未完成**：含凝聚体振荡的 lattice/Floquet 计算（论文自认的缺口）。\n")
+    A("## 5. Conclusions\n")
+    A("1. **Establishable**: the exact BD initial data are correct ($\\mu=0$ gives $|\\beta_0|=0$ to machine zero, $u_R=0$).")
+    A("2. **Establishable**: the **instantaneous** adiabatic occupation number at the transition point is **not** $1/(e^{2\\pi\\mu}+1)$")
+    A("   (the latter is the out-vacuum result at future infinity), so it cannot be used to decide the exponent.")
+    A("3. **Numerical conclusion**: production across the transition is a **power law** over $m_\\psi/H_{\\rm inf}\\gtrsim0.5$,")
+    A("   $\\propto m^{-p}$ ($p\\simeq1.1$), with $n_\\psi/H^3\\sim10^{-4}$-$10^{-3}$: **no exponential suppression**;")
+    A("   hence $\\Omega_\\psi$ is nearly insensitive to $g$, and the abundance is set by $T_{\\rm reh}$.")
+    A("4. **The exponent verdict is unchanged**: the basis for $2\\pi$ remains the exact de Sitter Hankel result and the literature")
+    A("   (ENT 1903.10973 Eq.(14)(16) verbatim; the Kolb-Long 2312.09042 self-labelled heuristic is the only source printing $\\pi$);")
+    A("   what this script shows is the **stronger** point -- the true production spectrum is not exponential at all.")
+    A("5. **Still missing**: a lattice/Floquet computation including the condensate oscillation (the gap the paper itself admits).\n")
 
     md = "\n".join(L) + "\n"
     with open(os.path.join(ROOT, "psi_abundance_oscillating.md"), "w",

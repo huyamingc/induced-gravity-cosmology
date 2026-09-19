@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fig.2 — n_s–r under LOCKED cosmological N (exact potential slow-roll).
+"""Fig.2 -- n_s-r under LOCKED cosmological N (exact potential slow-roll).
 
 MUST match paper Table tab:sens / scripts/lock_n_convention.py.
 Writes both fig2_ns_r.pdf and fig2_ns_r_lockedN.pdf so tex includegraphics
@@ -58,7 +58,7 @@ def main() -> None:
         0.004 * np.sin(th),
         color="#d6dce4",
         alpha=0.7,
-        label="Planck 1σ (schematic)",
+        label="Planck 1 sigma (schematic)",
     )
     ax.plot(
         ns_f,

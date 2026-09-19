@@ -1,9 +1,12 @@
-"""临时探针：真实模方程下 Omega=0.265 在**重支侧**的交点是否存在、在哪？
+"""Diagnostic probe: does the Omega = 0.265 crossing exist on the HEAVY-BRANCH
+side under the true mode equation, and where?
 
-背景：dm_gap_closure_test.py 的幂律扫描停在 m/H = 3，那里 Omega = 1.6e3
-（仍比 0.265 高 6e3 倍），所以"重支"在真实模方程下的匹配点从未被定位。
-本探针只补几个 m/H 较大的点，复用同一套模方程与归一化。
-用完即删，不改动任何既有产物。
+Background: the power-law scan in dm_gap_closure_test.py stops at m/H = 3,
+where Omega = 1.6e3 (still 6e3 times above 0.265), so the heavy-side matching
+point under the true mode equation had never been located. This probe only
+fills in a few larger m/H points, reusing the same mode equation and the same
+normalization. Diagnostic retained for reference; it is not part of
+run_all.py, writes no files, and modifies no existing artifact.
 """
 import sys
 import time

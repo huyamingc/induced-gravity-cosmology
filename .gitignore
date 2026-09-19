@@ -1,4 +1,4 @@
-﻿# Python env & cache
+# Python env & cache
 scripts/.venv/
 **/__pycache__/
 *.py[cod]
@@ -17,3 +17,8 @@ scripts/.venv/
 # OS
 Thumbs.db
 .DS_Store
+
+# Generated artifacts (run_all.py outputs; only the figure PDFs are tracked)
+figures/*.png
+scripts/*.md
+scripts/*.json

@@ -61,13 +61,27 @@ ALLOW_CONTEXT = [
     "printed",
     "formula",
     "guide",
+    # Appendix A splits the disclaimer onto the line after the aligned
+    # equation (7.46e-8), and App. D5c introduces the hypothetical stable-
+    # condensate value (1.65e-29) in the sentence before the equation, so a
+    # small neighbor window plus these keywords is required.
+    "hypothetical",
+    "stable condensate",
+    "stable-condensate",
+    "not the locked",
 ]
 
-FLAG_CONTEXT_OK = False
+# The disclaimer often sits on the line above/below the number (aligned
+# equation environments split lines), so the context check also looks at
+# neighboring lines.
+CONTEXT_WINDOW = 2
 
 
-def context_ok(line: str) -> bool:
-    return any(k in line for k in ALLOW_CONTEXT)
+def context_ok(lines: list, idx: int) -> bool:
+    """idx is the 0-based index of the matched line; also scan neighbors."""
+    lo = max(0, idx - CONTEXT_WINDOW)
+    hi = min(len(lines), idx + CONTEXT_WINDOW + 1)
+    return any(k in lines[j] for j in range(lo, hi) for k in ALLOW_CONTEXT)
 
 
 def main() -> None:
@@ -75,19 +89,19 @@ def main() -> None:
     lines = t.splitlines()
     out = []
     A = out.append
-    A("# tex 数值审计（锁定 N 约定）")
+    A("# tex number audit (locked-N convention)")
     A("")
-    A(f"目标：`{TEX.name}`")
+    A(f"Target: `{TEX.name}`")
     A("")
 
-    A("## 主数值出现情况")
+    A("## Locked primary occurrences")
     A("")
-    A("| 锁定值 | 模式 | 次数 |")
+    A("| Locked value | Pattern | Count |")
     A("|---|---|---|")
     checks = [
-        ("λ0 N=50", r"6\.70"),
+        ("lambda0 N=50", r"6\.70"),
         ("r N=50", r"0\.00425"),
-        ("r_max 2σ", r"0\.0052"),
+        ("r_max 2sigma", r"0\.0052"),
         ("N anomaly", r"N\\simeq51|N\simeq51"),
         ("m_chi", r"3\.25"),
         ("H_inf", r"1\.64"),
@@ -98,9 +112,9 @@ def main() -> None:
         A(f"| {name} | `{pat}` | {len(re.findall(pat, t))} |")
     A("")
 
-    A("## 旧值扫描")
+    A("## Old-value scan")
     A("")
-    A("| 模式 | 行 | 上下文判断 | 判定 |")
+    A("| Pattern | Line | Context check | Verdict |")
     A("|---|---|---|---|")
     n_flag = n_ok = 0
     flags = []
@@ -108,7 +122,7 @@ def main() -> None:
         for i, ln in enumerate(lines, 1):
             if not re.search(pat, ln):
                 continue
-            ok = context_ok(ln)
+            ok = context_ok(lines, i - 1)
             if ok:
                 n_ok += 1
                 verdict = "OK_NOTE"
@@ -119,40 +133,40 @@ def main() -> None:
             ctx = "allow" if ok else "no-allow-keyword"
             A(f"| {meaning} | L{i} | {ctx} | {verdict} |")
     A("")
-    A(f"统计：OK_NOTE={n_ok}, FLAG={n_flag}")
+    A(f"Statistics: OK_NOTE={n_ok}, FLAG={n_flag}")
     A("")
     if flags:
-        A("### 需人工确认/修改的 FLAG")
+        A("### FLAGs needing manual review/fix")
         A("")
         for i, meaning, s in flags:
             A(f"- L{i} ({meaning}): {s}")
         A("")
     else:
-        A("无 FLAG（旧值均出现在对比/历史语境，或已清除）。")
+        A("No FLAG (all old values appear in comparison/historical context, or have been removed).")
         A("")
 
-    A("## 主张级核对")
+    A("## Claim-level checks")
     A("")
-    A("| 检查项 | 结果 |")
+    A("| Check | Result |")
     A("|---|---|")
     abs_txt = t.split("\\end{abstract}")[0] if "\\end{abstract}" in t else t[:3000]
     abs_bad = ("[48,55]" in abs_txt) or ("0.0053" in abs_txt) or ("self-consistently selecting the fiducial" in abs_txt)
-    A(f"| 摘要无旧窗/旧 r/旧 fiducial | {'PASS' if not abs_bad else 'FAIL'} |")
-    A(f"| 定义 eq:Ndef 存在 | {'PASS' if 'eq:Ndef' in t else 'FAIL'} |")
-    A(f"| Table tab:sens 存在 | {'PASS' if 'tab:sens' in t else 'FAIL'} |")
-    A(f"| DE calibration 声明 | {'PASS' if 'calibrated' in t else 'FAIL'} |")
-    A(f"| 拒绝残余精质 | {'PASS' if 'quintessence' in t.lower() and ('excluded' in t.lower() or 'excluded' in t) else 'FAIL'} |")
+    A(f"| Abstract has no old window / old r / old fiducial | {'PASS' if not abs_bad else 'FAIL'} |")
+    A(f"| Definition eq:Ndef exists | {'PASS' if 'eq:Ndef' in t else 'FAIL'} |")
+    A(f"| Table tab:sens exists | {'PASS' if 'tab:sens' in t else 'FAIL'} |")
+    A(f"| DE calibration statement | {'PASS' if 'calibrated' in t else 'FAIL'} |")
+    A(f"| Residual quintessence rejected | {'PASS' if 'quintessence' in t.lower() and ('excluded' in t.lower() or 'excluded' in t) else 'FAIL'} |")
     A("")
 
-    A("## 结论")
+    A("## Conclusion")
     A("")
     if n_flag == 0:
-        A("- 数值审计：**通过**（旧值仅出现在约定对比/附录历史说明中）。")
+        A("- Number audit: **PASS** (old values appear only in convention-comparison / appendix historical notes).")
     else:
-        A(f"- 数值审计：**发现 {n_flag} 处需处理**（见上 FLAG 列表）。")
-    A("- 建议：将本脚本并入 `run_all.py`，每次改稿后重跑。")
+        A(f"- Number audit: **{n_flag} issue(s) found** (see the FLAG list above).")
+    A("- Recommendation: merge this script into `run_all.py` and re-run it after every manuscript edit.")
     A("")
-    A("[审计完成]")
+    A("[Audit complete]")
 
     OUT.write_text("\n".join(out), encoding="utf-8")
     print("\n".join(out))

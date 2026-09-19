@@ -6,6 +6,9 @@
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb,bm}
 \usepackage{hyperref}
+%% The class default \orcid prints the Orcid logo image (Orcidlogo.eps), which
+%% is not shipped with this source; typeset the identifier as a plain link.
+\renewcommand{\orcid}[1]{~\href{https://orcid.org/#1}{ORCID: #1}}
 \providecommand{\gtrsim}{\geq}
 \providecommand{\lesssim}{\leq}
 
@@ -25,7 +28,7 @@
 \title[Induced-Gravity Cosmology]{Induced-Gravity Cosmology: Inflation, Dark Energy, and Dark Matter from a Common Scalar Origin}
 
 %% Independent researcher: EPJC records city/country of residence.
-\author*{\fnm{Yaming} \sur{Hu}}\email{64687555@qq.com}
+\author*{\fnm{Yaming} \sur{Hu}}\email{64687555@qq.com}\orcid{0009-0003-1406-0485}
 \affil*{\orgaddress{\city{Guiyang}, \state{Guizhou}, \country{China}}}
 
 \abstract{We construct a scalar-tensor cosmology within pure induced gravity, in which a single real scalar field $\Phi$ with a $\Ztwo$-symmetric potential $V_J(\Phi)=\frac{\lambda_0}{4}(\Phi^2-\PhiV^2)^2+V_c$ and non-minimal coupling $\xi\Phi^2R$ replaces the Einstein--Hilbert term, generating the Planck mass via $\vev{\Phi}=\MP/\sqrt{\xi}$. Conformal transformation to the Einstein frame yields a Starobinsky-type slow-roll plateau. With locked $N\equiv\ln(a_{\rm end}/a_*)$ and exact potential slow-roll, $\xi=11.1$ gives $N=50\Rightarrow\lambda_0\simeq6.70\times10^{-8}$, $r\simeq0.00425$, $n_s\simeq0.962$; anomaly $T_{\rm reh}\simeq10^9$ GeV maps to $N\simeq51$. Planck $2\sigma$ selects $N\approx45$--$56$ ($r\leq0.0052$); LiteBIRD $r>0.01$ would exclude the model class. A Dirac fermion $\psi$ with $-g\Phi\bar\psi\psi$ is a cold-dark-matter \emph{candidate}: $m_\psi=g\PhiV$ shares the same VEV; stability uses a discrete $\Ztwopsi$ symmetry and a conformally vanishing $\chi\psi\bar\psi$ vertex (both structural consequences of $F=\xi\Phi^2$), conditional on an anomaly-free UV completion. Matching $\Omega_{\rm DM}$ with the exact mode-equation spectrum at the end-of-inflation transition selects $g\simeq1.0\times10^{-7}$ ($m_\psi\simeq7.5\times10^{10}$ GeV $\simeq4.6\times10^{-3}H_{\rm inf}$), cold kinematics ($\lambda_{\rm fs}\sim10^{-19}$ Mpc); absolute normalization awaits a lattice computation. The potential minimum furnishes a frozen cosmological constant with $w=-1$ (residual-condensate corrections $\leq10^{-10}$); \textbf{this dark-energy sector is calibrated, not predicted}, with $V_c$ fixed by $\Omega_\Lambda=0.683$ and the $10^{110}$ hierarchy unexplained. The identity $\Omega=\Phi/\PhiV$ decouples $\chi$ from $\psi$ at tree level; large $m_\chi\sim10^{13}$ GeV suppresses SM fifth forces. Tree-level $\chi\to h\bar h$ and $\chi\to\psi\bar\psi$ are closed; reheating is via conformal anomaly. The SM embedding is RG-stable ($\Delta\xi\leq10^{-6}$); the late-time $w_0=-1$ prediction is shared with $\Lambda$CDM and is therefore not independently discriminating, so the sharp falsification handles remain the inflationary observables.}
@@ -1035,14 +1038,14 @@ the third line vanishes because $\Gamma t_0\gg1$ for any $T_{\rm reh}\gtrsim10^{
 
 \bmhead{Acknowledgements}
 
-Supplemental Material: Python numerical code for computing inflationary observables and generating all figures is available from the author on reasonable request.
+Supplemental Material: Python numerical code for computing inflationary observables and generating all figures is publicly available at \url{https://github.com/huyamingc/induced-gravity-cosmology}; \texttt{scripts/run\_all.py} runs the complete verification suite.
 
 \paragraph{Modifications relative to earlier drafts of this manuscript.} (1) The $e$-fold number is locked to $N=\ln(a_{\rm end}/a_*)$ with explicit matching assumptions; all tabulated $n_s$, $r$, $\lambda_0$ use exact potential slow-roll at that $N$ (not mixed attractor closed forms). (2) At $\xi=11.1$: $N=50$ $\Rightarrow$ $\lambda_0=6.70\times10^{-8}$, $r=0.00425$, $n_s=0.9616$; anomaly $T_{\rm reh}\sim10^9\,$GeV $\Rightarrow$ $N\simeq51$. Planck $2\sigma$ band $N\approx45$--$56$ has $r\leq0.0052$. (3) Appendix no longer promotes the incorrect $\lambda_0=48\pi^2\xi^2A_s/N^2$ formula. (4) $\Ztwopsi$ stability is conditional on an anomaly-free UV discrete gauge completion. (5) Dark energy is a calibrated frozen $V_c$; single-field residual quintessence is excluded by $m_\chi/H_0\sim10^{55}$. (6) A parallel topological-defect DM channel is listed. (7) Figures regenerated with the locked-$N$ convention (\texttt{scripts/lock\_n\_convention.py}). (8) The dark-matter production exponent is corrected from $e^{-\pi m_\psi/H_{\rm inf}}$ to the exact Bogoliubov result $e^{-2\pi m_\psi/H_{\rm inf}}$; the exponential-framework matching point is $g\simeq6.9\times10^{-5}$. (9) The gravitational pulse of channel (i) does not reheat the universe (radiation fraction scales as $a^{-1}$); reheating is attributed solely to the conformal-anomaly channel. (10) $K_{\rm end}=\epsilon_H V_{\rm end}/(3-\epsilon_H)\simeq0.199V_{\rm end}$; the Planck band becomes $N\approx45$--$56$ ($N_{\rm max}=55.9$). (11) $\Delta w_{\rm quant}\lesssim2\times10^{-121}$; the residual-condensate bound $\leq0.39$ is a constraint satisfied because $\Gamma t_0\gg1$. (12) The QCD $b_3$ and $\alpha_s(m_\chi)$ entering the anomaly are given explicitly. (13) Appendix D records the end-of-inflation numerical validation. (14) Abundance matching with the true mode-equation spectrum selects the light branch $g\simeq1.0\times10^{-7}$ ($m_\psi\simeq7.5\times10^{10}$ GeV); the heavy exponential-framework point overproduces at the model's own $T_{\rm reh}$; absolute normalization awaits a lattice computation.
 
 \section*{Declarations}
 
 \begin{itemize}
-\item \textbf{Funding:} No funding was received for conducting this study.
+\item \textbf{Funding:} The author is an independent researcher; no funding was received for conducting this study.
 \item \textbf{Competing interests:} The author declares no competing interests.
 \item \textbf{Ethics approval:} Not applicable.
 \item \textbf{Consent to participate:} Not applicable.

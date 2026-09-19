@@ -44,27 +44,27 @@ def main() -> None:
     fp = fiducial()
     fp_num = fiducial(use_numeric_lam0=True)
     lines: list[str] = [
-        "> # ⚠️ 已过期（LEGACY）——不可用于当前论文",
+        "> # WARNING: OUTDATED (LEGACY) -- not valid for the current paper",
         ">",
-        "> 本报告用**旧参数**：解析 A5 归一化 λ₀=7.465e-8（或旧草稿值 6.78e-8）、旧 Table I 的 r=0.00487。",
-        "> **当前论文**用锁定 $N$ 约定：λ₀=6.70e-8、r=0.00425、n_s=0.9616（N=50, ξ=11.1）。",
+        "> This report was computed with **OLD parameters**: the analytic A5 normalization lambda0=7.465e-8 (or the old draft value 6.78e-8), and r=0.00487 from the old Table I.",
+        "> The **current paper** uses the locked-$N$ convention: lambda0=6.70e-8, r=0.00425, n_s=0.9616 (N=50, xi=11.1).",
         ">",
-        "> 故本报告的**数值与 PASS/FAIL 判定均不代表论文现状**，仅作历史对照。",
-        "> 当前值请看 `lock_n_convention.py`、`background_and_reheating.py`、`dm_gap_closure_test.py`。",
+        "> Therefore the **numerical values and PASS/FAIL verdicts in this report do NOT represent the current paper** -- historical comparison only.",
+        "> For current values see `lock_n_convention.py`, `background_and_reheating.py`, `dm_gap_closure_test.py`.",
         "",
     ]
-    lines.append("# 数值验证报告 — paper_prd_merged")
+    lines.append("# Numerical verification report -- paper_prd_merged")
     lines.append("")
-    lines.append("脚本：`scripts/verify_numerics.py`（配套 `scripts/cosmo_model.py`）")
-    lines.append(f"基准点：ξ={fp.xi}, N={fp.N}, A_s={A_S}")
+    lines.append("Script: `scripts/verify_numerics.py` (with companion `scripts/cosmo_model.py`)")
+    lines.append(f"Fiducial point: xi={fp.xi}, N={fp.N}, A_s={A_S}")
     lines.append("")
-    lines.append("## 1. 参数与暴涨可观测量")
+    lines.append("## 1. Parameters and inflationary observables")
     lines.append("")
-    lines.append("| 量 | 论文（合并稿） | 独立计算 | 结果 | 备注 |")
+    lines.append("| Quantity | Paper (merged draft) | Independent computation | Verdict | Note |")
     lines.append("|---|---|---|---|---|")
     lines.append(
         check(
-            "β_p=2/√(6+1/ξ)",
+            "beta_p=2/sqrt(6+1/xi)",
             "0.810",
             f"{fp.beta_p:.4f}",
             abs(fp.beta_p - 0.810) < 0.002,
@@ -72,22 +72,22 @@ def main() -> None:
     )
     lines.append(
         check(
-            "r(N=50,ξ=11.1)",
+            "r(N=50,xi=11.1)",
             "0.00487",
             f"{fp.r:.6f}",
             abs(fp.r - 0.00487) < 2e-5,
-            "8/(β²N²) ≡ 2(6+1/ξ)/N²",
+            "8/(beta^2 N^2) == 2(6+1/xi)/N^2",
         )
     )
     lam_an = fp.lam0
     lam_A5_wrong = lambda0_paper_A5_wrong(fp.xi, fp.N)
     lines.append(
         check(
-            "λ₀ 解析 (A_s 关系)",
-            "文中数值 6.78e-8；附录旧式 48π²ξ²A_s/N²",
-            f"解析={lam_an:.4e}；旧式={lam_A5_wrong:.4e}；数值稿={fp_num.lam0:.4e}",
+            "lambda0 analytic (A_s relation)",
+            "value quoted in the text 6.78e-8; old-style appendix formula 48pi^2 xi^2 A_s/N^2",
+            f"analytic={lam_an:.4e}; old-style={lam_A5_wrong:.4e}; numeric draft={fp_num.lam0:.4e}",
             False,
-            "旧式漏 (6+1/ξ)；解析与数值差 ~9%",
+            "the old-style formula misses (6+1/xi); analytic and numeric differ by ~9%",
         )
     )
     lines.append(
@@ -108,7 +108,7 @@ def main() -> None:
     )
     lines.append(
         check(
-            "V_end/V₀",
+            "V_end/V_0",
             "0.285",
             f"{fp.V_end_frac:.4f}",
             abs(fp.V_end_frac - 0.285) < 0.003,
@@ -116,53 +116,53 @@ def main() -> None:
     )
     lines.append(
         check(
-            "H_inf (解析 λ₀)",
-            "1.65e13（数值 λ₀）/ 1.73e13（解析）",
-            f"解析={fp.H_inf:.4e}；数值λ₀={fp_num.H_inf:.4e}",
+            "H_inf (analytic lambda0)",
+            "1.65e13 (numeric lambda0) / 1.73e13 (analytic)",
+            f"analytic={fp.H_inf:.4e}; numeric lambda0={fp_num.H_inf:.4e}",
             True,
-            "与各自 λ₀ 自洽",
+            "self-consistent with each respective lambda0",
         )
     )
     lines.append(
         check(
-            "U^{1/4}=(3M_P²H²)^{1/4}",
-            "应与 H 自洽（非 4.8e15）",
-            f"解析={fp.U_quarter:.4e}；数值={fp_num.U_quarter:.4e}",
+            "U^{1/4}=(3M_P^2H^2)^{1/4}",
+            "should be self-consistent with H (not 4.8e15)",
+            f"analytic={fp.U_quarter:.4e}; numeric={fp_num.U_quarter:.4e}",
             True,
-            "旧稿 4.8e15 与 H 不一致",
+            "the old draft value 4.8e15 is inconsistent with H",
         )
     )
     lines.append(
         check(
-            "m_χ (Einstein)",
-            "3.28e13（数值 λ₀）/ 3.43e13（解析）",
-            f"解析={fp.m_chi:.4e}；数值={fp_num.m_chi:.4e}",
+            "m_chi (Einstein)",
+            "3.28e13 (numeric lambda0) / 3.43e13 (analytic)",
+            f"analytic={fp.m_chi:.4e}; numeric={fp_num.m_chi:.4e}",
             True,
         )
     )
     lines.append(
         check(
-            "m_Φ (Jordan, 真空处)",
+            "m_Phi (Jordan, at the vacuum)",
             "~2.6e14",
             f"{fp.m_Phi:.4e}",
             True,
-            "√(2λ₀) Φ₀ = √(2λ₀) M_P/√ξ",
+            "sqrt(2 lambda0) Phi_0 = sqrt(2 lambda0) M_P/sqrt(xi)",
         )
     )
 
     lines.append("")
-    lines.append("## 2. N 窗与再加热")
+    lines.append("## 2. N window and reheating")
     lines.append("")
     lam = fp.lam0
     V0_ = fp.V0
     V_end = fp.V_end
-    lines.append(f"- V_end(解析) = {V_end:.4e} GeV⁴")
+    lines.append(f"- V_end(analytic) = {V_end:.4e} GeV^4")
     for T in (1e9, 4e5, 1e-2, 6e15):
         Ntry = N_match(T, V_end)
-        lines.append(f"- Eq.(Nmatch): T_reh={T:.2e} GeV → N≈{Ntry:.2f}")
+        lines.append(f"- Eq.(Nmatch): T_reh={T:.2e} GeV -> N~{Ntry:.2f}")
     lines.append("")
     N_win = [48, 49, 50, 52, 55]
-    lines.append("| N | r | n_s NLO | λ₀ 解析 | T_reh (invert Nmatch) |")
+    lines.append("| N | r | n_s NLO | lambda0 analytic | T_reh (invert Nmatch) |")
     lines.append("|---|---|---|---|---|")
     for N in N_win:
         lam_N = lambda0_analytic(fp.xi, N)
@@ -178,80 +178,80 @@ def main() -> None:
 
     # Planck consistency
     lines.append("")
-    lines.append("## 3. Planck 兼容性")
+    lines.append("## 3. Planck consistency")
     lines.append("")
     for N in (48, 50, 52, 55):
         ns = 1 - 2 / N - 1.5 / N**2
         sigma = (ns - 0.9649) / 0.0042
-        lines.append(f"- N={N}: n_s={ns:.4f}, 偏离 Planck 中心 {sigma:+.2f}σ")
+        lines.append(f"- N={N}: n_s={ns:.4f}, deviation from the Planck central value {sigma:+.2f} sigma")
 
     lines.append("")
-    lines.append("## 4. 暗能量与质量层级（否定单场精质）")
+    lines.append("## 4. Dark energy and mass hierarchy (ruling out single-field quintessence)")
     lines.append("")
     H0 = H0_GeV()
     Vc_val = Vc()
-    lines.append(f"- H₀ = {H0:.4e} GeV")
-    lines.append(f"- V_c(Ω_Λ=0.683) = {Vc_val:.4e} GeV⁴（论文 ~2.7e-47）")
-    lines.append(f"- m_χ/H₀ (解析 λ₀) = {fp.m_chi_over_H0:.4e} → **冻结，非精质**")
-    lines.append(f"- (H₀/m_χ)² ~ Δw_Ricci ≈ {(H0/fp.m_chi)**2:.3e}（论文 ~2e-111）")
-    lines.append(f"- 均匀动能红移 ρ_kin ∝ a⁻⁶：不能承担今日 DM/DE")
+    lines.append(f"- H_0 = {H0:.4e} GeV")
+    lines.append(f"- V_c(Omega_Lambda=0.683) = {Vc_val:.4e} GeV^4 (paper ~2.7e-47)")
+    lines.append(f"- m_chi/H_0 (analytic lambda0) = {fp.m_chi_over_H0:.4e} -> **frozen, not quintessence**")
+    lines.append(f"- (H_0/m_chi)^2 ~ Delta w_Ricci ~ {(H0/fp.m_chi)**2:.3e} (paper ~2e-111)")
+    lines.append(f"- a homogeneous kinetic energy redshifts as rho_kin propto a^-6: it cannot account for DM/DE today")
 
     lines.append("")
-    lines.append("## 5. 暗物质参数窗")
+    lines.append("## 5. Dark-matter parameter window")
     lines.append("")
     Phi0 = fp.Phi0
     Hinf = fp.H_inf
-    lines.append(f"- Φ₀ = M_P/√ξ = {Phi0:.4e} GeV")
+    lines.append(f"- Phi_0 = M_P/sqrt(xi) = {Phi0:.4e} GeV")
     lines.append(f"- H_inf = {Hinf:.4e} GeV")
-    lines.append("| g | m_ψ=gΦ₀ | m_ψ/H_inf |")
+    lines.append("| g | m_psi=g Phi_0 | m_psi/H_inf |")
     lines.append("|---|---|---|")
     for g in (1e-5, 2.3e-5, 1e-4):
         mpsi = g * Phi0
         lines.append(f"| {g:.2e} | {mpsi:.4e} GeV | {mpsi/Hinf:.3f} |")
     lines.append("")
-    lines.append("引力产生标度 n_ψ~H³e^{-π m_ψ/H}；T_reh=4e5 时稀释更狠，需格点定量。")
+    lines.append("Gravitational-production scaling: n_psi ~ H^3 e^{-pi m_psi/H}; dilution is even harsher at T_reh=4e5, requiring lattice simulations for a quantitative result.")
     Tlow = 4e5
-    # qualitative scaling of dilution with T_reh: (a_end/a0)^3 ∝ T_reh
-    lines.append(f"- 相对 T_reh=1e9，T_reh={Tlow:.0e} 的稀释因子 ∝ {Tlow/1e9:.2e}（丰度窗移动）")
+    # qualitative scaling of dilution with T_reh: (a_end/a0)^3 propto T_reh
+    lines.append(f"- relative to T_reh=1e9, the dilution factor at T_reh={Tlow:.0e} scales as {Tlow/1e9:.2e} (the abundance window shifts)")
 
     lines.append("")
-    lines.append("## 6. 共形退耦代数")
+    lines.append("## 6. Conformal decoupling algebra")
     lines.append("")
-    lines.append("- Yukawa: Φ·ψ̄·ψ·√-g 幂次：1 + 3/2 + 3/2 − 4 = **0** → m_E=gΦ₀ 常数，树图 χψ̄ψ=0")
-    lines.append(f"- G_eff(Φ₀)=1/(8πξΦ₀²) vs 1/(8πM_P²): {1/(8*math.pi*fp.xi*fp.Phi0**2):.6e} vs {1/(8*math.pi*M_P**2):.6e}  (equal)")
+    lines.append("- Yukawa: mass dimension of Phi*psibar*psi*sqrt(-g): 1 + 3/2 + 3/2 - 4 = **0** -> m_E=g Phi_0 is constant, and the tree-level chi*psibar*psi vertex vanishes")
+    lines.append(f"- G_eff(Phi_0)=1/(8 pi xi Phi_0^2) vs 1/(8 pi M_P^2): {1/(8*math.pi*fp.xi*fp.Phi0**2):.6e} vs {1/(8*math.pi*M_P**2):.6e}  (equal)")
 
     # Conformal algebra numeric
     Omega = 3.7
     Phi = Phi0 * Omega
     # powers cancel
-    lines.append(f"- 数值抽检 Ω={Omega}: Φ Ω³ Ω^{-4} = Φ·{Omega**3*Omega**-4:.6f} → 比例 = Φ/Φ₀ · 1")
+    lines.append(f"- numerical spot check Omega={Omega}: Phi Omega^3 Omega^{-4} = Phi*{Omega**3*Omega**-4:.6f} -> ratio = Phi/Phi_0*1")
 
     lines.append("")
-    lines.append("## 7. 畴壁与 EFT 边界")
+    lines.append("## 7. Domain walls and the EFT boundary")
     lines.append("")
     lam0 = fp.lam0
     xi = fp.xi
     Phi0 = M_P / math.sqrt(xi)
     sigma = (4.0 / 3.0) * math.sqrt(lam0 / 2.0) * Phi0**3
-    lines.append(f"- σ_wall = (4/3)√(λ₀/2) Φ₀³ = {sigma:.4e} GeV³（论文 ~1e50 量级）")
-    lines.append("- F(0)=ξ·0=0, F'(0)=0 → Israel 薄壳条件在 Φ=0 代数不自洽（结构性）")
+    lines.append(f"- sigma_wall = (4/3) sqrt(lambda0/2) Phi_0^3 = {sigma:.4e} GeV^3 (paper: order ~1e50)")
+    lines.append("- F(0)=xi*0=0, F'(0)=0 -> the Israel thin-shell condition at Phi=0 is not algebraically self-consistent (structural)")
 
     lines.append("")
-    lines.append("## 8. 结论摘要")
+    lines.append("## 8. Summary of conclusions")
     lines.append("")
-    lines.append("| 主张 | 验证结果 |")
+    lines.append("| Claim | Verification result |")
     lines.append("|---|---|")
-    lines.append("| Starobinsky 型 n_s(N), r(N) | **成立**（公式与数值一致） |")
-    lines.append("| N∈[48,55] 与 BBN+Planck | **大致成立**；N=50 时 n_s 偏低 ~1.2–1.4σ，N↑ 更接近 Planck |")
-    lines.append("| λ₀ 附录旧公式 | **不成立**；解析 λ₀≈7.46e-8，数值稿 6.78e-8 为另一匹配 |")
-    lines.append("| 共形退耦 Ω=Φ/Φ₀ | **成立** |")
-    lines.append("| 单场精质 DE | **不成立**（m_χ/H₀~10⁵⁵）；DE=V_c 冻结 **成立** |")
-    lines.append("| DM 引力产生 | **机制成立**；Ω 定量 **未验证**（需格点） |")
-    lines.append("| r≲0.0053 可证伪窗 | **成立**（在所采用 N 窗与 ξ=11.1 下） |")
+    lines.append("| Starobinsky-like n_s(N), r(N) | **holds** (formula and numerics agree) |")
+    lines.append("| N in [48,55] vs BBN+Planck | **roughly holds**; at N=50 n_s is low by ~1.2-1.4 sigma, and larger N moves closer to Planck |")
+    lines.append("| lambda0 old appendix formula | **does not hold**; analytic lambda0 ~ 7.46e-8 while the numeric-draft value 6.78e-8 is a different matching |")
+    lines.append("| Conformal decoupling Omega=Phi/Phi_0 | **holds** |")
+    lines.append("| Single-field quintessence DE | **does not hold** (m_chi/H_0~10^55); DE=V_c frozen **holds** |")
+    lines.append("| DM gravitational production | **mechanism holds**; Omega quantitatively **not verified** (lattice needed) |")
+    lines.append("| Falsifiable window r <~ 0.0053 | **holds** (for the adopted N window and xi=11.1) |")
     lines.append("")
-    lines.append(f"图目录：`{FIGDIR}`")
+    lines.append(f"Figure directory: `{FIGDIR}`")
     lines.append("")
-    lines.append("[验证完成]")
+    lines.append("[verification complete]")
 
     OUT.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))

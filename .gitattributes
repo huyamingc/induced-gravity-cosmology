@@ -1,0 +1,4 @@
+# Byte-exact checkout on every platform: never convert line endings.
+* -text
+# Render PDFs as binary in diffs.
+*.pdf -diff

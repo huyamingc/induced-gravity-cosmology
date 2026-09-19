@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Independent derivation from the action — no presupposed paper formulas.
+Independent derivation from the action -- no presupposed paper formulas.
 
 Pipeline:
   Jordan action
@@ -357,7 +357,7 @@ Near omega=0 (chi=0):
   Compare 1/2 m^2 chi^2 => m^2 = 8 V0 / (M_Pl^2 beta_o^2)
   V0 = lambda0 M_Pl^4/(4 xi^2)
   m^2 = 8 lambda0 M_Pl^2 / (4 xi^2 beta_o^2) = 2 lambda0 M_Pl^2 / (xi^2 beta_o^2)
-  This is m_chi^2 — matches common induced-gravity result.
+  This is m_chi^2 -- matches common induced-gravity result.
 
 KG: chi_ddot + 3H chi_dot + m^2 chi = 0
 For H << m: oscillatory, virial <w> -> 0 for quadratic (matter-like), NOT -1.
@@ -380,7 +380,7 @@ def de_viability(lambda0: float, xi: float) -> dict:
         "m_chi": m,
         "H0": H0,
         "m_over_H0": m / H0,
-        "damping_time_s": HBAR_GEV_S / m if m > 0 else float("inf"),  # t ~ ħ/m
+        "damping_time_s": HBAR_GEV_S / m if m > 0 else float("inf"),  # t ~ hbar/m
         "w_from_Vc": -1.0,
         "w_from_osc_quadratic": 0.0,  # virial for quadratic
         "kinetic_redshift": "a^{-6}",
@@ -403,11 +403,11 @@ def Omega_psi_scaling(mpsi: float, Hinf: float, Treh: float, pref: float = 1.0) 
     if mpsi <= 0 or Hinf <= 0:
         return 0.0
     n = Hinf**3 * math.exp(-math.pi * mpsi / Hinf)
-    # today number ~ n * (a_end/a0)^3, (a_end/a0)^3 ∝ Treh^{-1} * (stuff); paper says ∝ Treh
-    # From reheating: a_end/a_reh ∝ (rho_reh/rho_end)^{1/3} ∝ Treh^{4/3} / rho_end^{1/3}
-    # a_reh/a0 ∝ T0/Treh
-    # (a_end/a0)^3 ∝ Treh^4 / rho_end * (T0/Treh)^3 = Treh * T0^3 / rho_end
-    # => Omega ∝ m n Treh / (rho_end factors)  — linear in Treh if rho_end fixed
+    # today number ~ n * (a_end/a0)^3, (a_end/a0)^3 propto Treh^{-1} * (stuff); paper says propto Treh
+    # From reheating: a_end/a_reh propto (rho_reh/rho_end)^{1/3} propto Treh^{4/3} / rho_end^{1/3}
+    # a_reh/a0 propto T0/Treh
+    # (a_end/a0)^3 propto Treh^4 / rho_end * (T0/Treh)^3 = Treh * T0^3 / rho_end
+    # => Omega propto m n Treh / (rho_end factors)  -- linear in Treh if rho_end fixed
     return pref * mpsi * n * Treh
 
 
@@ -418,38 +418,38 @@ def main() -> None:
     H0 = H0_GeV_v2()
     T0 = T0_GeV()
     lines: list[str] = []
-    lines.append("# 从作用量出发的独立推导报告")
+    lines.append("# Independent derivation report from the action")
     lines.append("")
-    lines.append("脚本：`scripts/derive_from_action.py`（不预设论文公式，仅用作用量结构与观测输入）")
+    lines.append("Script: `scripts/derive_from_action.py` (no paper formulas presupposed; only the action structure and observational inputs)")
     lines.append("")
-    lines.append("## 0. 输入与定义")
+    lines.append("## 0. Inputs and definitions")
     lines.append("")
-    lines.append(f"- 约化 Planck 质量 M_Pl = {M_PL:.4e} GeV")
-    lines.append(f"- Planck 2018: A_s={A_S_OBS}, n_s={N_S_OBS}±{SIG_NS}")
-    lines.append(f"- H0 = {H0:.4e} GeV（由 67.4 km/s/Mpc 换算）")
+    lines.append(f"- Reduced Planck mass M_Pl = {M_PL:.4e} GeV")
+    lines.append(f"- Planck 2018: A_s={A_S_OBS}, n_s={N_S_OBS}+/-{SIG_NS}")
+    lines.append(f"- H0 = {H0:.4e} GeV (converted from 67.4 km/s/Mpc)")
     lines.append(f"- T_CMB = {T0:.4e} GeV")
-    lines.append(f"- 真空定义：Phi0 = M_Pl/sqrt(xi)（由 V_J 极值，与 M_Pl^2=xi Phi0^2 一致）")
+    lines.append(f"- Vacuum definition: Phi0 = M_Pl/sqrt(xi) (from the V_J extremum, consistent with M_Pl^2=xi Phi0^2)")
     lines.append("")
-    lines.append("## A. 共形变换 → Einstein 帧（推导要点）")
+    lines.append("## A. Conformal transformation -> Einstein frame (key derivation steps)")
     lines.append("")
-    lines.append("由 Omega^2 = xi Phi^2/M_Pl^2 得 **Omega = Phi/Phi0**（恒等式，非假设）。")
-    lines.append("动能合并系数 M_Pl^2(3+1/(2xi))，故")
-    lines.append("**dchi/domega = M_Pl sqrt(6+1/xi) ≡ M_Pl beta_o**，**x ≡ 2 omega = beta_p chi/M_Pl**，beta_p=2/beta_o。")
+    lines.append("From Omega^2 = xi Phi^2/M_Pl^2 we get **Omega = Phi/Phi0** (an identity, not an assumption).")
+    lines.append("The kinetic-term combination coefficient is M_Pl^2(3+1/(2xi)), hence")
+    lines.append("**dchi/domega = M_Pl sqrt(6+1/xi) == M_Pl beta_o**, **x == 2 omega = beta_p chi/M_Pl**, beta_p=2/beta_o.")
     lines.append("")
     lines.append("V_E = V_J/Omega^4 = **(lambda0 M_Pl^4/(4 xi^2)) (1-e^{-2 omega})^2 + Vc e^{-4 omega}**")
     lines.append("")
-    lines.append("论文写 beta=2/sqrt(6+1/xi) 与上述 beta_p 一致；r=16 eps 在吸引子极限给出 8/(beta_p^2 N^2)=2(6+1/xi)/N^2。**公式结构由推导支持。**")
+    lines.append("The paper writes beta=2/sqrt(6+1/xi), identical to the beta_p above; r=16 eps in the attractor limit gives 8/(beta_p^2 N^2)=2(6+1/xi)/N^2. **The formula structure is supported by the derivation.**")
     lines.append("")
 
-    lines.append("## B. 精确慢滚与 lambda0 归一化（按 N 求解）")
+    lines.append("## B. Exact slow roll and lambda0 normalization (solved at fixed N)")
     lines.append("")
-    lines.append("对 V=V0(1-e^{-x})^2：")
+    lines.append("For V=V0(1-e^{-x})^2:")
     lines.append("- eps = 2 beta_p^2 e^{-2x}/(1-e^{-x})^2")
     lines.append("- eta = 2 beta_p^2 e^{-x}(2e^{-x}-1)/(1-e^{-x})^2")
-    lines.append("- N(x) = [e^x - x - (e^{x_end}-x_end)]/(2 beta_p^2)，x_end 由 eps=1：u=1/(1+sqrt(2) beta_p)")
-    lines.append("- A_s = V(x_*)/(24 pi^2 M_Pl^4 eps_*)；在固定 N 下对 lambda0 线性，可反解")
+    lines.append("- N(x) = [e^x - x - (e^{x_end}-x_end)]/(2 beta_p^2); x_end from eps=1: u=1/(1+sqrt(2) beta_p)")
+    lines.append("- A_s = V(x_*)/(24 pi^2 M_Pl^4 eps_*); at fixed N it is linear in lambda0, so lambda0 can be inverted")
     lines.append("")
-    lines.append("| xi | N | lambda0(exact As) | ns(PS) | r(PS) | ns(attractor) | r(attractor) | ns−Planck [sigma] |")
+    lines.append("| xi | N | lambda0(exact As) | ns(PS) | r(PS) | ns(attractor) | r(attractor) | ns-Planck [sigma] |")
     lines.append("|---|---|---|---|---|---|---|---|")
     table_B = []
     for xi in XI_CANDIDATES:
@@ -463,51 +463,51 @@ def main() -> None:
             )
     lines.append("")
     # Compare attractor vs PS
-    lines.append("**PS vs 吸引子近似：** 同一 x_* 下二者应接近；若 r_ps 与 r_attr 差 > few %，说明 N≈e^x/(2β²) 近似在该 N 有偏。")
+    lines.append("**PS vs attractor approximation:** at the same x_* the two should be close; if r_ps and r_attr differ by more than a few %, the N~e^x/(2beta^2) approximation is biased at that N.")
     lines.append("")
     for xi, N, lam, obs in table_B:
         if abs(xi - 11.1) < 1e-6 and N == 50:
             dr = abs(obs["r_ps"] - obs["r_attr"]) / obs["r_attr"] * 100
             dns = abs(obs["ns_ps"] - obs["ns_attr"])
-            lines.append(f"- 示例 ξ=11.1, N=50: |r_ps−r_attr|/r_attr={dr:.2f}%, |ns_ps−ns_attr|={dns:.4f}, lambda0={lam:.4e}")
+            lines.append(f"- Example xi=11.1, N=50: |r_ps-r_attr|/r_attr={dr:.2f}%, |ns_ps-ns_attr|={dns:.4f}, lambda0={lam:.4e}")
     lines.append("")
     lam50, obs50 = lambda0_for_As(50, 11.1)
     lines.append(
-        f"- **ξ=11.1, N=50 精确反演 lambda0 = {lam50:.4e}**"
-        f"（论文 Table I 用 6.78e-8；大场解析式另给 ~7.5e-8）"
+        f"- **xi=11.1, N=50 exact inversion gives lambda0 = {lam50:.4e}**"
+        f" (the paper's Table I uses 6.78e-8; the large-field analytic formula instead gives ~7.5e-8)"
     )
-    lines.append(f"- 同点：H_inf ~ sqrt(V0/(3 M_Pl^2)) 可由 V0={obs50['V0']:.4e} 推出")
+    lines.append(f"- At the same point: H_inf ~ sqrt(V0/(3 M_Pl^2)) follows from V0={obs50['V0']:.4e}")
     Hinf = math.sqrt(obs50["V0"] / (3 * M_PL**2))
     U14 = obs50["V0"] ** 0.25
     mchi = m_chi_from_first_principles(lam50, 11.1)
-    lines.append(f"- H_inf={Hinf:.4e} GeV, U^{{1/4}}={U14:.4e} GeV, m_chi(由 V_E''(0))={mchi:.4e} GeV")
+    lines.append(f"- H_inf={Hinf:.4e} GeV, U^{{1/4}}={U14:.4e} GeV, m_chi(from V_E''(0))={mchi:.4e} GeV")
     lines.append("")
 
-    lines.append("## C. N(T_reh)：从膨胀史匹配（非套用论文公式）")
+    lines.append("## C. N(T_reh): matching from the expansion history (not plugging into a paper formula)")
     lines.append("")
-    lines.append("输入：k=0.05 Mpc^{-1}，Omega_m=0.315，Omega_r=9e-5，g*=106.75，a_eq=Omega_r/Omega_m。")
-    lines.append("链条：a_*=k/H_* → a_end=a_reh (rho_reh/rho_end)^{1/3} → a_reh=a_eq (rho_eq/rho_reh)^{1/4} → N=ln(a_end/a_*)。")
+    lines.append("Inputs: k=0.05 Mpc^{-1}, Omega_m=0.315, Omega_r=9e-5, g*=106.75, a_eq=Omega_r/Omega_m.")
+    lines.append("Chain: a_*=k/H_* -> a_end=a_reh (rho_reh/rho_end)^{1/3} -> a_reh=a_eq (rho_eq/rho_reh)^{1/4} -> N=ln(a_end/a_*).")
     lines.append("")
     for N_target in (50,):
         res = solve_N_T_self_consistent(11.1, N_target)
-        lines.append(f"### 目标 N={N_target}, xi=11.1")
+        lines.append(f"### Target N={N_target}, xi=11.1")
         lines.append("")
         lines.append(f"- lambda0(exact As)={res['lambda0']:.4e}, V_*={res['V_star']:.4e}, V_end={res['V_end']:.4e}")
         if res["solve_ok"]:
-            lines.append(f"- **使推导 N 等于 {N_target} 的 T_reh ≈ {res['T_reh_selfcons']:.4e} GeV**")
+            lines.append(f"- **T_reh ~ {res['T_reh_selfcons']:.4e} GeV makes the derived N equal to {N_target}**")
         else:
-            lines.append(f"- **在 [1e-2,1e16] GeV 内未能反解出 T_reh 使 N={N_target}**（检查匹配或输入）")
+            lines.append(f"- **No T_reh in [1e-2,1e16] GeV could be inverted so that N={N_target}** (check the matching or the inputs)")
         lines.append("")
-        lines.append("| T_reh [GeV] | N_derived | 备注 |")
+        lines.append("| T_reh [GeV] | N_derived | Note |")
         lines.append("|---|---|---|")
         for T, info in res["benches"].items():
             inside = 48.0 <= info["N"] <= 55.0
-            tag = "∈[48,55]" if inside else "窗外"
+            tag = "in [48,55]" if inside else "outside window"
             lines.append(f"| {T:.2e} | {info['N']:.2f} | {tag} |")
         lines.append("")
 
     # Also try other xi quickly at T=1e9
-    lines.append("### 固定 T_reh=1e9 GeV 时不同 xi 的推导 N（N_target 仅用于定 lambda0）")
+    lines.append("### Derived N for different xi at fixed T_reh=1e9 GeV (N_target only fixes lambda0)")
     lines.append("")
     lines.append("| xi | N_target | lambda0 | N_derived(T=1e9) | r(PS) | ns(PS) |")
     lines.append("|---|---|---|---|---|---|")
@@ -519,37 +519,37 @@ def main() -> None:
             f"{res['obs']['r_ps']:.5f} | {res['obs']['ns_ps']:.4f} |"
         )
     lines.append("")
-    lines.append("**推导结论（C）：** N–T_reh 关系依赖匹配输入（k, g*, Omega，再加热状态方程）。")
-    lines.append("若推导的 N(T) 与论文 Eq.(18) 或「50+¼ln」不一致，则论文该式 **不能** 当作唯一真理，只能当某约定下的近似；应报告推导值与不确定度。")
+    lines.append("**Derived conclusion (C):** the N-T_reh relation depends on the matching inputs (k, g*, Omega, and the reheating equation of state).")
+    lines.append("If the derived N(T) disagrees with Eq.(18) of the paper or with the \"50+(1/4)ln\" rule, then that paper formula **cannot** be treated as the unique truth, only as an approximation under a particular convention; the derived value and its uncertainty should be reported.")
     lines.append("")
 
-    lines.append("## D. 晚期暗能量：从运动方程判定")
+    lines.append("## D. Late-time dark energy: verdict from the equations of motion")
     lines.append("")
     lam_use = lam50
     de = de_viability(lam_use, 11.1)
-    lines.append(f"由 V_E 在极小处展开：m_chi^2 = 8 V0/(M_Pl^2 beta_o^2) = 2 lambda0 M_Pl^2/(xi^2 beta_o^2)")
+    lines.append(f"Expanding V_E about the minimum: m_chi^2 = 8 V0/(M_Pl^2 beta_o^2) = 2 lambda0 M_Pl^2/(xi^2 beta_o^2)")
     lines.append(f"- lambda0={lam_use:.4e} => m_chi={de['m_chi']:.4e} GeV")
     lines.append(f"- H0={de['H0']:.4e} GeV, m_chi/H0={de['m_over_H0']:.4e}")
-    lines.append(f"- 阻尼时间 ~ {de['damping_time_s']:.3e} s")
-    lines.append(f"- 二次势振荡：virial => w_osc={de['w_from_osc_quadratic']}（物质型），动能 ∝ {de['kinetic_redshift']}")
-    lines.append(f"- 常数项 Vc：w={de['w_from_Vc']}，与 chi 演化独立")
-    lines.append(f"- 今日慢滚精质可行？ m_chi <=~ 10 H0 ? **{de['quintessence_possible']}**")
+    lines.append(f"- Damping time ~ {de['damping_time_s']:.3e} s")
+    lines.append(f"- Oscillation in the quadratic potential: virial => w_osc={de['w_from_osc_quadratic']} (matter-like), kinetic energy redshifts as {de['kinetic_redshift']}")
+    lines.append(f"- Constant term Vc: w={de['w_from_Vc']}, independent of the chi evolution")
+    lines.append(f"- Is slow-roll quintessence viable today? m_chi <=~ 10 H0 ? **{de['quintessence_possible']}**")
     lines.append("")
-    lines.append("**推导结论（D）：** 在该作用量与由 A_s 定出的 lambda0 下，")
-    lines.append("场在今日不可能以 w≈−0.987 慢滚；DE 只能来自 **常数 Vc**（或框架外新自由度）。")
-    lines.append("这不是预设，而是 m/H0 与 KG 方程的直接结果。")
+    lines.append("**Derived conclusion (D):** for this action and the lambda0 fixed by A_s,")
+    lines.append("the field cannot slow-roll today with w~-0.987; DE can only come from **the constant Vc** (or new degrees of freedom beyond this framework).")
+    lines.append("This is not presupposed; it follows directly from m/H0 and the KG equation.")
     lines.append("")
 
-    lines.append("## E. 暗物质：仅参数标度，不预设成功")
+    lines.append("## E. Dark matter: parametric scaling only, no presupposed success")
     lines.append("")
     Hinf = math.sqrt(obs50["V0"] / (3 * M_PL**2))
     Phi0_11 = Phi0(11.1)
     lines.append(f"- Phi0(xi=11.1)={Phi0_11:.4e} GeV, H_inf={Hinf:.4e} GeV")
-    lines.append("- 共形恒等式 => E 帧 m_psi=g Phi0 **与 chi 无关**，树图 chi-psi-psi = 0（推导支持）")
-    lines.append("- 引力产生：n_psi ~ H_inf^3 exp(-pi m_psi/H_inf)（重场标准估计，系数 O(1) 未从第一性原理钉死）")
-    lines.append("- 稀释：(a_end/a0)^3 在 w=0 再加热下 **∝ T_reh**（推导），故 Omega 对 T_reh 线性、对 m_psi 指数敏感")
+    lines.append("- Conformal identity => in the Einstein frame m_psi=g Phi0 is **independent of chi**, and the tree-level chi-psi-psi vertex = 0 (supported by the derivation)")
+    lines.append("- Gravitational production: n_psi ~ H_inf^3 exp(-pi m_psi/H_inf) (standard heavy-field estimate; the O(1) coefficient is not pinned down from first principles)")
+    lines.append("- Dilution: (a_end/a0)^3 under w=0 reheating is **propto T_reh** (derived), so Omega is linear in T_reh and exponentially sensitive to m_psi")
     lines.append("")
-    lines.append("| g | m_psi | m_psi/H_inf | Omega_rel(T=1e9, 归一前) | Omega_rel(T=4e5) |")
+    lines.append("| g | m_psi | m_psi/H_inf | Omega_rel(T=1e9, unnormalized) | Omega_rel(T=4e5) |")
     lines.append("|---|---|---|---|---|")
     ref = Omega_psi_scaling(4e12, Hinf, 1e9)
     for g in (1e-5, 2.3e-5, 1e-4):
@@ -558,27 +558,27 @@ def main() -> None:
         o2 = Omega_psi_scaling(mpsi, Hinf, 4e5) / ref
         lines.append(f"| {g:.2e} | {mpsi:.3e} | {mpsi/Hinf:.3f} | {o1:.4f} | {o2:.4e} |")
     lines.append("")
-    lines.append("**推导结论（E）：** 机制在数学上允许在 m_psi~H_inf、T_reh~1e9 附近调到观测丰度；")
-    lines.append("低 T_reh 通道不足。**不**从第一性原理得到唯一 g 或 Omega=0.12。")
-    lines.append("稳定化若诉诸 Z2^psi gauge，仍是 **额外 UV 假设**，推导链在此分支。")
+    lines.append("**Derived conclusion (E):** the mechanism mathematically allows tuning to the observed abundance near m_psi~H_inf and T_reh~1e9;")
+    lines.append("the low-T_reh channel is insufficient. A unique g or Omega=0.12 is **not** obtained from first principles.")
+    lines.append("If stabilization appeals to a Z2^psi gauge symmetry, that remains an **additional UV assumption**, and the derivation chain branches here.")
     lines.append("")
 
-    lines.append("## F. 不预设时的综合判断")
+    lines.append("## F. Overall verdict without presuppositions")
     lines.append("")
-    lines.append("| 问题 | 从作用量+观测输入推出什么 |")
+    lines.append("| Question | What follows from the action + observational inputs |")
     lines.append("|---|---|")
-    lines.append("| Einstein 帧是否 Starobinsky 型 | **是**（推导） |")
-    lines.append("| r, n_s 函数形式 | **是**，且精确慢滚可算 |")
-    lines.append("| lambda0 | **依赖 N 与 xi**；N=50,xi=11.1 时精确值约 6.7e-8 |")
-    lines.append("| N 与 T_reh | **依赖宇宙学匹配输入**；须报告推导 N(T) 而非单一教条公式 |")
-    lines.append("| 同场能否做今日 DE | **否**（m/H0 与 KG） |")
-    lines.append("| DE 来自 Vc | **是**（常数项）；数值仍需观测标定 |")
-    lines.append("| DM | **条件性**；顶点关闭由共形恒等式支持；丰度未第一性原理算尽 |")
-    lines.append("| 单一场统一暴涨+DM+DE | **DE 部分不成立**；暴涨+条件性 DM 可立 |")
+    lines.append("| Is the Einstein frame Starobinsky-like | **yes** (derived) |")
+    lines.append("| Functional forms of r, n_s | **yes**, and exact slow roll can be computed |")
+    lines.append("| lambda0 | **depends on N and xi**; at N=50, xi=11.1 the exact value is ~6.7e-8 |")
+    lines.append("| N and T_reh | **depends on the cosmological matching inputs**; the derived N(T) must be reported rather than a single dogmatic formula |")
+    lines.append("| Can the same field be today's DE | **no** (m/H0 and the KG equation) |")
+    lines.append("| DE from Vc | **yes** (the constant term); its value still needs observational calibration |")
+    lines.append("| DM | **conditional**; the vanishing vertex is supported by the conformal identity; the abundance is not fully computed from first principles |")
+    lines.append("| Single field unifying inflation+DM+DE | **fails for the DE part**; inflation + conditional DM stands |")
     lines.append("")
-    lines.append("报告文件：scripts/derivation_report.md")
+    lines.append("Report file: scripts/derivation_report.md")
     lines.append("")
-    lines.append("[独立推导完成]")
+    lines.append("[independent derivation complete]")
 
     OUT.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fig.3 — Domain-wall two-frame comparison: F(varphi) and V_E / sigma_E artifact."""
+"""Fig.3 -- Domain-wall two-frame comparison: F(varphi) and V_E / sigma_E artifact."""
 from __future__ import annotations
 
 import sys

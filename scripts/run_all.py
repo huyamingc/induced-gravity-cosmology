@@ -15,7 +15,7 @@ sys.path.insert(0, str(HERE))
 # so the artifact is fine but the script exits 1 and the traceback looks like a
 # failure.  runpy executes every script in THIS process, so one reconfigure here
 # covers all of them.  Running a single script directly still needs
-# PYTHONIOENCODING=utf-8 (see the project-root README.md, section "数值脚本").
+# PYTHONIOENCODING=utf-8 (see the project-root README.md, section "Numerical scripts").
 for _stream in (sys.stdout, sys.stderr):
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")

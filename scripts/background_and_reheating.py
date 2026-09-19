@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 r"""
-background_and_reheating.py  (缺失脚本补全 #1 + #3  [P0])
+background_and_reheating.py  (P0 backfill #1 + #3)
 =========================================================
-需求原文（评审工作区 review_workspace/ 已在定稿后清理；此处保留摘录）§C:
-  "[P0] 背景演化数值积分（非套解析式）：解 chi''+3H chi'+V_E'=0（solve_ivp，e-folds 为自变量），
-        取 eps_H=-Hdot/H^2、eta_H，扫 xi 并钉 A_s，得 (N,n_s,r)。现缺：脚本从未积分 KG。"
-  "[P0] 再加热双通道：脉冲通道 rho_rad=N_eff H^4/192pi^2 -> H_reh -> T_reh
-        与反常通道（真实 b_i、alpha_i(m_chi)）各自独立算，并做 Gamma/H_reh 与 BBN 约束。"
+Original requirement (the review workspace review_workspace/ was removed after the final draft; excerpt kept) Sec. C:
+  "[P0] Numerical integration of the background evolution (not plugging into analytic formulas): solve chi''+3H chi'+V_E'=0 (solve_ivp, e-folds as the independent variable),
+        take eps_H=-Hdot/H^2 and eta_H, scan xi with A_s pinned, and get (N,n_s,r). Currently missing: the scripts never integrate the KG equation."
+  "[P0] Reheating two channels: the pulse channel rho_rad=N_eff H^4/192pi^2 -> H_reh -> T_reh
+        and the anomaly channel (real b_i, alpha_i(m_chi)) are each computed independently, and the Gamma/H_reh and BBN constraints are checked."
 
-本脚本做三件事:
-  [A] 真正积分背景: 以 e-fold N 为自变量解
+This script does three things:
+  [A] Genuinely integrate the background: with e-fold N as the independent variable, solve
           dchi/dN = p,          dp/dN = -3p - V_E'(chi)/H^2
           H^2 = V_E / (3 M_P^2 - p^2/2)
-      从慢滚末 x_end 起积到振荡相，输出 eps_H(N)、w(N)、<w>(N)、振荡周期，
-      复核论文 L.319 (V_end=0.285V0) 与 P0-I/P0-D 的 rho_end。
-  [B] N 窗上界: 用论文**自己的** Table I (tab:sens) 的 T_reh*(N) 趋势外推，
-      与瞬时再加热上限 T_reh^inst(N)=(30 rho_end/(pi^2 g_*))^{1/4} 求交，
-      定出 N_max；并独立从第一性原理推 T_reh*(N) 以交叉核对。
-  [C] 再加热双通道:
-      (i) 脉冲/引力通道 rho_rad(a_end) = N_eff H^4/(192 pi^2) -> T_max
-      (ii) 共形反常通道 Gamma = b3^2 alpha_s^2 m_chi^3/(16 pi^3 M_P^2 (6+1/xi))
-           —— 用 1-loop 跑动的**物理** alpha_s(m_chi)，而非论文未声明的 alpha_s=0.1
-      并做 Gamma/H_reh、BBN(>=10 MeV) 约束。
+      integrate from the end of slow roll x_end into the oscillation phase, output eps_H(N), w(N), <w>(N), the oscillation period,
+      and double-check the paper's L.319 (V_end=0.285V0) and the P0-I/P0-D rho_end.
+  [B] Upper bound of the N window: extrapolate the T_reh*(N) trend of the paper's **own** Table I (tab:sens),
+      intersect it with the instantaneous-reheating upper bound T_reh^inst(N)=(30 rho_end/(pi^2 g_*))^{1/4},
+      to determine N_max; also derive T_reh*(N) independently from first principles as a cross-check.
+  [C] Reheating two channels:
+      (i) pulse/gravitational channel rho_rad(a_end) = N_eff H^4/(192 pi^2) -> T_max
+      (ii) conformal-anomaly channel Gamma = b3^2 alpha_s^2 m_chi^3/(16 pi^3 M_P^2 (6+1/xi))
+           -- using the 1-loop running **physical** alpha_s(m_chi), not the undeclared alpha_s=0.1
+      and the Gamma/H_reh and BBN (>=10 MeV) constraints are checked.
 
-输出: scripts/background_and_reheating.md / .json
+Output: scripts/background_and_reheating.md / .json
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from scipy.optimize import brentq
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# ---------------- 常量 / 论文锁定值 ----------------
+# ---------------- constants / paper-locked values ----------------
 M_P = 2.435e18
 XI = 11.1
 BETA_P = 2.0 / math.sqrt(6.0 + 1.0 / XI)          # 0.810435
@@ -55,13 +55,13 @@ X_END = 0.7636653
 
 
 def lam0_of_N(N: float) -> float:
-    r"""论文**锁定**约定 (tab:sens): lambda0 = 6.70e-8 x (50/N)^2.
+    r"""Paper-**locked** convention (tab:sens): lambda0 = 6.70e-8 x (50/N)^2.
 
-    注意: 论文 App.A 的解析式 lambda0 = 12 pi^2 xi^2 (6+1/xi) A_s/N^2 给 7.465e-8,
-    那是被正文明确降级为 "analytic, not the locked-N table value" 的另一条轨
-    (L.848)。本脚本一律用**锁定轨** 1.675e-4/N^2, 它逐行复现 tab:sens:
-        N=48 -> 7.27e-8 (表 7.24)   N=50 -> 6.70e-8 (表 6.70)
-        N=52 -> 6.19e-8 (表 6.21)   N=55 -> 5.54e-8 (表 5.58)
+    Note: the analytic formula in the paper's App.A, lambda0 = 12 pi^2 xi^2 (6+1/xi) A_s/N^2, gives 7.465e-8;
+    that is the other track, explicitly demoted by the main text to "analytic, not the locked-N table value"
+    (L.848). This script always uses the **locked track** 1.675e-4/N^2, which reproduces tab:sens row by row:
+        N=48 -> 7.27e-8 (table 7.24)   N=50 -> 6.70e-8 (table 6.70)
+        N=52 -> 6.19e-8 (table 6.21)   N=55 -> 5.54e-8 (table 5.58)
     """
     return 1.675e-4 / N**2
 
@@ -88,7 +88,7 @@ H_INF = H_inf_of_N(N_FID)
 M_CHI = math.sqrt(2.0 * V0_FID * BETA_P**2 / M_P**2)
 
 
-# ---------------- [A] 背景积分 ----------------
+# ---------------- [A] background integration ----------------
 def V_E(x: float, N: float = N_FID, Vc: float = 0.0) -> float:
     return V0_of_N(N) * (1.0 - math.exp(-x))**2 + Vc * math.exp(-2.0 * x)
 
@@ -104,32 +104,36 @@ def eps_V(x: float) -> float:
 
 
 def slowroll_to_end(n_steps: int = 20000) -> dict:
-    r"""阶段一: 从 eps_V = 0.05 的慢滚点积分**e-fold**方程到 eps_V = 1 (= x_end).
+    r"""Stage one: integrate the **e-fold** equations from the eps_V = 0.05 slow-roll
+    point down to eps_V = 1 (= x_end).
 
-    论文把 x_end 定义在 eps_V = 1 (e^{-x}=1/(1+sqrt2 beta))。但 eps_V = 1 处慢滚
-    已失效, 不能用慢滚初值直接当作 x_end 的初值 —— 必须从慢滚区内积过来, 让 K_end
-    由动力学定出。e-fold 方程 dchi/dN = p, dp/dN = -3p - V'/H^2,
-    H^2 = V/(3 - p^2/2) 在 V>0 时非奇异 (V->0 才退化, 那时已进入振荡相)。
+    The paper defines x_end at eps_V = 1 (e^{-x}=1/(1+sqrt2 beta)). But slow roll
+    has already failed at eps_V = 1, so the slow-roll velocity cannot be used
+    directly as the initial value at x_end -- one must integrate in from the
+    slow-roll region and let the dynamics determine K_end. The e-fold equations
+    are dchi/dN = p, dp/dN = -3p - V'/H^2,
+    H^2 = V/(3 - p^2/2), which is non-singular for V>0 (it only degenerates as
+    V->0, by which time the oscillation phase has begun).
 
-    单位 M_P = 1。
+    Units: M_P = 1.
     """
     def solve_p(x):
-        """吸引子值 p = chi_dot/H = -V'/V (M_P 单位), 等价于 eps_H = (1/2)(V'/V)^2."""
+        """Attractor value p = chi_dot/H = -V'/V (M_P units), equivalent to eps_H = (1/2)(V'/V)^2."""
         V = V_E(x) / M_P**4
         dV = dV_E_dx(x) * BETA_P / M_P**4
         return -dV / V
 
-    # x_start: eps_V = 0.05  (大约 N=50 之前)
+    # x_start: eps_V = 0.05  (roughly before N=50)
     x_start = -math.log(math.sqrt(0.05 / (2.0 * BETA_P**2)))
     chi, p = x_start / BETA_P, solve_p(x_start)
 
     def rhs(chi, p):
         r"""dp/dN = -3p + p*eps_H - V'/H^2,  eps_H = p^2/2,  H^2 = V/(3-p^2/2).
 
-        推导: p = chi_dot/H, dp/dN = chi_ddot/H^2 + p*eps_H,
+        Derivation: p = chi_dot/H, dp/dN = chi_ddot/H^2 + p*eps_H,
               chi_ddot = -3H chi_dot - V'  ==>  dp/dN = -3p - V'/H^2 + p*eps_H.
-        注意 -(3-p^2/2) = -3+eps_H, 故 dp/dN = -(3-p^2/2)(p + V'/V).
-        吸引子 dp/dN=0 给 p = -V'/V, 于是 eps_H = (1/2)(V'/V)^2 = eps_V **精确**.
+        Note -(3-p^2/2) = -3+eps_H, hence dp/dN = -(3-p^2/2)(p + V'/V).
+        The attractor dp/dN=0 gives p = -V'/V, so eps_H = (1/2)(V'/V)^2 = eps_V **exactly**.
         """
         x = BETA_P * chi
         V = V_E(x) / M_P**4
@@ -149,7 +153,7 @@ def slowroll_to_end(n_steps: int = 20000) -> dict:
         chi += dN / 6.0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0])
         p += dN / 6.0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])
         N += dN
-    # 线性插值到 eps_V = 1 精确
+    # linear interpolation to hit eps_V = 1 exactly
     eps_now = eps_V(BETA_P * chi)
     if eps_now > eps_prev:
         fr = (1.0 - eps_prev) / (eps_now - eps_prev)
@@ -170,10 +174,11 @@ def slowroll_to_end(n_steps: int = 20000) -> dict:
 
 
 def background(N_span: float = 30.0, n_steps: int = 90000) -> dict:
-    r"""阶段二: 从阶段一的 x_end 出发, 以宇宙时积分**振荡相**.
+    r"""Stage two: from the stage-one x_end, integrate the **oscillation phase** in cosmic time.
 
-    单位 M_P = 1。精确关系 Hdot = -chi_dot^2/2  ==>  eps_H = chi_dot^2/(2H^2) = 3K/rho。
-    用自写定步长 RK4 (solve_ivp 在此刚性标度下步长控制失效, 实测挂死)。
+    Units: M_P = 1. Exact relation Hdot = -chi_dot^2/2  ==>  eps_H = chi_dot^2/(2H^2) = 3K/rho.
+    A hand-written fixed-step RK4 is used (solve_ivp loses step control on this stiff
+    scaling and hangs in practice).
     """
     sr = slowroll_to_end()
     chi_end, chidot_end = sr["chi_end"], sr["chidot_end"]
@@ -213,7 +218,7 @@ def background(N_span: float = 30.0, n_steps: int = 90000) -> dict:
         V_s[i] = V_now
         K_s[i] = K_now
         H_s[i] = math.sqrt(max(rho_now / 3.0, 0.0))
-        # 提前停: 已积够 e-folds
+        # early stop: enough e-folds accumulated
         if Nacc >= N_span:
             xs, Ns, x_s, V_s, K_s, H_s = (xs[:i + 1], Ns[:i + 1], x_s[:i + 1],
                                           V_s[:i + 1], K_s[:i + 1], H_s[:i + 1])
@@ -230,12 +235,12 @@ def background(N_span: float = 30.0, n_steps: int = 90000) -> dict:
 
 
 def osc_period_efolds() -> float:
-    """振荡周期 (e-folds): 2 pi H_inf / m_chi."""
+    """Oscillation period (e-folds): 2 pi H_inf / m_chi."""
     return 2.0 * math.pi * H_INF / M_CHI
 
 
-# ---------------- [B] N 窗上界 ----------------
-# 论文 Table I (tab:sens) 的 T_reh* 列 (L.263-268)
+# ---------------- [B] upper bound of the N window ----------------
+# T_reh* column of the paper's Table I (tab:sens) (L.263-268)
 TABLE_I = {48: (7.24e-8, 0.9600, 0.00459, 1.0e5),
            49: (6.96e-8, 0.9608, 0.00441, 1.4e6),
            50: (6.70e-8, 0.9616, 0.00425, 4.4e7),
@@ -245,7 +250,7 @@ TABLE_I = {48: (7.24e-8, 0.9600, 0.00459, 1.0e5),
 
 
 def fit_table_slope() -> dict:
-    """由论文自己的表拟合 ln T_reh* = ln A + s N."""
+    """Fit ln T_reh* = ln A + s N to the paper's own table."""
     Ns = np.array(sorted(TABLE_I), dtype=float)
     Ts = np.array([TABLE_I[int(n)][3] for n in Ns])
     A = np.vstack([Ns, np.ones_like(Ns)]).T
@@ -254,7 +259,7 @@ def fit_table_slope() -> dict:
 
 
 def T_reh_inst(N: float) -> float:
-    """瞬时再加热上限: rho_rad = rho_end(N) => T = (30 rho_end/(pi^2 g_*))^{1/4}."""
+    """Instantaneous-reheating bound: rho_rad = rho_end(N) => T = (30 rho_end/(pi^2 g_*))^{1/4}."""
     return (30.0 * rho_end_of_N(N) / (math.pi**2 * G_STAR)) ** 0.25
 
 
@@ -263,15 +268,15 @@ def T_reh_star_from_table(N: float, fit: dict) -> float:
 
 
 def T_reh_star_first_principles(N: float) -> float:
-    r"""第一性原理: 固定 k_*=0.05 Mpc^-1 的膨胀史匹配.
+    r"""First principles: expansion-history matching at fixed k_*=0.05 Mpc^-1.
 
     a_0/a_* = e^N (rho_end/rho_rad)^{1/3} (g_{*s,reh}/g_{*s,0})^{1/3} T_reh/T_0
-    且 a_0/a_* = (a_0 H_0/k_*) (H_*/H_0) = K_PIVOT_OVER_A0H0^{-1} H_*/H_0
+    and a_0/a_* = (a_0 H_0/k_*) (H_*/H_0) = K_PIVOT_OVER_A0H0^{-1} H_*/H_0
     =>  T_reh = e^{3N} rho_end (30/(pi^2 g_*)) (g_{*s,reh}/g_{*s,0})
                 ( K_PIVOT_OVER_A0H0 * H_0 /(T_0 H_*) )^3
-    其中 H_* 为视界出射时的哈勃率 (平台处 V(x_*)).
+    where H_* is the Hubble rate at horizon exit (on the plateau, V(x_*)).
     """
-    # x_* : e^{2x} - 2x = 2 beta^2 N  (Starobinsky 型吸引子, 论文 App.)
+    # x_* : e^{2x} - 2x = 2 beta^2 N  (Starobinsky-type attractor, paper App.)
     def f(xs):
         return math.exp(2 * xs) - 2 * xs - 2 * BETA_P**2 * N
     x_star = brentq(f, 0.0, 40.0)
@@ -286,7 +291,7 @@ def solve_N_max() -> dict:
     fit = fit_table_slope()
     f = lambda N: T_reh_star_from_table(N, fit) - T_reh_inst(N)
     N_hi = brentq(f, 50.0, 70.0, xtol=1e-10)
-    # 用论文自称的上限 V_end^{1/4}
+    # using the paper's self-declared bound V_end^{1/4}
     g = lambda N: T_reh_star_from_table(N, fit) - V_end_of_N(N) ** 0.25
     N_hi_naive = brentq(g, 50.0, 70.0, xtol=1e-10)
     return {"fit": fit, "N_max_proper": N_hi, "N_max_naive_Vend14": N_hi_naive,
@@ -300,15 +305,15 @@ def solve_N_max() -> dict:
             "Vend14_50": V_end_of_N(50.0) ** 0.25}
 
 
-# ---------------- [C] 再加热双通道 ----------------
+# ---------------- [C] reheating two channels ----------------
 def alpha_s_1loop(mu_gev: float, b3: float = 7.0,
                   mu_z: float = 91.1876, a_s_z: float = 0.1179) -> float:
-    """1-loop 跑动 alpha_s(mu) = a_z/(1 + (b3/2pi) a_z ln(mu/mu_z))."""
+    """1-loop running alpha_s(mu) = a_z/(1 + (b3/2pi) a_z ln(mu/mu_z))."""
     return a_s_z / (1.0 + (b3 / (2.0 * math.pi)) * a_s_z * math.log(mu_gev / mu_z))
 
 
 def gamma_anom(m_chi: float, alpha_s: float, b3: float = 7.0) -> float:
-    """论文 L.342: Gamma ~ b3^2 alpha_s^2 m_chi^3 /(16 pi^3 M_P^2 (6+1/xi))."""
+    """Paper L.342: Gamma ~ b3^2 alpha_s^2 m_chi^3 /(16 pi^3 M_P^2 (6+1/xi))."""
     return (b3**2 * alpha_s**2 * m_chi**3
             / (16.0 * math.pi**3 * M_P**2 * (6.0 + 1.0 / XI)))
 
@@ -319,7 +324,7 @@ def T_reh_from_gamma(Gamma: float, g_star: float = G_STAR) -> float:
 
 def reheating_channels(N_eff: float = 10.0) -> dict:
     out = {}
-    # (i) 脉冲/引力通道: rho_rad(a_end) = N_eff H^4/(192 pi^2)
+    # (i) pulse/gravitational channel: rho_rad(a_end) = N_eff H^4/(192 pi^2)
     rho_pulse = N_eff * H_INF**4 / (192.0 * math.pi**2)
     T_pulse = (30.0 * rho_pulse / (math.pi**2 * G_STAR)) ** 0.25
     out["pulse"] = {
@@ -330,7 +335,7 @@ def reheating_channels(N_eff: float = 10.0) -> dict:
         "H_reh": math.sqrt(rho_end_of_N(N_FID) / (3.0 * M_P**2)),
         "a_reh_over_a_end": rho_end_of_N(N_FID) / rho_pulse,
     }
-    # (ii) 反常通道
+    # (ii) anomaly channel
     a_s_phys = alpha_s_1loop(M_CHI)
     rows = []
     for label, a_s in (("physical (1-loop)", a_s_phys), ("paper-ish 0.1", 0.1)):
@@ -393,105 +398,105 @@ def main() -> None:
               encoding="utf-8") as f:
         json.dump(out, f, indent=2, ensure_ascii=False, default=float)
 
-    # ---------------- 报告 ----------------
+    # ---------------- report ----------------
     L = []
     A = L.append
-    A("# 背景演化积分与再加热双通道（缺失脚本补全 #1 / #3）\n")
-    A("对象：`paper_prd_merged.tex` L.319（$V_{\\rm end}$）、L.325（$K_{\\rm end}$）、")
-    A("L.345（$T_{\\rm reh,max}$）、L.349–357（$N$ 窗与 Table I）、L.361–367（脉冲通道）、")
-    A("L.338–342（反常通道）。本脚本真正积分 KG 方程，并用论文自己的表定 $N$ 窗上界。\n")
+    A("# Background-evolution integration and the two reheating channels (P0 backfill #1 / #3)\n")
+    A("Targets: `paper_prd_merged.tex` L.319 ($V_{\\rm end}$), L.325 ($K_{\\rm end}$),")
+    A("L.345 ($T_{\\rm reh,max}$), L.349-357 ($N$ window and Table I), L.361-367 (pulse channel),")
+    A("L.338-342 (anomaly channel). This script genuinely integrates the KG equation and uses the paper's own table to set the upper bound of the $N$ window.\n")
 
     c = out["constants"]
     b = out["background"]
-    A("## 1. 精确背景积分\n")
-    A(f"参数：$\\xi={c['xi']}$，$\\beta={c['beta_p']:.6f}$，$V_0(50)={c['V0_50']:.4e}$ GeV$^4$，")
-    A(f"$H_{{\\rm inf}}={c['H_inf_50']:.4e}$ GeV，$m_\\chi={c['m_chi']:.4e}$ GeV，")
-    A(f"$m_\\chi/H_{{\\rm inf}}={c['m_chi_over_H_inf']:.4f}$。\n")
-    A(f"**振荡周期 $=2\\pi H_{{\\rm inf}}/m_\\chi={c['osc_period_efolds']:.3f}$ e-folds**——")
-    A("即凝聚体每个 Hubble 时间里只振荡约 $2/3$ 个周期，**并不处于快振荡（$m_\\chi\\gg H$）区**。")
-    A("这一点决定了后暴胀阶段既不能简单当作 $w=0$ 的粉尘，也不能用标准 parametric resonance 处理。\n")
-    A("| 量 | 本脚本动力学积分 | 论文值 | 判定 |")
+    A("## 1. Exact background integration\n")
+    A(f"Parameters: $\\xi={c['xi']}$, $\\beta={c['beta_p']:.6f}$, $V_0(50)={c['V0_50']:.4e}$ GeV$^4$,")
+    A(f"$H_{{\\rm inf}}={c['H_inf_50']:.4e}$ GeV, $m_\\chi={c['m_chi']:.4e}$ GeV,")
+    A(f"$m_\\chi/H_{{\\rm inf}}={c['m_chi_over_H_inf']:.4f}$.\n")
+    A(f"**Oscillation period $=2\\pi H_{{\\rm inf}}/m_\\chi={c['osc_period_efolds']:.3f}$ e-folds** --")
+    A("i.e. the condensate completes only about $2/3$ of a cycle per Hubble time, so it is **not in the fast-oscillation ($m_\\chi\\gg H$) regime**.")
+    A("This decides that the post-inflationary stage can be treated neither as simple $w=0$ dust nor with the standard parametric resonance.\n")
+    A("| Quantity | This script, dynamical integration | Paper value | Verdict |")
     A("|---|---|---|---|")
-    A(f"| $x_{{\\rm end}}$（$\\epsilon_V=1$ 处） | {sr['x_end_dyn']:.6f} | {X_END:.6f}（round-3 / 论文 L.317） | ✓ |")
-    A(f"| $\\epsilon_H(x_{{\\rm end}})$ | {sr['eps_H_end']:.5f} | round-3 $0.49871$ | {'✓' if abs(sr['eps_H_end']-0.49871) < 0.01 else '✗'} |")
-    A(f"| $V_{{\\rm end}}/V_0$ | {sr['V_end_frac_of_V0']:.6f} | 0.285（L.319） | ✓ |")
-    _kend_note = "L.325 称 $K_{\\rm end}\\approx V_{\\rm end}$（=1）"
+    A(f"| $x_{{\\rm end}}$ (at $\\epsilon_V=1$) | {sr['x_end_dyn']:.6f} | {X_END:.6f} (round-3 / paper L.317) | [OK] |")
+    A(f"| $\\epsilon_H(x_{{\\rm end}})$ | {sr['eps_H_end']:.5f} | round-3 $0.49871$ | {'[OK]' if abs(sr['eps_H_end']-0.49871) < 0.01 else '[FAIL]'} |")
+    A(f"| $V_{{\\rm end}}/V_0$ | {sr['V_end_frac_of_V0']:.6f} | 0.285 (L.319) | [OK] |")
+    _kend_note = "L.325 states $K_{\\rm end}\\approx V_{\\rm end}$ (=1)"
     A(f"| $K_{{\\rm end}}/V_{{\\rm end}}$ | {sr['K_over_V_end']:.5f} | "
-      + _kend_note + " | ✗ 见下 |")
-    A(f"| $\\rho_{{\\rm end}}/V_{{\\rm end}}$ | {sr['rho_end']/sr['V_end']:.5f} | round-3 $1.19938$ | {'✓' if abs(sr['rho_end']/sr['V_end']-1.19938) < 0.02 else '✗'} |")
-    A(f"| $\\langle w\\rangle$（0–1） | {b['wbar_0_1']:.5f} | — | — |")
-    A(f"| $\\langle w\\rangle$（0–2） | {b['wbar_0_2']:.5f} | round-3 首个周期 $-0.1043$ | 同号同量级 |")
-    A(f"| $\\langle w\\rangle$（0–3） | {b['wbar_0_3']:.5f} | — | — |")
-    A(f"| $\\langle w\\rangle$（0–{b['N_reached']:.2f}，全部） | {b['wbar_0_end']:.5f} | round-3 $w_{{\\rm eff}}=-0.0019$ | 见评注 |")
-    A(f"| $x_{{\\rm min}}$（积分区间内） | {b['x_min']:.5f} | — | 未到达 $\\Phi=0$ |")
+      + _kend_note + " | [FAIL] see below |")
+    A(f"| $\\rho_{{\\rm end}}/V_{{\\rm end}}$ | {sr['rho_end']/sr['V_end']:.5f} | round-3 $1.19938$ | {'[OK]' if abs(sr['rho_end']/sr['V_end']-1.19938) < 0.02 else '[FAIL]'} |")
+    A(f"| $\\langle w\\rangle$ (0-1) | {b['wbar_0_1']:.5f} | -- | -- |")
+    A(f"| $\\langle w\\rangle$ (0-2) | {b['wbar_0_2']:.5f} | round-3 first cycle $-0.1043$ | same sign and order |")
+    A(f"| $\\langle w\\rangle$ (0-3) | {b['wbar_0_3']:.5f} | -- | -- |")
+    A(f"| $\\langle w\\rangle$ (0-{b['N_reached']:.2f}, all) | {b['wbar_0_end']:.5f} | round-3 $w_{{\\rm eff}}=-0.0019$ | see comment |")
+    A(f"| $x_{{\\rm min}}$ (within the integration range) | {b['x_min']:.5f} | -- | $\\Phi=0$ never reached |")
     A("")
-    A(f"（积分区间 $N\\in[0,{b['N_reached']:.2f}]$，共 {b['n_points']} 点；"
-      f"$\\langle w\\rangle$ 逐步趋于 0：$w=0$ 的粉尘行为在若干振荡后建立。）")
-    A("**注意**：以宇宙时为自变量的积分只能覆盖最初几个 e-fold——物质型膨胀下 "
-      "$N(t)=\\frac23\\ln(t/t_i)$ 只是对数增长，要覆盖完整的 $N_{\\rm reh}\\simeq20$ "
-      "需要 $t$ 增长 $e^{30}$ 倍，数值上不可行。")
-    A("因此 $\\langle w\\rangle$ 的**渐近值**应解析取 $w\\to0$；本表的早期均值只用于说明"
-      "首个周期的瞬态（$\\langle w\\rangle<0$，与 round-3 的 $-0.1043$ 同量级）。\n")
-    A("**关键更正（相对本脚本 §初版）**：$x_{\\rm end}$ 由 $\\epsilon_V=1$ 定义，但该点慢滚已失效，"
-      "**不能**把慢滚速度 $\\dot\\chi=-V'/(3H)$ 直接当作 $x_{\\rm end}$ 的初值"
-      "（那样会强行得到 $K_{\\rm end}=V_{\\rm end}/3$、$\\epsilon_H=3/4$，是初值而非动力学结果）。")
-    A("本脚本改为从 $\\epsilon_V=0.05$ 的慢滚区用 e-fold 方程积到 $\\epsilon_V=1$，"
-      "让 $K_{\\rm end}$ 由动力学定出。\n")
-    A("论文 L.325 写 $K_{\\rm end}=\\frac12\\dot\\chi_{\\rm end}^2=\\epsilon_{\\rm end}V_{\\rm end}\\approx V_{\\rm end}$，")
-    A("而精确关系是 $K=\\epsilon_H V/(3-\\epsilon_H)$；本积分给 "
-      f"$K_{{\\rm end}}/V_{{\\rm end}}={sr['K_over_V_end']:.4f}$，")
-    A("比论文的 $\\approx1$ 小一个因子 $\\sim5$，$K_{\\rm end}/\\Delta V_J$ 相应减小（P0-D 定量版）。")
-    A(f"并且 $\\rho_{{\\rm end}}=K+V={sr['rho_end']/sr['V_end']:.5f}V_{{\\rm end}}$，"
-      f"即 round-3 的 $1.19938\\,V_{{\\rm end}}$。\n")
+    A(f"(Integration range $N\\in[0,{b['N_reached']:.2f}]$, {b['n_points']} points in total;"
+      f"$\\langle w\\rangle$ tends to 0 step by step: the $w=0$ dust behavior is established after a few oscillations.)")
+    A("**Note**: the cosmic-time integration can only cover the first few e-folds -- under matter-like expansion "
+      "$N(t)=\\frac23\\ln(t/t_i)$ grows only logarithmically, and covering the full $N_{\\rm reh}\\simeq20$ "
+      "would need $t$ to grow by $e^{30}$, which is numerically infeasible.")
+    A("Therefore the **asymptotic value** of $\\langle w\\rangle$ should be taken analytically as $w\\to0$; the early-time means in this table only illustrate"
+      "the transient of the first cycle ($\\langle w\\rangle<0$, same order as the round-3 $-0.1043$).\n")
+    A("**Key correction (relative to the first version of this script)**: $x_{\\rm end}$ is defined by $\\epsilon_V=1$, but slow roll has already failed there,"
+      " so the slow-roll velocity $\\dot\\chi=-V'/(3H)$ must **not** be used directly as the initial value at $x_{\\rm end}$"
+      " (that would force $K_{\\rm end}=V_{\\rm end}/3$ and $\\epsilon_H=3/4$ -- an initial value, not a dynamical result).")
+    A("Instead this script integrates the e-fold equations from the $\\epsilon_V=0.05$ slow-roll region up to $\\epsilon_V=1$,"
+      " letting the dynamics determine $K_{\\rm end}$.\n")
+    A("Paper L.325 writes $K_{\\rm end}=\\frac12\\dot\\chi_{\\rm end}^2=\\epsilon_{\\rm end}V_{\\rm end}\\approx V_{\\rm end}$,")
+    A("while the exact relation is $K=\\epsilon_H V/(3-\\epsilon_H)$; this integration gives "
+      f"$K_{{\\rm end}}/V_{{\\rm end}}={sr['K_over_V_end']:.4f}$,")
+    A("a factor $\\sim5$ smaller than the paper's $\\approx1$, and $K_{\\rm end}/\\Delta V_J$ is reduced accordingly (quantitative version of P0-D).")
+    A(f"Moreover $\\rho_{{\\rm end}}=K+V={sr['rho_end']/sr['V_end']:.5f}V_{{\\rm end}}$,"
+      f"i.e. the round-3 $1.19938\\,V_{{\\rm end}}$.\n")
 
     nw = out["N_window"]
-    A("## 2. $N$ 窗上界：用论文自己的表外推\n")
-    A(f"由论文 Table I 的 $T^*_{{\\rm reh}}(N)$ 列拟合得 $\\ln T^*_{{\\rm reh}}=\\ln A+sN$，")
-    A(f"$s={nw['fit']['slope']:.4f}$（round-3 独立得 3.025，一致）。即 $T^*_{{\\rm reh}}\\propto e^{{3N}}$。\n")
-    A("物理上限是**瞬时再加热**：$\\rho_{\\rm rad}=\\rho_{\\rm end}(N)$，")
-    A("$T^{\\rm inst}_{\\rm reh}=(30\\rho_{\\rm end}/(\\pi^2g_*))^{1/4}$。\n")
-    A("| $N$ | $T^*_{\\rm reh}$（论文表趋势） | $T^{\\rm inst}_{\\rm reh}$（正确，含 $0.411$ 因子） | $V_{\\rm end}^{1/4}$（论文自称上限） | 超限？ |")
+    A("## 2. Upper bound of the $N$ window: extrapolated from the paper's own table\n")
+    A(f"Fitting the $T^*_{{\\rm reh}}(N)$ column of the paper's Table I gives $\\ln T^*_{{\\rm reh}}=\\ln A+sN$,")
+    A(f"$s={nw['fit']['slope']:.4f}$ (round-3 independently obtains 3.025, consistent). I.e. $T^*_{{\\rm reh}}\\propto e^{{3N}}$.\n")
+    A("The physical bound is **instantaneous reheating**: $\\rho_{\\rm rad}=\\rho_{\\rm end}(N)$,")
+    A("$T^{\\rm inst}_{\\rm reh}=(30\\rho_{\\rm end}/(\\pi^2g_*))^{1/4}$.\n")
+    A("| $N$ | $T^*_{\\rm reh}$ (paper-table trend) | $T^{\\rm inst}_{\\rm reh}$ (correct, with the $0.411$ factor) | $V_{\\rm end}^{1/4}$ (paper's self-declared bound) | Exceeded? |")
     A("|---|---|---|---|---|")
     for N in (50, 55, 56, 57, 58):
         Ts = nw[f"T_reh_star_{N}"] if f"T_reh_star_{N}" in nw else (
             T_reh_star_from_table(N, nw["fit"]))
         Ti = T_reh_inst(float(N))
         A(f"| {N} | {Ts:.3e} | {Ti:.3e} | {V_end_of_N(N)**0.25:.3e} | "
-          f"{'**是**' if Ts > Ti else '否'} |")
+          f"{'**YES**' if Ts > Ti else 'NO'} |")
     A("")
-    A(f"解得 **$N_{{\\rm max}}={nw['N_max_proper']:.2f}$**（用正确的瞬时再加热上限），")
-    A(f"若改用论文自称的 $V_{{\\rm end}}^{{1/4}}$ 上限则为 $N_{{\\rm max}}={nw['N_max_naive_Vend14']:.2f}$。")
-    A("两种读法都给 $N_{\\rm max}\\approx56$。")
-    A("**故摘要/正文的 $N\\approx45$–$58$（L.250/L.296/L.298/L.706/L.780/L.794 与表题）应改为 $45$–$56$。**\n")
-    A("（第一性原理独立复算 $T^*_{{\\rm reh}}(50)="
-      f"{nw['T_reh_first_principles_50']:.3e}$ vs 论文表 {nw['table_T_reh_50']:.3e}，")
-    A("相差一个常数因子——斜率一致、常数不一致，属另一项待查的 $\\mathcal O(1)$ 口径差，")
-    A("**不影响**用论文自身趋势定出的 $N_{\\rm max}$。）\n")
+    A(f"This gives **$N_{{\\rm max}}={nw['N_max_proper']:.2f}$** (with the correct instantaneous-reheating bound),")
+    A(f"or $N_{{\\rm max}}={nw['N_max_naive_Vend14']:.2f}$ if the paper's self-declared $V_{{\\rm end}}^{{1/4}}$ bound is used instead.")
+    A("Both readings give $N_{\\rm max}\\approx56$.")
+    A("**Therefore the abstract/main-text $N\\approx45$--$58$ (L.250/L.296/L.298/L.706/L.780/L.794 and the table caption) should read $45$--$56$.**\n")
+    A("(The first-principles independent recomputation gives $T^*_{{\\rm reh}}(50)="
+      f"{nw['T_reh_first_principles_50']:.3e}$ vs the paper table {nw['table_T_reh_50']:.3e},")
+    A("differing by a constant factor -- the slopes agree, the constants do not; this is a separate $\\mathcal O(1)$ convention discrepancy left for another check,")
+    A("and it does **not** affect the $N_{\\rm max}$ determined from the paper's own trend.)\n")
 
     r = out["reheating"]
-    A("## 3. 再加热双通道\n")
-    A("### (i) 脉冲/引力通道\n")
-    A(f"$\\rho_{{\\rm rad}}(a_{{\\rm end}})=N_{{\\rm eff}}H_{{\\rm inf}}^4/(192\\pi^2)$，取 $N_{{\\rm eff}}={r['pulse']['N_eff']:g}$：")
-    A(f"$\\rho_{{\\rm rad}}={r['pulse']['rho_rad_aend']:.4e}$ GeV$^4$（论文 L.361 的 $4\\times10^{{50}}$ ✓），")
-    A(f"$\\rho_{{\\rm rad}}/\\rho_{{\\rm end}}={r['pulse']['rho_ratio_to_rho_end']:.3e}$，")
-    A(f"对应 $T={r['pulse']['T_pulse_from_rho']:.4e}$ GeV。")
-    A(f"该通道单独只能把宇宙加热到 $\\sim10^{{12}}$ GeV 量级，远低于 $T_{{\\rm reh}}\\sim10^9$ GeV 所需？")
-    A("——不，$10^{12}>10^{9}$，故该通道**单独就能满足** $T_{\\rm reh}\\sim10^9$ GeV；")
-    A("论文把 $T_{\\rm reh}\\sim10^9$ GeV 归给反常通道，但脉冲通道已足够，两者的相对权重需要说明。\n")
-    A("### (ii) 共形反常通道\n")
-    A("论文 L.342 给 $\\Gamma\\sim b_3^2\\alpha_s^2m_\\chi^3/(16\\pi^3M_P^2(6+1/\\xi))$，")
-    A("但**全文从未给出 $b_3$ 与 $\\alpha_s$ 的数值**（脚本里是手选的 $b_3=7,\\alpha_s=0.1$）。\n")
-    A("| $\\alpha_s(m_\\chi)$ 取值 | $\\alpha_s$ | $\\Gamma$ [GeV] | $T_{\\rm reh}$ [GeV] | 隐含 $N$（由 $T\\propto e^{3N}$） |")
+    A("## 3. The two reheating channels\n")
+    A("### (i) Pulse/gravitational channel\n")
+    A(f"$\\rho_{{\\rm rad}}(a_{{\\rm end}})=N_{{\\rm eff}}H_{{\\rm inf}}^4/(192\\pi^2)$, with $N_{{\\rm eff}}={r['pulse']['N_eff']:g}$:")
+    A(f"$\\rho_{{\\rm rad}}={r['pulse']['rho_rad_aend']:.4e}$ GeV$^4$ (the paper L.361 value $4\\times10^{{50}}$ [OK]),")
+    A(f"$\\rho_{{\\rm rad}}/\\rho_{{\\rm end}}={r['pulse']['rho_ratio_to_rho_end']:.3e}$,")
+    A(f"corresponding to $T={r['pulse']['T_pulse_from_rho']:.4e}$ GeV.")
+    A("One might ask whether this channel alone can only heat the universe to $\\sim10^{12}$ GeV, far below what $T_{\\rm reh}\\sim10^9$ GeV requires?")
+    A("-- No: $10^{12}>10^{9}$, so this channel **alone already satisfies** $T_{\\rm reh}\\sim10^9$ GeV;")
+    A("the paper attributes $T_{\\rm reh}\\sim10^9$ GeV to the anomaly channel, but the pulse channel already suffices; the relative weights of the two need to be stated.\n")
+    A("### (ii) Conformal-anomaly channel\n")
+    A("Paper L.342 gives $\\Gamma\\sim b_3^2\\alpha_s^2m_\\chi^3/(16\\pi^3M_P^2(6+1/\\xi))$,")
+    A("but **the paper never quotes numerical values of $b_3$ and $\\alpha_s$** (the script hand-picks $b_3=7,\\alpha_s=0.1$).\n")
+    A("| $\\alpha_s(m_\\chi)$ choice | $\\alpha_s$ | $\\Gamma$ [GeV] | $T_{\\rm reh}$ [GeV] | Implied $N$ (from $T\\propto e^{3N}$) |")
     A("|---|---|---|---|---|")
     for row in r["anomaly"]["rows"]:
         A(f"| {row['label']} | {row['alpha_s']:.5f} | {row['Gamma_GeV']:.5f} | "
           f"{row['T_reh_GeV']:.4e} | {row['N_implied_from_T_reh']:.2f} |")
     A("")
-    A("1-loop 跑动给 $\\alpha_s(3.25\\times10^{13}\\,{\\rm GeV})\\simeq"
-      f"{r['anomaly']['rows'][0]['alpha_s']:.4f}$，**不是 0.1**。")
-    A("代入物理值后 $T_{\\rm reh}$ 降到 $\\sim3\\times10^8$ GeV，")
-    A("异常通道的工作点由 $N\\simeq51$ 移到 $N\\simeq50.6$。")
-    A(f"BBN 地板 $10$ MeV：{'满足' if r['bbn_ok'] else '不满足'}。\n")
+    A("The 1-loop running gives $\\alpha_s(3.25\\times10^{13}\\,{\\rm GeV})\\simeq"
+      f"{r['anomaly']['rows'][0]['alpha_s']:.4f}$, **not 0.1**.")
+    A("Substituting the physical value lowers $T_{\\rm reh}$ to $\\sim3\\times10^8$ GeV,")
+    A("and the anomaly-channel operating point moves from $N\\simeq51$ to $N\\simeq50.6$.")
+    A(f"BBN floor $10$ MeV: {'satisfied' if r['bbn_ok'] else 'violated'}.\n")
 
     md = "\n".join(L) + "\n"
     with open(os.path.join(ROOT, "background_and_reheating.md"), "w",

@@ -1,41 +1,44 @@
-# Induced-Gravity Cosmology（EPJC 投稿仓库）
+# Induced-Gravity Cosmology (EPJC submission repository)
 
-论文 **Induced-Gravity Cosmology: Inflation, Dark Energy, and Dark Matter from a Common Scalar Origin**  
-目标期刊：**Eur. Phys. J. C**（Springer Nature `sn-jnl`；SCOAP3 全刊资助，APC=0）
+Paper: **Induced-Gravity Cosmology: Inflation, Dark Energy, and Dark Matter from a Common Scalar Origin**
+Target journal: **Eur. Phys. J. C** (Springer Nature `sn-jnl`; SCOAP3 covers the whole journal, APC = 0).
 
-## 目录结构
+## Repository layout
 
 ```text
-paper_prd_merged.tex     # 唯一正文（EPJC / sn-jnl）
-paper_prd_merged.pdf     # 本地编译产物（pdflatex ×2）
-sn-jnl.cls               # Springer Nature 期刊类
-sn-mathphys-num.bst      # 物理 numbered 参考文献样式
-figures/*.pdf            # 正文插图（fig1–fig3）
-scripts/*.py             # 数值验证与作图脚本
+paper_prd_merged.tex     # the manuscript (EPJC / sn-jnl)
+paper_prd_merged.pdf     # compiled output (pdflatex x2)
+sn-jnl.cls               # Springer Nature journal class
+sn-mathphys-num.bst      # numbered physics bibliography style
+figures/*.pdf            # figures used by the manuscript (fig1-fig3)
+scripts/*.py             # numerical verification and figure scripts
 README.md
+LICENSE                  # MIT for the code; manuscript text (c) the author
 .gitignore
+.gitattributes
 ```
 
-## 编译
+## Compilation
 
 ```powershell
-cd D:\work\papers\llun
+cd <repository root>
 pdflatex -interaction=nonstopmode paper_prd_merged.tex
 pdflatex -interaction=nonstopmode paper_prd_merged.tex
 ```
 
-依赖：`sn-jnl.cls`、`sn-mathphys-num.bst`、`figures/*.pdf`。  
-参考文献已内嵌 `thebibliography`，**无需** bibtex/biber。
+Dependencies: `sn-jnl.cls`, `sn-mathphys-num.bst`, `figures/*.pdf`.
+The bibliography is inlined as `thebibliography`; **no** bibtex/biber pass is needed.
 
-## 文档类与格式
+## Document class and format
 
 - `\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}`
-- EPJC：摘要 150–250 词；`Declarations`（Funding / Competing interests / Data / Code / Author contributions）
-- 无机构作者登记 city/country（Guiyang, Guizhou, China）
+- EPJC: abstract 150-250 words; `Declarations` (Funding / Competing interests / Data / Code / Author contributions)
+- Independent researcher; the affiliation records the city/country of residence (Guiyang, Guizhou, China). ORCID: 0009-0003-1406-0485.
+- Funding statement: no funding was received for this study.
 
-## 数值脚本
+## Numerical scripts
 
-环境（本地，勿提交 venv）：
+Environment (local; do not commit the venv):
 
 ```powershell
 python -m venv scripts\.venv
@@ -44,31 +47,48 @@ $env:PYTHONUNBUFFERED=1
 & scripts\.venv\Scripts\python.exe scripts\run_all.py
 ```
 
-主链（`scripts/run_all.py`）：锁定 $N$ 约定、KG 积分与再加热、$\psi$ Bogoliubov 指数审计、跨跃迁模方程丰度、残余精质、三张图等。
+`scripts/run_all.py` is the single entry point. It runs every verification and
+figure script in order and regenerates the reports (`scripts/*.md`, `*.json`)
+and the three figures. Measured end-to-end runtime on the author's machine
+(Python 3.13, numpy 2.4 / scipy 1.18 / matplotlib 3.11) is about **25 minutes**
+in total, of which `psi_abundance_oscillating.py` takes ~5.5 min and
+`dm_gap_closure_test.py` ~19 min. On a Windows console, either run through
+`run_all.py` (it reconfigures the output streams to UTF-8) or set
+`$env:PYTHONIOENCODING='utf-8'` before running a single script.
 
-关键结果脚本：
+`scripts/_probe_heavy_branch.py` is a standalone diagnostic that is NOT part of
+`run_all.py`: it probes a few large m/H points on the heavy branch of the
+mode-equation abundance matching, reusing the machinery of
+`dm_gap_closure_test.py`. It writes no files.
 
-| 脚本 | 内容 |
+Key result scripts:
+
+| Script | Content |
 |---|---|
-| `background_and_reheating.py` | 精确 KG 积分、$N$ 窗、再加热通道 |
-| `psi_production_bogoliubov.py` | de Sitter 指数 $2\pi$ 审计、$g$ 匹配 |
-| `psi_abundance_oscillating.py` | 跨跃迁模方程（幂律谱） |
-| `dm_gap_closure_test.py` | 小 $g$ 轻支与自由流长度 |
-| `residual_quintessence.py` | 两流体积分、$\Delta w$ |
+| `background_and_reheating.py` | exact KG integration, N window, reheating channels |
+| `psi_production_bogoliubov.py` | de Sitter exponent 2 pi audit, g matching |
+| `psi_abundance_oscillating.py` | cross-transition mode equation (power-law spectrum) |
+| `dm_gap_closure_test.py` | small-g light branch and free-streaming length |
+| `residual_quintessence.py` | two-fluid integration, Delta w budget |
 
-## 暗物质口径（正文 §V）
+## Dark-matter convention (paper Sec. V)
 
-真实模方程谱下，丰度匹配落在**轻支**  
-$g\simeq1.0\times10^{-7}$，$m_\psi\simeq7.5\times10^{10}$ GeV（冷暗物质）；  
-指数闭式重支在模型自身 $T_{\rm reh}$ 下超产。绝对归一化待 lattice/Floquet。
+With the true mode-equation spectrum, the abundance matching lands on the
+**light branch**: g ~ 1.0e-7, m_psi ~ 7.5e10 GeV (cold dark matter). The heavy
+branch of the exponential closed form overproduces at the model's own T_reh.
+The absolute normalization awaits a lattice/Floquet computation.
 
-## 投稿打包
+## Submission packaging
 
-上传 zip 建议包含：`paper_prd_merged.tex`、`sn-jnl.cls`、`sn-mathphys-num.bst`、`figures/*.pdf`。  
-封面信可写明 SCOAP3 资助（EPJC APC=0）。
+Suggested zip contents for submission: `paper_prd_merged.tex`, `sn-jnl.cls`,
+`sn-mathphys-num.bst`, `figures/*.pdf`. The cover letter may note SCOAP3
+funding (EPJC APC = 0).
 
-**Funding**：当前声明为无外部资助（独立研究者）。若有项目支持请自行改写 `Declarations` 中 Funding 句。
+**Funding**: the Declarations state that the author is an independent
+researcher and that no funding was received for this study.
 
 ## Git
 
-勿提交：`scripts/.venv/`、`__pycache__/`、LaTeX 中间文件（见 `.gitignore`）。
+Do not commit: `scripts/.venv/`, `__pycache__/`, LaTeX intermediates (see
+`.gitignore`). `.gitattributes` pins `* -text` so that every platform checks
+out byte-exact files.

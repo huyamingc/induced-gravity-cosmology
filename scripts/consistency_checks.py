@@ -100,27 +100,27 @@ def exact_As_NS(lam0: float, xi: float, N_target: float):
 
 def main() -> None:
     lines = [
-        "> # ⚠️ 已过期（LEGACY）——不可用于当前论文",
+        "> # WARNING: OUTDATED (LEGACY) -- not valid for the current paper",
         ">",
-        "> 本报告用**旧参数**：解析 A5 归一化 λ₀=7.465e-8（或旧草稿值 6.78e-8）、旧 Table I 的 r=0.00487。",
-        "> **当前论文**用锁定 $N$ 约定：λ₀=6.70e-8、r=0.00425、n_s=0.9616（N=50, ξ=11.1）。",
+        "> This report was computed with **OLD parameters**: analytic-A5 normalization lambda0=7.465e-8 (or the old draft value 6.78e-8), and r=0.00487 from the old Table I.",
+        "> **The current paper** uses the locked-$N$ convention: lambda0=6.70e-8, r=0.00425, n_s=0.9616 (N=50, xi=11.1).",
         ">",
-        "> 故本报告的**数值与 PASS/FAIL 判定均不代表论文现状**，仅作历史对照。",
-        "> 当前值请看 `lock_n_convention.py`、`background_and_reheating.py`、`dm_gap_closure_test.py`。",
+        "> Therefore the **numerical values and PASS/FAIL verdicts in this report do NOT represent the current paper** -- historical comparison only.",
+        "> For current values see `lock_n_convention.py`, `background_and_reheating.py`, `dm_gap_closure_test.py`.",
         "",
     ]
-    lines.append("# 脚本结果 vs 论文主张：一致性深检")
+    lines.append("# Script results vs paper claims: deeper consistency checks")
     lines.append("")
-    lines.append("脚本：`scripts/consistency_checks.py`")
+    lines.append("Script: `scripts/consistency_checks.py`")
     lines.append("")
 
     fp_an = fiducial(use_numeric_lam0=False)
     fp_num = fiducial(use_numeric_lam0=True)
 
     # --- 1. Table I ---
-    lines.append("## 1. 论文 Table I vs 解析 λ₀ vs 数值 λ₀")
+    lines.append("## 1. Paper Table I vs analytic lambda0 vs numeric lambda0")
     lines.append("")
-    lines.append("| N | 论文 λ₀ | 解析 λ₀ | 比值 | 论文 r | 脚本 r | 论文 n_s | 脚本 n_s NLO |")
+    lines.append("| N | paper lambda0 | analytic lambda0 | ratio | paper r | script r | paper n_s | script n_s NLO |")
     lines.append("|---|---|---|---|---|---|---|---|")
     for N, lam_p, ns_p, r_p in paper_table_I():
         lam_a = lambda0_analytic(fp_an.xi, N)
@@ -131,15 +131,16 @@ def main() -> None:
         )
     lines.append("")
     lines.append(
-        "**判定：** Table I 的 λ₀ 全表系统性约为解析值的 **0.907–0.909 倍**（≈√0.82，或来自精确势/N 匹配），"
-        "**表内自洽**，但与附录解析式 A5（7.46e-8 @ N=50）**不一致**。r、n_s 与公式一致（PASS）。"
+        "**Verdict:** the lambda0 column of Table I is systematically about **0.907-0.909 times** the analytic value"
+        " (~sqrt(0.82), or from the exact-potential/N matching), **internally consistent within the table**, "
+        "but **inconsistent** with the appendix analytic formula A5 (7.46e-8 @ N=50). r and n_s agree with the formulas (PASS)."
     )
     lines.append("")
 
     # --- 2. Exact slow roll ---
-    lines.append("## 2. 精确慢滚积分 vs 大场近似（A_s 归一化）")
+    lines.append("## 2. Exact slow-roll integral vs large-field approximation (A_s normalization)")
     lines.append("")
-    lines.append("| λ₀ | N_exact 目标 | As_exact | As_paper_formula | As_ratio | r_exact | r_formula | ns_ps | ns_formula NLO |")
+    lines.append("| lambda0 | N_exact target | As_exact | As_paper_formula | As_ratio | r_exact | r_formula | ns_ps | ns_formula NLO |")
     lines.append("|---|---|---|---|---|---|---|---|---|")
     As_formula = lambda lam0, xi, N: lam0 * N**2 / (12 * math.pi**2 * xi**2 * (6 + 1 / xi))
     for tag, lam0 in [("analytic", fp_an.lam0), ("numeric", fp_num.lam0), ("TableI-N50", 6.78e-8)]:
@@ -152,8 +153,10 @@ def main() -> None:
         )
     lines.append("")
     lines.append(
-        "**判定：** 若 As_exact/As_formula 显著偏离 1，则大场近似 A_s=λ₀N²/(12π²ξ²β_o²) 与精确积分有偏差；"
-        "论文数值稿 λ₀=6.78e-8 可能是用精确势把 As 钉到 2.1e-9 的结果，而非附录解析式。"
+        "**Verdict:** if As_exact/As_formula deviates significantly from 1, then the large-field approximation "
+        "A_s=lambda0 N^2/(12 pi^2 xi^2 beta_o^2) deviates from the exact integral;"
+        " the paper's numeric-draft lambda0=6.78e-8 may instead be the result of pinning As to 2.1e-9 with the exact potential, "
+        "rather than of the appendix analytic formula."
     )
     lines.append("")
 
@@ -165,22 +168,22 @@ def main() -> None:
         return As_target / (probe["As"] / 1.0e-8)
 
     lam_exact = lam0_for_As_exact()
-    lines.append(f"- 使 **精确** A_s=2.1e-9 且 N_exact=50 所需 λ₀ = **{lam_exact:.4e}**")
-    lines.append(f"- 解析大场式给出 λ₀ = {fp_an.lam0:.4e}")
-    lines.append(f"- 论文数值/Table I = 6.78e-8")
-    lines.append(f"- 精确/解析 = {lam_exact/fp_an.lam0:.4f}；精确/论文数值 = {lam_exact/6.78e-8:.4f}")
+    lines.append(f"- lambda0 required for **exact** A_s=2.1e-9 with N_exact=50: **{lam_exact:.4e}**")
+    lines.append(f"- analytic large-field formula gives lambda0 = {fp_an.lam0:.4e}")
+    lines.append(f"- paper numeric / Table I = 6.78e-8")
+    lines.append(f"- exact/analytic = {lam_exact/fp_an.lam0:.4f}; exact/paper-numeric = {lam_exact/6.78e-8:.4f}")
     res50 = exact_As_NS(lam_exact, 11.1, 50.0)
     lines.append(
-        f"- 在该 λ₀_exact 下：r_exact={res50['r']:.5f}, ns_PS={res50['ns']:.4f}, N_large≈{res50['N_large']:.2f}"
+        f"- at this lambda0_exact: r_exact={res50['r']:.5f}, ns_PS={res50['ns']:.4f}, N_large~{res50['N_large']:.2f}"
     )
     lines.append("")
 
     # --- 3. Reheating window ---
-    lines.append("## 3. 再加热通道 → N 窗（Liddle–Leach 匹配）")
+    lines.append("## 3. Reheating channel -> N window (Liddle-Leach matching)")
     lines.append("")
-    lines.append("论文声称：引力通道 T_reh~4e5 → N≈48；反常通道 T_reh~1e9 → N≈50；均在 [48,55]。")
+    lines.append("The paper claims: gravitational channel T_reh~4e5 -> N~48; anomaly channel T_reh~1e9 -> N~50; both within [48,55].")
     lines.append("")
-    lines.append("| λ₀ 源 | V_end | T_reh | N_match | 是否 ∈[48,55] | 论文对应 |")
+    lines.append("| lambda0 source | V_end | T_reh | N_match | in [48,55]? | paper value |")
     lines.append("|---|---|---|---|---|---|")
     for tag, lam0 in [("analytic", fp_an.lam0), ("numeric", fp_num.lam0)]:
         V0_ = lam0 * M_P**4 / (4 * 11.1**2)
@@ -190,76 +193,78 @@ def main() -> None:
             inside = 48.0 <= Nm <= 55.0
             lines.append(
                 f"| {tag}={lam0:.2e} | {Vend:.3e} | {T:.2e} | {Nm:.2f} | "
-                f"{'YES' if inside else '**NO**'} | 论文 N≈{paperN} |"
+                f"{'YES' if inside else '**NO**'} | paper N~{paperN} |"
             )
     lines.append("")
     lines.append(
-        "**判定（新问题）：** 用论文自己的匹配公式 Eq.(18) 与解析 λ₀，"
-        "**引力通道 T_reh=4e5 GeV 给出 N≈47.2，落在声明窗 [48,55] 之下**。"
-        "论文写 N≈48 来自另一常数形式（50+¼ln），与 Eq.(18) 不完全等价。"
-        "脚本因此 **削弱**「两通道均自洽落在物理窗」的表述；应对齐公式或放宽窗并改正文。"
+        "**Verdict (new problem):** using the paper's own matching formula Eq.(18) with the analytic lambda0,"
+        " **the gravitational channel T_reh=4e5 GeV gives N~47.2, below the claimed window [48,55]**."
+        " The paper's N~48 comes from another constant form (50+1/4 ln), not exactly equivalent to Eq.(18)."
+        " The script therefore **weakens** the statement that \"both channels self-consistently fall in the physical window\"; "
+        "the formulas should be aligned, or the window relaxed and the text corrected."
     )
     lines.append("")
 
     # --- 4. DM kinematics ---
-    lines.append("## 4. 暗物质运动学双重保护 vs g 窗")
+    lines.append("## 4. DM kinematic double protection vs the g window")
     lines.append("")
     Hinf = fp_an.H_inf
     mchi = fp_an.m_chi
-    lines.append(f"- H_inf={Hinf:.3e}, m_χ={mchi:.3e}, m_χ/2={mchi/2:.3e}")
-    lines.append(f"- 运动学关闭条件 m_χ ≲ 2 m_ψ ⇔ m_ψ ≳ m_χ/2 ≈ {mchi/2:.3e} GeV")
+    lines.append(f"- H_inf={Hinf:.3e}, m_chi={mchi:.3e}, m_chi/2={mchi/2:.3e}")
+    lines.append(f"- kinematic-closure condition m_chi <~ 2 m_psi <=> m_psi >~ m_chi/2 ~ {mchi/2:.3e} GeV")
     lines.append("")
-    lines.append("| g | m_ψ | m_ψ/H_inf | m_ψ vs m_χ/2 | 运动学关闭？ | 顶点关闭？ |")
+    lines.append("| g | m_psi | m_psi/H_inf | m_psi vs m_chi/2 | kinematically closed? | vertex closed? |")
     lines.append("|---|---|---|---|---|---|")
     for g in (1e-5, 2.3e-5, 5e-5, 1e-4):
         mpsi = g * fp_an.Phi0
         kin = mpsi >= mchi / 2
         lines.append(
             f"| {g:.2e} | {mpsi:.3e} | {mpsi/Hinf:.3f} | "
-            f"{'≥' if kin else '<'} m_χ/2 | {'YES' if kin else '**NO**'} | YES (共形恒等式) |"
+            f"{'>=' if kin else '<'} m_chi/2 | {'YES' if kin else '**NO**'} | YES (conformal identity) |"
         )
     lines.append("")
     lines.append(
-        "**判定：** 顶点关闭对任意 g 成立；**「双重保护」仅在 m_ψ≳m_χ/2 即 g≳约 2.3e-5–5e-5 时成立**。"
-        "g=1e-5 时运动学不保护（论文附录 B 已承认，但正文/摘要有时写 doubly protected）。"
-        "脚本 **支持**顶点关闭，**限定**运动学保护范围。"
+        "**Verdict:** vertex closure holds for any g; **\"double protection\" holds only when m_psi >~ m_chi/2, "
+        "i.e. g >~ about 2.3e-5-5e-5**."
+        " At g=1e-5 the kinematic protection fails (acknowledged in appendix B of the paper, but the main text/abstract sometimes says doubly protected)."
+        " The script **supports** vertex closure and **restricts** the kinematic-protection range."
     )
     lines.append("")
 
     # --- 5. Scale consistency under one lambda0 ---
-    lines.append("## 5. 同一 λ₀ 下能标自洽性")
+    lines.append("## 5. Scale consistency under one lambda0")
     lines.append("")
-    lines.append("| 量 | 数值 λ₀=6.78e-8 | 解析 λ₀=7.47e-8 | 精确反演 λ₀ | 论文正文常用 |")
+    lines.append("| quantity | numeric lambda0=6.78e-8 | analytic lambda0=7.47e-8 | exact-inverted lambda0 | used in paper main text |")
     lines.append("|---|---|---|---|---|")
-    rows = ["λ₀", "H_inf", "V0", "U1/4", "m_chi", "m_Phi"]
+    rows = ["lambda0", "H_inf", "V0", "U1/4", "m_chi", "m_Phi"]
     vals = {}
     for tag, lam0 in [("num", 6.78e-8), ("an", fp_an.lam0), ("ex", lam_exact)]:
         H = math.sqrt(lam0) * M_P / (2 * math.sqrt(3) * 11.1)
         V0_ = lam0 * M_P**4 / (4 * 123.21)
         vals[tag] = {
-            "λ₀": lam0,
+            "lambda0": lam0,
             "H_inf": H,
             "V0": V0_,
             "U1/4": V0_**0.25,
             "m_chi": m_chi(lam0, 11.1),
             "m_Phi": m_Phi(lam0, 11.1),
         }
-    paper_ref = {"λ₀": "6.78e-8 (Table I)", "H_inf": "1.65e13", "V0": "4.83e63", "U1/4": "~8.3e15", "m_chi": "3.28e13", "m_Phi": "~2.6e14"}
+    paper_ref = {"lambda0": "6.78e-8 (Table I)", "H_inf": "1.65e13", "V0": "4.83e63", "U1/4": "~8.3e15", "m_chi": "3.28e13", "m_Phi": "~2.6e14"}
     for key in rows:
         lines.append(
             f"| {key} | {vals['num'][key]:.4e} | {vals['an'][key]:.4e} | {vals['ex'][key]:.4e} | {paper_ref[key]} |"
         )
     lines.append("")
     lines.append(
-        "**判定（针对旧稿，已过期）：** 旧稿正文（H_inf=1.65e13, V0=4.83e63, m_χ=3.28e13）与 **数值 λ₀=6.78e-8 自洽**。"
-        "**注意：当前论文已改用锁定约定 λ₀=6.70e-8、H_inf=1.64e13、V0=4.78e63**，"
-        "因此本节结论已不适用于现稿；当年指出的“双 λ₀ 轨”问题已由 `lock_n_convention.py` 统一解决。"
-        "（保留本节仅为记录问题曾存在。）"
+        "**Verdict (about the old draft; outdated):** the old-draft main text (H_inf=1.65e13, V0=4.83e63, m_chi=3.28e13) is **self-consistent with the numeric lambda0=6.78e-8**."
+        " **Note: the current paper has switched to the locked convention lambda0=6.70e-8, H_inf=1.64e13, V0=4.78e63**,"
+        " so the conclusion of this section no longer applies to the current draft; the \"dual-lambda0 track\" problem flagged back then was resolved uniformly by `lock_n_convention.py`."
+        " (This section is kept only as a record that the problem once existed.)"
     )
     lines.append("")
 
     # --- 6. Parse tex for dual values ---
-    lines.append("## 6. 论文 .tex 内数值并存扫描")
+    lines.append("## 6. Scan for coexisting numeric values in the paper .tex")
     lines.append("")
     if TEX.exists():
         tex = TEX.read_text(encoding="utf-8", errors="replace")
@@ -273,62 +278,63 @@ def main() -> None:
             "4.83e63 V0": r"4\.83\\times10\^\{63\}",
             "5.32e63 / 5.33e63": r"5\.3[23]\\times10\^\{63\}",
         }
-        lines.append("| 模式 | 出现次数 |")
+        lines.append("| pattern | occurrence count |")
         lines.append("|---|---|")
         for name, pat in pats.items():
             n = len(re.findall(pat, tex))
             lines.append(f"| {name} | {n} |")
         lines.append("")
         lines.append(
-            "**判定：** 若 6.78e-8 与 7.46e-8、1.65e13 与 1.73e13 同时出现在正文/附录，"
-            "则论文内部 **双轨数值** 未完全收束；需在修订中声明「Table I 用精确数值归一，附录给出解析近似」，"
-            "或全部统一到同一 λ₀。"
+            "**Verdict:** if 6.78e-8 and 7.46e-8, or 1.65e13 and 1.73e13, appear simultaneously in the main text/appendix,"
+            " the paper's internal **dual-track numerics** have not fully converged; a revision should state that "
+            "\"Table I uses the exact numerical normalization while the appendix gives the analytic approximation\","
+            " or unify everything to a single lambda0."
         )
     else:
-        lines.append("未找到 paper_prd_merged.tex")
+        lines.append("paper_prd_merged.tex not found")
     lines.append("")
 
     # --- 7. What scripts support / not / new problems ---
-    lines.append("## 7. 总判定")
+    lines.append("## 7. Overall verdict")
     lines.append("")
-    lines.append("### 脚本支持的论文主张")
+    lines.append("### Paper claims supported by the scripts")
     lines.append("")
-    lines.append("1. Starobinsky 型函数形式 r=8/(β²N²)=2(6+1/ξ)/N²，n_s≈1−2/N —— **支持**")
-    lines.append("2. 结束条件 e^{-x_end}=0.466，V_end/V0=0.285 —— **支持**")
-    lines.append("3. 共形退耦 Ω=Φ/Φ₀，树图 χψ̄ψ=0 —— **支持**（代数）")
-    lines.append("4. G_eff(Φ₀)=G_N —— **支持**")
-    lines.append("5. 单场精质不可行（m_χ/H0≫1）；DE=冻结 V_c —— **支持**")
-    lines.append("6. T_reh~1e9 ↔ N≈50（同一匹配式下）—— **支持**")
-    lines.append("7. r≲0.0053 在 N∈[48,55]、ξ=11.1 —— **支持**（公式层面）")
-    lines.append("8. 畴壁 σ_wall~1e50 GeV³ 量级、F(0)=F′(0)=0 —— **支持**")
+    lines.append("1. Starobinsky-type functional form r=8/(beta^2 N^2)=2(6+1/xi)/N^2, n_s~1-2/N -- **supported**")
+    lines.append("2. End condition e^{-x_end}=0.466, V_end/V0=0.285 -- **supported**")
+    lines.append("3. Conformal decoupling Omega=Phi/Phi_0, tree-level chi psibar psi=0 -- **supported** (algebra)")
+    lines.append("4. G_eff(Phi_0)=G_N -- **supported**")
+    lines.append("5. Single-field quintessence not viable (m_chi/H0>>1); DE = frozen V_c -- **supported**")
+    lines.append("6. T_reh~1e9 <-> N~50 (under the same matching formula) -- **supported**")
+    lines.append("7. r<~0.0053 for N in [48,55], xi=11.1 -- **supported** (at the formula level)")
+    lines.append("8. Domain-wall sigma_wall~1e50 GeV^3 order of magnitude, F(0)=F'(0)=0 -- **supported**")
     lines.append("")
-    lines.append("### 脚本不支持或仅部分支持")
+    lines.append("### Claims not supported, or only partially supported, by the scripts")
     lines.append("")
-    lines.append("1. 附录解析 λ₀=48π²ξ²A_s/N² —— **不支持**（代数错误）")
-    lines.append("2. 「引力 T_reh~4e5 与反常 T_reh~1e9 均落在 N∈[48,55]」—— **部分不支持**（4e5→N≈47）")
-    lines.append("3. 「χ→ψψ 运动学+顶点双重保护」对整个 g∈[1e-5,1e-4] —— **仅高 g 端支持**")
-    lines.append("4. DM Ω_DM=0.12 定量预言 —— **脚本未验证**（机制参数窗可估，归一化需格点）")
-    lines.append("5. Fig2 中 Planck 等高线 —— **示意**，非官方似然；不能当数据约束证据")
+    lines.append("1. Appendix analytic lambda0=48 pi^2 xi^2 A_s/N^2 -- **not supported** (algebra error)")
+    lines.append("2. \"Both the gravitational T_reh~4e5 and the anomaly T_reh~1e9 fall in N in [48,55]\" -- **partially not supported** (4e5 -> N~47)")
+    lines.append("3. \"chi -> psi psi kinematic + vertex double protection\" over the whole g in [1e-5,1e-4] -- **supported only at the high-g end**")
+    lines.append("4. DM Omega_DM=0.12 quantitative prediction -- **not verified by the scripts** (the mechanism's parameter window can be estimated; the normalization needs lattice input)")
+    lines.append("5. The Planck contours in Fig2 -- **schematic**, not an official likelihood; cannot serve as evidence of a data constraint")
     lines.append("")
-    lines.append("### 脚本/作图引入或暴露的问题")
+    lines.append("### Problems introduced or exposed by the scripts/plots")
     lines.append("")
-    lines.append("1. **双 λ₀ 轨**：Table I/正文用 6.78e-8，解析附录与 figures 用 ~7.47e-8 → 图文标度差 ~10%")
-    lines.append("2. **N–T_reh 公式不统一**：Eq.(18) 与「50+¼ln」对同一 T_reh 给出不同 N")
-    lines.append("3. **精确 vs 大场 A_s**：需用脚本给出的 λ₀_exact 对照 Table I，确认 6.78e-8 的来源")
-    lines.append("4. 代码瑕疵：`m_Phi_jordan` 死代码；Fig2 约束为示意")
+    lines.append("1. **Dual lambda0 track**: Table I/main text use 6.78e-8 while the analytic appendix and figures use ~7.47e-8 -> a ~10% scale mismatch between figures and text")
+    lines.append("2. **N-T_reh formulas not unified**: Eq.(18) and \"50+1/4 ln\" give different N for the same T_reh")
+    lines.append("3. **Exact vs large-field A_s**: use the script's lambda0_exact to cross-check Table I and confirm the origin of 6.78e-8")
+    lines.append("4. Code blemish: `m_Phi_jordan` dead code; the Fig2 constraint is schematic")
     lines.append("")
-    lines.append("### 建议补充的脚本")
+    lines.append("### Suggested additional scripts")
     lines.append("")
-    lines.append("| 脚本 | 目的 |")
+    lines.append("| script | purpose |")
     lines.append("|---|---|")
-    lines.append("| `consistency_checks.py`（本文件） | Table I / 精确慢滚 / 再加热窗 / DM 运动学 |")
-    lines.append("| `check_rg_running.py` | 复核 β_ξ、Δξ≲1e-6 |")
-    lines.append("| `check_reheating_rates.py` | 复核 Γ_anom~O(1) GeV 与 T_reh 公式 |")
-    lines.append("| `check_dm_abundance.py` | 参数化 Ω_ψ(m_ψ,T_reh) 曲面与 0.12 交线 |")
-    lines.append("| `check_condensate_overclosure.py` | 再加热后凝聚体残留上界 |")
-    lines.append("| 图脚本改用单一 λ₀ 约定 | 与 Table I 或解析式对齐，并在 caption 写明 |")
+    lines.append("| `consistency_checks.py` (this file) | Table I / exact slow roll / reheating window / DM kinematics |")
+    lines.append("| `check_rg_running.py` | recheck beta_xi, Delta xi <~ 1e-6 |")
+    lines.append("| `check_reheating_rates.py` | recheck Gamma_anom~O(1) GeV and the T_reh formula |")
+    lines.append("| `check_dm_abundance.py` | parametrize the Omega_psi(m_psi,T_reh) surface and its 0.12 crossing line |")
+    lines.append("| `check_condensate_overclosure.py` | upper bound on the post-reheating condensate remnant |")
+    lines.append("| switch the figure scripts to a single lambda0 convention | align with Table I or the analytic formula, and state it in the caption |")
     lines.append("")
-    lines.append("[一致性深检完成]")
+    lines.append("[deeper consistency checks complete]")
 
     OUT.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))

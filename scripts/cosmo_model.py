@@ -165,7 +165,7 @@ def fiducial(xi: float = XI_FID, N: float = N_FID, use_numeric_lam0: bool = Fals
     """Fiducial scales.
 
     use_numeric_lam0: legacy Table-I draft lambda0=6.78e-8 (attractor-matched draft).
-    use_locked_lam0: exact slow-roll A_s inversion at this (N, xi) — paper primary.
+    use_locked_lam0: exact slow-roll A_s inversion at this (N, xi) -- paper primary.
     Default False keeps large-field analytic lambda0 (App. A5) for comparison only.
     """
     if use_locked_lam0:

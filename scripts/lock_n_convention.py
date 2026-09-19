@@ -3,7 +3,7 @@
 Lock one cosmological definition of N and recompute all observables.
 
 CONVENTION (fixed, not presupposed from the paper):
-  N ≡ ln(a_end / a_*)
+  N = ln(a_end / a_*)   (locked definition)
   with a_* from k_* = a_* H_*  (pivot k=0.05 Mpc^{-1})
   and a_end from post-inflationary matching
       a_end = a_reh (rho_reh/rho_end)^{1/3}
@@ -136,28 +136,28 @@ def r_falsify_line(xi: float, r_lim: float = 0.01) -> float:
 
 def main() -> None:
     lines = []
-    lines.append("# 锁定 N 定义后的推导结果")
+    lines.append("# Derived results under the locked N definition")
     lines.append("")
-    lines.append("**约定（本次推导固定，不从论文抄用）：**")
+    lines.append("**Convention (fixed for this derivation, not copied from the paper):**")
     lines.append("")
     lines.append("$$N \\equiv \\ln(a_{\\rm end}/a_*)$$")
     lines.append("")
-    lines.append("其中 \(k_*=a_*H_*\)（\(k_*=0.05\\,\\mathrm{Mpc}^{-1}\)），")
-    lines.append("再加热前凝聚体 \(w=0\)，")
-    lines.append("\\(a_{\\rm end}=a_{\\rm reh}(\\rho_{\\rm reh}/\\rho_{\\rm end})^{1/3}\\)，")
-    lines.append("\\(a_{\\rm reh}=a_{\\rm eq}(\\rho_{\\rm eq}/\\rho_{\\rm reh})^{1/4}\\)，")
-    lines.append("\\(a_{\\rm eq}=\\Omega_r/\\Omega_m\\)。")
+    lines.append("where \\(k_*=a_*H_*\\) (\\(k_*=0.05\\,\\mathrm{Mpc}^{-1}\\)),")
+    lines.append("the condensate has \\(w=0\\) before reheating,")
+    lines.append("\\(a_{\\rm end}=a_{\\rm reh}(\\rho_{\\rm reh}/\\rho_{\\rm end})^{1/3}\\),")
+    lines.append("\\(a_{\\rm reh}=a_{\\rm eq}(\\rho_{\\rm eq}/\\rho_{\\rm reh})^{1/4}\\),")
+    lines.append("\\(a_{\\rm eq}=\\Omega_r/\\Omega_m\\).")
     lines.append("")
-    lines.append("在该 N 下：\(x_*\) 由精确慢滚积分 \(N(x_*)=N\) 定出，")
-    lines.append("可观测量取势慢滚 \(r=16\\varepsilon_*\)，\(n_s=1-6\\varepsilon_*+2\\eta_*\)，")
-    lines.append("\\(\\lambda_0\\) 由 \(A_s=2.1\\times10^{-9}\\) 反解。")
+    lines.append("At this N: \\(x_*\\) is fixed by the exact slow-roll integral \\(N(x_*)=N\\),")
+    lines.append("the observables are potential slow-roll \\(r=16\\varepsilon_*\\), \\(n_s=1-6\\varepsilon_*+2\\eta_*\\),")
+    lines.append("\\(\\lambda_0\\) is solved back from \\(A_s=2.1\\times10^{-9}\\).")
     lines.append("")
 
     # --- Fiducial xi=11.1 table ---
     xi0 = 11.1
-    lines.append(f"## 1. ξ={xi0} 锁定 N 网格")
+    lines.append(f"## 1. xi={xi0} locked-N grid")
     lines.append("")
-    lines.append("| N | λ₀ | r | n_s | n_s−Planck | H_inf | U^{1/4} | m_χ | T_reh* (使 N_derived=N) |")
+    lines.append("| N | lambda0 | r | n_s | n_s-Planck | H_inf | U^{1/4} | m_chi | T_reh* (making N_derived=N) |")
     lines.append("|---|---|---|---|---|---|---|---|---|")
     grid = []
     for N in N_LIST:
@@ -167,15 +167,15 @@ def main() -> None:
         grid.append(p)
         lines.append(
             f"| {N} | {p['lambda0']:.3e} | {p['r']:.5f} | {p['ns']:.4f} | "
-            f"{p['ns_sigma']:+.2f}σ | {p['H_inf']:.3e} | {p['U_quarter']:.3e} | "
+            f"{p['ns_sigma']:+.2f} sigma | {p['H_inf']:.3e} | {p['U_quarter']:.3e} | "
             f"{p['m_chi']:.3e} | {Tstar:.3e} |"
         )
     lines.append("")
 
     # --- Derived N vs T for N=50,55 points ---
-    lines.append("## 2. 自洽性：固定 λ₀(N) 后，N_derived(T_reh)")
+    lines.append("## 2. Self-consistency: with lambda0(N) fixed, N_derived(T_reh)")
     lines.append("")
-    lines.append("| 锁定 N | T_reh | N_derived | ΔN |")
+    lines.append("| Locked N | T_reh | N_derived | Delta N |")
     lines.append("|---|---|---|---|")
     for p in grid:
         if p["N"] not in (48, 50, 52, 55):
@@ -184,12 +184,12 @@ def main() -> None:
             Nd = N_derived_for_T(p, T)
             lines.append(f"| {p['N']} | {T:.2e} | {Nd:.2f} | {Nd - p['N']:+.2f} |")
     lines.append("")
-    lines.append("解读：若 |ΔN|≲0.5，可认为该 (N,T_reh) 在本匹配下近似自洽；")
-    lines.append("锁定 N 与 N_derived 的偏差直接反映再加热假设（w、k、Ω、g*）的不确定度。")
+    lines.append("Reading: if |Delta N| <~ 0.5, the (N, T_reh) pair is approximately self-consistent under this matching;")
+    lines.append("the deviation between the locked N and N_derived directly reflects the uncertainty of the reheating assumptions (w, k, Omega, g*).")
     lines.append("")
 
     # --- Planck window under locked convention ---
-    lines.append("## 3. Planck 2σ 窗与 r 范围（锁定 N 定义）")
+    lines.append("## 3. Planck 2-sigma window and r range (locked-N definition)")
     lines.append("")
     ns_lo = N_S_OBS - 2 * SIG_NS
     ns_hi = N_S_OBS + 2 * SIG_NS
@@ -198,26 +198,26 @@ def main() -> None:
         Nmin, Nmax = N_win[0]["N"], N_win[-1]["N"]
         rmin = min(p["r"] for p in N_win)
         rmax = max(p["r"] for p in N_win)
-        lines.append(f"- Planck n_s ∈ [{ns_lo:.4f}, {ns_hi:.4f}]")
-        lines.append(f"- 锁定 N 下满足 2σ 的 N ∈ **[{Nmin}, {Nmax}]**")
-        lines.append(f"- 对应 r ∈ **[{rmin:.5f}, {rmax:.5f}]**")
+        lines.append(f"- Planck n_s in [{ns_lo:.4f}, {ns_hi:.4f}]")
+        lines.append(f"- N satisfying 2 sigma under the locked N: N in **[{Nmin}, {Nmax}]**")
+        lines.append(f"- corresponding r in **[{rmin:.5f}, {rmax:.5f}]**")
     else:
-        lines.append("- 网格内无点落入 Planck 2σ（需加密 N 或检查 ns(PS)）")
+        lines.append("- no grid point falls inside the Planck 2-sigma window (refine the N grid or check ns(PS))")
     lines.append("")
     # 1 sigma
     ns_lo1 = N_S_OBS - SIG_NS
     N_win1 = [p for p in grid if ns_lo1 <= p["ns"] <= ns_hi]
     if N_win1:
         lines.append(
-            f"- 若用 1σ 下界 n_s≥{ns_lo1:.4f}：N ∈ [{N_win1[0]['N']}, {N_win1[-1]['N']}]，"
-            f"r ∈ [{min(p['r'] for p in N_win1):.5f}, {max(p['r'] for p in N_win1):.5f}]"
+            f"- with the 1-sigma lower bound n_s >= {ns_lo1:.4f}: N in [{N_win1[0]['N']}, {N_win1[-1]['N']}],"
+            f"r in [{min(p['r'] for p in N_win1):.5f}, {max(p['r'] for p in N_win1):.5f}]"
         )
     lines.append("")
 
     # --- Falsification ---
-    lines.append("## 4. 证伪线（锁定 N 定义）")
+    lines.append("## 4. Falsification line (locked-N definition)")
     lines.append("")
-    lines.append("| ξ | r=0.01 对应 N* | 该点 n_s | r_max(2σ窗) | LiteBIRD r>0.01 能否排除 |")
+    lines.append("| xi | N* at r=0.01 | n_s there | r_max (2-sigma window) | Does LiteBIRD r>0.01 exclude |")
     lines.append("|---|---|---|---|---|")
     for xi in XI_LIST:
         Nstar = r_falsify_line(xi, 0.01)
@@ -234,21 +234,21 @@ def main() -> None:
             if ns_lo <= p["ns"] <= ns_hi:
                 rmax = p["r"] if rmax is None else max(rmax, p["r"])
         if rmax is None:
-            excl = "窗内无点"
+            excl = "no point in window"
         else:
-            excl = "YES" if rmax < 0.01 else "NO（窗内已有 r≥0.01）"
+            excl = "YES" if rmax < 0.01 else "NO (window already has r >= 0.01)"
         lines.append(
             f"| {xi} | {Nstar:.2f} | {ns_s:.4f} | "
-            f"{'—' if rmax is None else f'{rmax:.5f}'} | {excl} |"
+            f"{'--' if rmax is None else f'{rmax:.5f}'} | {excl} |"
         )
     lines.append("")
-    lines.append("若 2σ 窗内 r_max < 0.01，则 LiteBIRD 测到 r>0.01 可排除该 ξ 在本 N 约定下的模型类。")
+    lines.append("If r_max < 0.01 within the 2-sigma window, then a LiteBIRD detection of r > 0.01 would exclude this model class at this xi under the locked-N convention.")
     lines.append("")
 
     # --- xi scan at N=50 locked ---
-    lines.append("## 5. ξ 扫描（锁定 N=50）")
+    lines.append("## 5. xi scan (locked N=50)")
     lines.append("")
-    lines.append("| ξ | λ₀ | r | n_s | m_χ | H_inf | T_reh* |")
+    lines.append("| xi | lambda0 | r | n_s | m_chi | H_inf | T_reh* |")
     lines.append("|---|---|---|---|---|---|---|")
     for xi in XI_LIST:
         p = point(xi, 50)
@@ -258,23 +258,23 @@ def main() -> None:
             f"{p['m_chi']:.3e} | {p['H_inf']:.3e} | {Tstar:.3e} |"
         )
     lines.append("")
-    lines.append("在锁定 N 定义下，r 对 ξ 仅弱依赖（通过 β_p 与 x_*(N)）；λ₀ ∝ ξ² 仍大致成立。")
+    lines.append("Under the locked-N definition, r depends only weakly on xi (through beta_p and x_*(N)); lambda0 propto xi^2 still holds approximately.")
     lines.append("")
 
     # --- DE / DM unchanged structure ---
     p50 = point(11.1, 50)
     p50["T_reh_selfcons"] = T_reh_for_N_derived(p50, 50)
     H0 = H0_GeV_v2()
-    lines.append("## 6. 与 DE/DM 结构的关系（不因 N 约定改变）")
+    lines.append("## 6. Relation to the DE/DM structure (unchanged by the N convention)")
     lines.append("")
-    lines.append(f"- 锁定 N=50, ξ=11.1: λ₀={p50['lambda0']:.4e}, m_χ={p50['m_chi']:.4e} GeV")
-    lines.append(f"- m_χ/H0={p50['m_chi']/H0:.4e} → **仍不可能**做今日精质 DE")
-    lines.append(f"- H_inf={p50['H_inf']:.4e} GeV；DM 窗 m_ψ~H_inf 量级结构不变")
-    lines.append(f"- T_reh* (N_derived=50)≈{p50['T_reh_selfcons']:.3e} GeV（本匹配）")
+    lines.append(f"- locked N=50, xi=11.1: lambda0={p50['lambda0']:.4e}, m_chi={p50['m_chi']:.4e} GeV")
+    lines.append(f"- m_chi/H0={p50['m_chi']/H0:.4e} -> **still impossible** as today's quintessence DE")
+    lines.append(f"- H_inf={p50['H_inf']:.4e} GeV; the DM window m_psi ~ H_inf order-of-magnitude structure is unchanged")
+    lines.append(f"- T_reh* (N_derived=50) ~ {p50['T_reh_selfcons']:.3e} GeV (this matching)")
     lines.append("")
 
     # --- Figure 2 locked ---
-    lines.append("## 7. 重绘 Fig.2（锁定 N）")
+    lines.append("## 7. Redraw Fig.2 (locked N)")
     lines.append("")
     xi = 11.1
     Ns_plot = np.linspace(44, 60, 80)
@@ -291,7 +291,7 @@ def main() -> None:
         0.004 * np.sin(th),
         color="#d6dce4",
         alpha=0.7,
-        label="Planck 1σ (schematic)",
+        label="Planck 1 sigma (schematic)",
     )
     ax.plot(ns_plot, r_plot, color="#1f4e79", lw=2, label=r"locked $N=\ln(a_{\rm end}/a_*)$")
     # mark N=48,50,52,55
@@ -316,11 +316,11 @@ def main() -> None:
     fig.tight_layout()
     for ext in ("pdf", "png"):
         fig.savefig(FIGDIR / f"fig2_ns_r_lockedN.{ext}")
-    lines.append(f"- 图已写：`figures/fig2_ns_r_lockedN.pdf`")
+    lines.append(f"- figure written: `figures/fig2_ns_r_lockedN.pdf`")
     lines.append("")
 
     # --- Summary ---
-    lines.append("## 8. 结论（在本 N 约定下）")
+    lines.append("## 8. Conclusions (under this N convention)")
     lines.append("")
     rmax2 = None
     Nband = []
@@ -328,26 +328,26 @@ def main() -> None:
         if ns_lo <= p["ns"] <= ns_hi:
             Nband.append(p["N"])
             rmax2 = p["r"] if rmax2 is None else max(rmax2, p["r"])
-    lines.append("1. **可观测量在给定 N（本定义）下可复算**：ξ=11.1 时 N=50 给出")
-    lines.append(f"   λ₀≈{p50['lambda0']:.3e}, r≈{p50['r']:.5f}, n_s≈{p50['ns']:.4f}（Planck 偏离 {p50['ns_sigma']:+.2f}σ）。")
+    lines.append("1. **The observables are recomputable at a given N (this definition)**: at xi=11.1, N=50 gives")
+    lines.append(f"   lambda0 ~ {p50['lambda0']:.3e}, r ~ {p50['r']:.5f}, n_s ~ {p50['ns']:.4f} (Planck deviation {p50['ns_sigma']:+.2f} sigma).")
     if Nband:
-        lines.append(f"2. Planck 2σ 对应锁定 N ∈ [{min(Nband)}, {max(Nband)}]，r_max≈{rmax2:.5f}。")
-    lines.append("3. **自洽 T_reh\\*** 与教科书/论文闭式不同：本匹配下 N=50 的 T_reh\\*~10⁷–10⁸ GeV 量级；")
-    lines.append("   T_reh=10⁹ 时 N_derived 约 51，仍在窗内但不再是 50。")
-    lines.append("4. **证伪**：在 Planck 2σ 窗内若 r_max<0.01，则 r>0.01 可排除该类模型（本约定下 ξ=11.1 通常成立）。")
-    lines.append("5. DE/DM 的结构性结论（不能同场精质、DM 条件性）**不依赖** N 的约定。")
+        lines.append(f"2. Planck 2 sigma corresponds to locked N in [{min(Nband)}, {max(Nband)}], r_max ~ {rmax2:.5f}.")
+    lines.append("3. **The self-consistent T_reh\\*** differs from the textbook/paper closed form: under this matching, T_reh\\* at N=50 is of order 10^7-10^8 GeV;")
+    lines.append("   at T_reh=10^9, N_derived is about 51 -- still inside the window but no longer 50.")
+    lines.append("4. **Falsification**: if r_max < 0.01 within the Planck 2-sigma window, then r > 0.01 excludes this model class (usually satisfied at xi=11.1 under this convention).")
+    lines.append("5. The structural DE/DM conclusions (no single-field quintessence; conditional DM) **do not depend** on the N convention.")
     lines.append("")
-    lines.append("## 9. 对论文正文的含义")
+    lines.append("## 9. Implications for the manuscript")
     lines.append("")
-    lines.append("| 项目 | 建议写入 paper_prd_merged.tex |")
+    lines.append("| Item | Suggested text for paper_prd_merged.tex |")
     lines.append("|---|---|")
-    lines.append("| N 的定义 | 明确写 N=ln(a_end/a_*) 及匹配假设（k, w=0 再加热, Ω） |")
-    lines.append("| r, n_s 数值表 | 用本锁定表替换模糊的「N=50 ⇒ r=0.00487」单一说法 |")
-    lines.append("| N 窗 | 用「Planck 2σ ∩ 自洽 T_reh≳BBN」表述，而非单一公式 |")
-    lines.append("| 附录 λ₀ | 采用精确慢滚反演值（N=50,ξ=11.1 约 6.7e-8），删错误 48π² 式 |")
-    lines.append("| 证伪句 | r_max(2σ窗) 与 r=0.01 比较；写明依赖 N 约定 |")
+    lines.append("| Definition of N | state N=ln(a_end/a_*) and the matching assumptions (k, w=0 reheating, Omega) explicitly |")
+    lines.append("| r, n_s value table | replace the vague single statement \"N=50 => r=0.00487\" with this locked table |")
+    lines.append("| N window | phrase as \"Planck 2 sigma intersected with self-consistent T_reh >~ BBN\", not a single formula |")
+    lines.append("| Appendix lambda0 | use the exact slow-roll inversion (N=50, xi=11.1 gives ~6.7e-8) and delete the wrong 48 pi^2 formula |")
+    lines.append("| Falsification sentence | compare r_max (2-sigma window) with r=0.01; state the dependence on the N convention |")
     lines.append("")
-    lines.append("[锁定 N 约定推导完成]")
+    lines.append("[Locked-N convention derivation complete]")
 
     OUT_MD.write_text("\n".join(lines), encoding="utf-8")
     OUT_JSON.write_text(

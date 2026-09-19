@@ -37,13 +37,13 @@ def main() -> None:
 
     lines = []
     A = lines.append
-    A("# 小项数值声称快速核验")
+    A("# Quick verification of small numerical claims")
     A("")
-    A("脚本：`scripts/quick_claims_check.py`")
-    A(f"锁定点：ξ={xi}, N={N}, λ₀={lam0:.4e}, n_s={ns:.4f}, r={r:.5f}")
-    A(f"H_inf={Hinf:.4e} GeV, m_χ={mchi:.4e} GeV, Φ₀={Phi0:.4e} GeV")
+    A("Script: `scripts/quick_claims_check.py`")
+    A(f"Locked point: xi={xi}, N={N}, lambda0={lam0:.4e}, n_s={ns:.4f}, r={r:.5f}")
+    A(f"H_inf={Hinf:.4e} GeV, m_chi={mchi:.4e} GeV, Phi0={Phi0:.4e} GeV")
     A("")
-    A("| 声称（论文） | 脚本计算 | 判定 |")
+    A("| Claim (paper) | Script value | Verdict |")
     A("|---|---|---|")
 
     # f_NL local ~ -5/12 (1-ns)
@@ -52,17 +52,17 @@ def main() -> None:
 
     # alpha_s = dn_s/dlnk ~ -2/N^2
     alphas = -2.0 / N**2
-    A(f"| α_s ~ -8e-4 (N=50) | {alphas:.4e} | {'PASS' if abs(alphas + 8e-4) < 2e-4 else 'CHECK'} |")
+    A(f"| alpha_s ~ -8e-4 (N=50) | {alphas:.4e} | {'PASS' if abs(alphas + 8e-4) < 2e-4 else 'CHECK'} |")
 
     # q_parametric ~ (m_t/m_chi)^2
     m_t = 173.0
     q = (m_t / mchi) ** 2
-    A(f"| q ~ (m_t/m_χ)² ~ 2.8e-23 | {q:.4e} | {'PASS' if 1e-24 < q < 1e-21 else 'CHECK'} |")
+    A(f"| q ~ (m_t/m_chi)^2 ~ 2.8e-23 | {q:.4e} | {'PASS' if 1e-24 < q < 1e-21 else 'CHECK'} |")
 
     # kinematic: m_psi >= m_chi/2 at g_min for "doubly protected"
     m_psi_min = mchi / 2.0
     g_min = m_psi_min / Phi0
-    A(f"| 双重保护 g ≳ few×10⁻⁵ | g_min=m_χ/(2Φ₀)={g_min:.3e} | PASS（与正文一致） |")
+    A(f"| Doubly protected: g >~ few x 10^-5 | g_min=m_chi/(2 Phi0)={g_min:.3e} | PASS (matches the text) |")
 
     # sigma_psiN: natural units sigma ~ G_N^2 m_N^2 [GeV^{-2}], convert with (hbar c)^2
     # G_N = 1/(8 pi M_Pl^2) [GeV^{-2}]
@@ -70,7 +70,7 @@ def main() -> None:
     hbar_c = 1.973269804e-14  # GeV cm
     m_N = 1.0  # GeV
     sig = (G_N**2) * (m_N**2) * (hbar_c**2)  # cm^2
-    A(f"| σ_ψN ~ 1e-104 cm² (G_N=1/8πM_Pl²) | G_N²m_N²(ħc)² = {sig:.3e} cm² | {'PASS' if 1e-108 < sig < 1e-100 else 'CHECK'} |")
+    A(f"| sigma_psiN ~ 1e-104 cm^2 (G_N=1/8 pi M_Pl^2) | G_N^2 m_N^2 (hbar c)^2 = {sig:.3e} cm^2 | {'PASS' if 1e-108 < sig < 1e-100 else 'CHECK'} |")
 
     # Gamma_therm / H at T~1e9, alpha_s=0.1
     T = 1e9
@@ -79,7 +79,7 @@ def main() -> None:
     gstar = 106.75
     H = math.sqrt(math.pi**2 * gstar / 90.0) * T**2 / M_PL
     ratio = Gamma / H
-    A(f"| Γ_th/H ~ 1e7 at T=1e9 | Γ/H={ratio:.3e} | {'PASS' if 1e5 < ratio < 1e9 else 'CHECK'} |")
+    A(f"| Gamma_th/H ~ 1e7 at T=1e9 | Gamma/H={ratio:.3e} | {'PASS' if 1e5 < ratio < 1e9 else 'CHECK'} |")
 
     # r=0.01 N* under locked convention
     def r_of_locked(Nv: float) -> float:
@@ -89,12 +89,12 @@ def main() -> None:
     from scipy.optimize import brentq
 
     Nstar = brentq(lambda x: r_of_locked(x) - 0.01, 20.0, 48.0)
-    A(f"| r=0.01 对应 N*≈32 | N*={Nstar:.2f} | {'PASS' if abs(Nstar-32)<3 else 'CHECK'} |")
+    A(f"| r=0.01 corresponds to N*~32 | N*={Nstar:.2f} | {'PASS' if abs(Nstar-32)<3 else 'CHECK'} |")
 
     A("")
-    A("这些均为数量级/标准公式核验；核心 Table 数值仍以 `lock_n_convention.py` 为准。")
+    A("All of these are order-of-magnitude / standard-formula checks; for the core Table values, defer to `lock_n_convention.py`.")
     A("")
-    A("[快速核验完成]")
+    A("[Quick verification complete]")
 
     OUT.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))
