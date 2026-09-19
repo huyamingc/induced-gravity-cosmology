@@ -44,8 +44,10 @@ SCRIPTS = [
     "background_and_reheating.py",     # exact KG integration; N window; reheating channels
     "psi_production_bogoliubov.py",    # de Sitter Bogoliubov index; Omega_psi matching; dilution
     "residual_quintessence.py",        # two-fluid Boltzmann integration; Delta w budget
-    # SLOW tail (the first one is ~10 min: vectorised mode-equation solve over the transition).
-    # dm_gap_closure_test imports psi_abundance_oscillating, so it runs after it.
+    # SLOW tail.  Measured end-to-end on the author's machine (Python 3.13,
+    # numpy 2.4 / scipy 1.18 / matplotlib 3.11): psi_abundance_oscillating ~5.5 min,
+    # dm_gap_closure_test ~19 min, so a full run_all.py is ~25 min.  dm_gap_closure_test
+    # imports psi_abundance_oscillating, so it runs after it.
     "psi_abundance_oscillating.py",
     "dm_gap_closure_test.py",          # light-branch abundance matching + free-streaming check
 ]
