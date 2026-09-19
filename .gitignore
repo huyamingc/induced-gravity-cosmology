@@ -1,0 +1,19 @@
+﻿# Python env & cache
+scripts/.venv/
+**/__pycache__/
+*.py[cod]
+
+# LaTeX intermediates
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# OS
+Thumbs.db
+.DS_Store
