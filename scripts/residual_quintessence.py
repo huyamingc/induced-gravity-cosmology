@@ -47,8 +47,13 @@ from __future__ import annotations
 import json
 import math
 import os
+import sys
 
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from cosmo_model import V_end_over_V0, rho_end_over_V_end  # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -63,9 +68,10 @@ RHO_C = 3.0 * H0_GEV**2 * M_P**2
 V_C = OMEGA_LAMBDA * RHO_C
 
 # Paper locked values (N=50, xi=11.1)
+XI = 11.1
 V0 = 4.7772e63
-V_END = 0.285204 * V0
-RHO_END = 1.19938 * V_END
+V_END = V_end_over_V0(XI) * V0
+RHO_END = rho_end_over_V_end() * V_END
 H_INF = 1.6388e13
 M_CHI = 3.2533e13
 N_EFF = 10.0

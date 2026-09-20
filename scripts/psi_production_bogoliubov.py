@@ -32,8 +32,17 @@ from __future__ import annotations
 import json
 import math
 import os
+import sys
 
 import mpmath as mp
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from cosmo_model import (  # noqa: E402
+    K_over_V_end,
+    V_end_over_V0,
+    rho_end_over_V_end,
+)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -47,12 +56,14 @@ V0 = LAM0 * M_P**4 / (4.0 * XI**2)             # 4.7772e63
 H_INF = math.sqrt(V0 / (3.0 * M_P**2))         # 1.6388e13
 M_CHI = math.sqrt(2.0 * V0 * BETA_P**2 / M_P**2)
 
-# end-of-inflation (round-3 exact slow-roll integration)
+# end-of-inflation: the ratios come from the single source in cosmo_model.  The
+# former literals 0.285204 / 0.19938 / 1.19938 were 6- and 5-digit truncations of
+# those exact values (relative errors 1.4e-6 / 1.4e-4 / 2.3e-5).
 X_END = 0.7636653
-V_END_FRAC = 0.285204
+V_END_FRAC = V_end_over_V0(XI)
 V_END = V_END_FRAC * V0
-K_END = 0.19938 * V_END
-RHO_END = 1.19938 * V_END
+K_END = K_over_V_end() * V_END
+RHO_END = rho_end_over_V_end() * V_END
 
 # cosmological constants
 H0_GEV = 1.4377e-42

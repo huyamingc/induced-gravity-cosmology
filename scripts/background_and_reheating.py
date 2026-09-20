@@ -104,11 +104,28 @@ def V0_of_N(N: float) -> float:
 
 
 def V_end_of_N(N: float) -> float:
-    return 0.285204 * V0_of_N(N)
+    """V_end = (V_end/V0) V0, with the exact closed-form ratio from cosmo_model.
+
+    The former literal 0.285204 was a 6-digit truncation of (1-u_e)^2 (relative
+    error 1.4e-6) and was copied into four scripts; cosmo_model.V_end_over_V0 is
+    now the single source.  Imported lazily, matching the lambda0 pattern above.
+    """
+    from cosmo_model import V_end_over_V0
+
+    return V_end_over_V0(XI) * V0_of_N(N)
 
 
 def rho_end_of_N(N: float) -> float:
-    return 1.19938 * V_end_of_N(N)
+    """rho_end = K_end + V_end = (1 + K/V) V_end.
+
+    K/V comes from the dynamical integration, via cosmo_model.K_over_V_end
+    (memoised); the former literal 1.19938 was its 5-digit truncation (relative
+    error 2.3e-5).  This function is not called from the RK4 loops -- only from
+    the T_reh and N-window routines below -- so the memoised lookup is free.
+    """
+    from cosmo_model import rho_end_over_V_end
+
+    return rho_end_over_V_end() * V_end_of_N(N)
 
 
 def H_inf_of_N(N: float) -> float:
@@ -466,7 +483,7 @@ def main() -> None:
     _kend_note = "L.325 states $K_{\\rm end}\\approx V_{\\rm end}$ (=1)"
     A(f"| $K_{{\\rm end}}/V_{{\\rm end}}$ | {sr['K_over_V_end']:.5f} | "
       + _kend_note + " | [FAIL] see below |")
-    A(f"| $\\rho_{{\\rm end}}/V_{{\\rm end}}$ | {sr['rho_end']/sr['V_end']:.5f} | round-3 $1.19938$ | {'[OK]' if abs(sr['rho_end']/sr['V_end']-1.19938) < 0.02 else '[FAIL]'} |")
+    A(f"| $\\rho_{{\\rm end}}/V_{{\\rm end}}$ | {sr['rho_end']/sr['V_end']:.5f} | round-3 $1.19938$ | {'[OK]' if abs(sr['rho_end']/sr['V_end']-1.19938) < 1e-3 else '[FAIL]'} |")
     A(f"| $\\langle w\\rangle$ (0-1) | {b['wbar_0_1']:.5f} | -- | -- |")
     A(f"| $\\langle w\\rangle$ (0-2) | {b['wbar_0_2']:.5f} | round-3 first cycle $-0.1043$ | same sign and order |")
     A(f"| $\\langle w\\rangle$ (0-3) | {b['wbar_0_3']:.5f} | -- | -- |")
@@ -491,7 +508,7 @@ def main() -> None:
     A("a factor $\\sim5$ below the $\\approx1$ of that draft, and $K_{\\rm end}/\\Delta V_J$ is reduced accordingly (quantitative version of P0-D).")
     A("The manuscript now quotes the exact value (revision item 10), so this is a resolved historical note rather than an open item.\n")
     A(f"Moreover $\\rho_{{\\rm end}}=K+V={sr['rho_end']/sr['V_end']:.5f}V_{{\\rm end}}$,"
-      f"i.e. the round-3 $1.19938\\,V_{{\\rm end}}$.\n")
+      f"matching the round-3 literal $1.19938\\,V_{{\\rm end}}$.\n")
 
     nw = out["N_window"]
     A("## 2. Upper bound of the $N$ window: extrapolated from the paper's own table\n")

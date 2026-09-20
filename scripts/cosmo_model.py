@@ -2,6 +2,7 @@
 # Fiducial parameters follow paper_prd_merged.tex (analytic A5 normalization).
 from __future__ import annotations
 
+import functools
 import math
 from dataclasses import dataclass
 
@@ -111,6 +112,47 @@ def x_end(xi: float) -> float:
     b = beta_p(xi)
     u = 1.0 / (1.0 + math.sqrt(2.0) * b)
     return -math.log(u)
+
+
+def u_end(xi: float) -> float:
+    """u_e = e^{-x_end} = 1/(1+sqrt(2) beta_p), fixed by eps_V = 1."""
+    return math.exp(-x_end(xi))
+
+
+def V_end_over_V0(xi: float) -> float:
+    """Exact end-of-inflation potential ratio, V_end/V0 = (1-u_e)^2.
+
+    A pure number: it contains no lambda0, no M_Pl and no N.  This function is
+    the single source for that ratio across the repository.  The 6-digit literal
+    0.285204 that used to be copied into four scripts was a truncation of this
+    value (relative error 1.4e-6) and has been removed.
+    """
+    return (1.0 - u_end(xi)) ** 2
+
+
+@functools.lru_cache(maxsize=None)
+def K_over_V_end() -> float:
+    """Kinetic-to-potential ratio at the end of inflation, K/V = eps_H/(3-eps_H).
+
+    This is NOT a closed form.  Slow roll has already failed at eps_V = 1, so
+    the slow-roll relation K/V = 1/3 is wrong by a factor ~1.7 there and the
+    ratio has to come from the dynamical integration of the e-fold equations.
+    We take it from background_and_reheating.slowroll_to_end (RK4, 2e4 steps;
+    imported lazily to avoid a circular import), which returns
+    eps_H,end = 0.4987655588641701.
+
+    Like V_end/V0 this is a pure number: the e-fold ODE in M_Pl = 1 units is
+    invariant under V -> c V, so the ratio carries no lambda0 and no N.
+    """
+    from background_and_reheating import slowroll_to_end
+
+    eps_h = slowroll_to_end()["eps_H_end"]
+    return eps_h / (3.0 - eps_h)
+
+
+def rho_end_over_V_end() -> float:
+    """rho_end/V_end = 1 + K/V at the end of inflation."""
+    return 1.0 + K_over_V_end()
 
 
 def VE_of_varphi(varphi, lam0: float, xi: float, Vc_val: float) -> np.ndarray:

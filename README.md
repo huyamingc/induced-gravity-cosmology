@@ -71,15 +71,15 @@ supports a claimed scaling, never a precise value.
 | `lock_n_convention.py` | **exact / source of Table I** | the authoritative locked-N grid: lambda0 inverted from A_s at fixed N, exact potential slow roll, and the T_reh*(N) matching. Every cell of Table I (`tab:sens`) is produced here |
 | `derive_from_action.py` | exact / independent derivation | rebuilds the model from the action alone, presupposing none of the paper's formulas; holds the exact A_s inversion and the N(T_reh) matching used everywhere else |
 | `background_and_reheating.py` | exact / cross-check | exact KG integration of the e-fold equations, the N window, and the two reheating channels; recomputes T_reh*(N) from first principles as an independent check on the Table I column. Shares the same exact lambda0 as `lock_n_convention.py` |
-| `cosmo_model.py` | exact / shared constants | common constants and the memoised `lambda0_for_As_locked` wrapper used by the figure scripts |
+| `cosmo_model.py` | exact / shared constants | common constants, the memoised `lambda0_for_As_locked` wrapper used by the figure scripts, and the **single source** of the end-of-inflation ratios `V_end_over_V0`, `K_over_V_end`, `rho_end_over_V_end` |
 | `psi_production_bogoliubov.py` | exact / cross-check | de Sitter exponent 2 pi audit, g matching |
 | `psi_abundance_oscillating.py` | exact / cross-check | cross-transition mode equation (power-law spectrum) |
 | `dm_gap_closure_test.py` | exact / cross-check | small-g light branch and free-streaming length |
 | `treh_error_band.py` | exact / error propagation | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
 | `residual_quintessence.py` | exact / cross-check | two-fluid integration, Delta w budget |
 | `n_definition_check.py` | exact / cross-check | how the definition of N changes r and n_s |
-| `extended_checks.py` | **order-of-magnitude** | RG running, Gamma_anom and Omega_psi scaling: supports the claimed orders of magnitude only, not precise values |
-| `quick_claims_check.py` | **order-of-magnitude** | small closed-form claims (f_NL, alpha_s, q, sigma_psiN, Gamma_th/H) |
+| `extended_checks.py` | **order-of-magnitude** | RG running, Gamma_anom and Omega_psi scaling, evaluated at the paper's locked-N parameters. Supports the claimed orders of magnitude only: the microscopic coefficients b_s, alpha_s and g_* are not derived from the model |
+| `quick_claims_check.py` | **order-of-magnitude** | small closed-form claims (f_NL, alpha_s, q, sigma_psiN, Gamma_th/H). Its inputs are the exact ones; the claims themselves are order-of-magnitude in the paper |
 | `verify_numerics.py` | audit | recomputes every quantitative claim printed in the paper from the current scripts; the reverse direction of `audit_tex_numbers.py` |
 | `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
 | `audit_tex_numbers.py` | audit | scans the `.tex` for superseded values and checks that any survivor sits in a comparison or historical context |
@@ -91,6 +91,29 @@ run last in `run_all.py` (they read the `.json` artefacts and the manuscript
 tables) and together take under a second. They are the automated form of the
 manual cross-checks that closed the N <-> T_reh matching review: run them after
 any edit to the manuscript or to the matching code.
+
+Two different things were previously conflated under one label, and the
+distinction matters when a number is quoted:
+
+- **A literal copied from an exact value.** `0.285204`, `0.19938` and `1.19938`
+  are the 6- and 5-digit truncations of `(1-u_e)^2`, `K/V` and `1 + K/V` at the
+  end of inflation. They had been copied into four scripts, and
+  `psi_abundance_oscillating.py` separately carried `rho_end = 1.63485e63`,
+  computed under the *old* fitted lambda0 = 6.70e-8 and drifted 4.3e-4 away from
+  the current exact value. Those literals are gone: `cosmo_model.py` evaluates
+  the closed form `V_end/V0 = (1-u_e)^2` and the memoised `K/V` once, and every
+  script imports them. Neither is an approximation level any more -- the closed
+  form is exact, and the dynamical integration sits 2.6e-6 from it -- so any
+  future drift would be a bug, and `consistency_checks.py` fails if a literal
+  reappears.
+- **A claim that is order-of-magnitude in the paper.** `f_NL ~ -0.02`,
+  `q ~ (m_t/m_chi)^2`, `Gamma_th/H ~ 1e7`, the anomaly width and the RG running
+  are order-of-magnitude *as physics*: they are closed forms, or they depend on
+  microscopic coefficients (`b_s`, `alpha_s`, `g_*`) that the model does not
+  derive. `quick_claims_check.py` and `extended_checks.py` therefore test them
+  against order-of-magnitude bands. Their inputs are exact; only the verdicts
+  are order-of-magnitude, and neither script should be quoted for a precise
+  value.
 
 ## Dark-matter convention (paper Sec. V)
 

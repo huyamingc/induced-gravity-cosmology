@@ -265,7 +265,12 @@ def N_match_derived(
     gs_reh: float = 106.75,
     gs_eq: float = 3.91,
     gstar_eq: float = 3.36,
-    rho_end_ratio: float = 1.199916,
+    # End-of-inflation rho/V = 1 + K/V.  None means "take the single source",
+    # cosmo_model.rho_end_over_V_end (imported lazily to avoid a circular import).
+    # The former literal default was 1.199916, which sits 4.237e-4 above the exact
+    # value and propagated that shift into every tabulated T_reh* -- it was the
+    # sixth hand-copied instance of this one ratio.
+    rho_end_ratio: float | None = None,
 ) -> dict:
     T0 = T0_GeV()
     H0 = H0_GeV_v2()
@@ -299,6 +304,10 @@ def N_match_derived(
         a_reh = a_eq * (rho_eq / rho_reh) ** 0.25
     # a_end from matter-like condensate domination: rho (a_end/a_reh)^3 = rho_reh.
     # The energy density at the end of inflation is rho_end = K_end + V_end, not V_end.
+    if rho_end_ratio is None:
+        from cosmo_model import rho_end_over_V_end
+
+        rho_end_ratio = rho_end_over_V_end()
     rho_end = rho_end_ratio * V_end
     a_end = a_reh * (rho_reh / rho_end) ** (1.0 / 3.0)
     N = math.log(a_end / a_star)
@@ -494,7 +503,9 @@ def main() -> None:
     lam50, obs50 = lambda0_for_As(50, 11.1)
     lines.append(
         f"- **xi=11.1, N=50 exact inversion gives lambda0 = {lam50:.4e}**"
-        f" (the paper's Table I uses 6.78e-8; the large-field analytic formula instead gives ~7.5e-8)"
+        f" (the paper's Table I uses this same locked-N inversion and is therefore exact"
+        f" by construction; the legacy draft value 6.78e-8 and the large-field analytic"
+        f" formula ~7.5e-8 are both superseded)"
     )
     lines.append(f"- At the same point: H_inf ~ sqrt(V0/(3 M_Pl^2)) follows from V0={obs50['V0']:.4e}")
     Hinf = math.sqrt(obs50["V0"] / (3 * M_PL**2))

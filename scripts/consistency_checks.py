@@ -42,6 +42,7 @@ OUT_MD = HERE / "consistency_report.md"
 OUT_JSON = HERE / "consistency_report.json"
 
 sys.path.insert(0, str(HERE))
+import cosmo_model as cm                # noqa: E402
 import derive_from_action as dfa        # noqa: E402
 import lock_n_convention as lk          # noqa: E402
 import background_and_reheating as bar  # noqa: E402
@@ -142,16 +143,44 @@ def main():
                 "former 4.46e-4 route spread was entirely the fitted-vs-exact lambda0")
     record("constants", "V_end [GeV^4]", "background.V_end_of_N(50)",
            bar.V_end_of_N(N_FID), "lock_n_convention.point V_end",
-           p50["V_end"], 5e-6, "identity",
-           note="V_end = 0.285204*V0 (bar: the V_end/V0 ratio truncated to 6 digits) vs "
-                "lock_n_convention's own V_end.  The shared lambda0 is now exact, so the "
-                "1.4e-6 residual is entirely that truncated ratio -- truncating "
-                "0.285204360685 to 0.285204 is itself a 1.27e-6 error -- and carries no "
-                "lambda0 or physics content")
+           p50["V_end"], 1e-9, "identity",
+           note="both sides now evaluate the same closed form V_end/V0 = (1-u_e)^2 "
+                "with u_e = 1/(1+sqrt(2) beta_p), so this is an identity rather than a "
+                "route check.  The former 1.4e-6 residual was the 6-digit literal "
+                "0.285204; note that the dynamical integration itself sits 2.6e-6 away "
+                "from that closed form, so freezing the integral would have been no "
+                "better than the literal it replaced")
     record("constants", "H_inf [GeV]", "background.H_inf_of_N(50)",
            bar.H_inf_of_N(N_FID), "lock_n_convention.point H_inf",
            p50["H_inf"], 1e-9, "identity",
            note="algebraically identical (M_Pl sqrt(lambda0)/(2 sqrt3 xi)) once lambda0 agrees")
+
+    # ---- end-of-inflation ratios: one source, guarded -------------------
+    # These exist to stop a hand-copied literal from creeping back.  The numbers
+    # 0.285204 / 0.19938 / 1.19938 used to sit in four scripts, and
+    # psi_abundance_oscillating.RHO_END had silently kept an OLD-lambda0 value.
+    sr = bar.slowroll_to_end()
+    record("end of inflation", "V_end/V0", "cosmo_model.V_end_over_V0(11.1)",
+           cm.V_end_over_V0(XI), "background.slowroll_to_end (RK4)",
+           sr["V_end_frac_of_V0"], 5e-6, "route",
+           note="closed form (1-u_e)^2 against the dynamical integration.  The "
+                "integration converges onto the closed form only to 2.6e-6; that "
+                "residual is the resolution of the integration, and it is the closed "
+                "form that is exact")
+    record("end of inflation", "rho_end/V_end", "cosmo_model.rho_end_over_V_end()",
+           cm.rho_end_over_V_end(), "1 + eps_H/(3-eps_H), integrated",
+           1.0 + sr["eps_H_end"] / (3.0 - sr["eps_H_end"]), 1e-9, "identity")
+    pab = load_json("psi_abundance_oscillating.json")
+    if pab:
+        record("end of inflation", "rho_end [GeV^4]",
+               "psi_abundance_oscillating.json", pab["constants"]["rho_end"],
+               "(V_end/V0)(rho_end/V_end)V0(50), exact lambda0",
+               cm.V_end_over_V0(XI) * cm.rho_end_over_V_end()
+               * cm.V0(cm.lambda0_for_As_locked(N_FID, XI), XI), 1e-9, "identity",
+               note="this script used to carry an isolated literal 1.63485e63 that "
+                    "was computed under the OLD fitted lambda0 = 6.70e-8 and had "
+                    "drifted 4.3e-4 from the current exact value; it now derives "
+                    "from the exact lambda0")
 
     # ---- A. Table I (tab:sens) vs lock_n_convention ---------------------
     # tolerances follow the rounding of the .tex cell, not a wish for agreement

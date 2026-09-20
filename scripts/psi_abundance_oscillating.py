@@ -66,9 +66,19 @@ from __future__ import annotations
 import json
 import math
 import os
+import sys
 
 import mpmath as mp
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from cosmo_model import (  # noqa: E402
+    V0 as _V0,
+    V_end_over_V0,
+    lambda0_for_As_locked,
+    rho_end_over_V_end,
+)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -80,7 +90,14 @@ G_STAR = 106.75
 G_STAR_S0 = 3.91
 PHI_V = 7.3087e17
 H_INF = 1.6388e13
-RHO_END = 1.63485e63
+# rho_end at the locked point, built from the exact lambda0 and the single-source
+# end-of-inflation ratios.  The former literal 1.63485e63 was the value under the
+# OLD fitted lambda0 = 6.70e-8 -- it equals 1.19938*0.285204*4.7793047e63 to
+# 1.8e-6 -- and had drifted 4.26e-4 away from the current exact lambda0.
+_XI_LOCKED = 11.1
+_N_LOCKED = 50.0
+RHO_END = (V_end_over_V0(_XI_LOCKED) * rho_end_over_V_end()
+           * _V0(lambda0_for_As_locked(_N_LOCKED, _XI_LOCKED), _XI_LOCKED))
 ETA0 = -1.0
 mp.mp.dps = 40
 

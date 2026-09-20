@@ -37,16 +37,21 @@ def Omega_psi(mpsi: float, Hinf: float, Treh: float, Treh_ref: float = 1e9, mpsi
 
 
 def main() -> None:
-    fp = fiducial()
-    fpn = fiducial(use_numeric_lam0=True)
+    fp = fiducial(use_locked_lam0=True)     # paper primary: exact A_s inversion
+    fpa = fiducial()                        # analytic App.A normalization
+    fpn = fiducial(use_numeric_lam0=True)   # legacy draft value
     lines = [
-        "> # WARNING: OUTDATED (LEGACY) -- not valid for the current paper",
+        "> # SCOPE: order-of-magnitude checks at the CURRENT paper parameters",
         ">",
-        "> This report was computed with **OLD parameters**: analytic-A5 normalization lambda0=7.465e-8 (or the old draft value 6.78e-8), and r=0.00487 from the old Table I.",
-        "> **The current paper** uses the locked-$N$ convention: lambda0=6.70e-8, r=0.00425, n_s=0.9616 (N=50, xi=11.1).",
+        "> The lambda0 used throughout is the paper's primary locked-$N$ value, i.e.",
+        f"> the exact A_s inversion: {fp.lam0:.4e} at N=50, xi=11.1.  Where a comparison",
+        "> against an older normalization is informative, that column is labelled",
+        "> explicitly (legacy draft 6.78e-8, or the analytic App.A formula 7.465e-8).",
         ">",
-        "> Therefore the **numerical values and PASS/FAIL verdicts in this report do NOT represent the current paper** -- historical comparison only.",
-        "> For current values see `lock_n_convention.py`, `background_and_reheating.py`, `dm_gap_closure_test.py`.",
+        "> **Every verdict below is an ORDER-OF-MAGNITUDE statement.**  The microscopic",
+        "> coefficients b_s, alpha_s (anomaly) and g_* are not derived from the model,",
+        "> so no number here is a precise prediction.  For the paper's own table values",
+        "> (Table I, the N <-> T_reh matching) defer to `lock_n_convention.py`.",
         "",
     ]
     lines.append("# Extended checks: RG / reheating rates / DM abundance scaling / condensate")
@@ -54,11 +59,11 @@ def main() -> None:
 
     lines.append("## A. RG running (paper Sec. VIII E)")
     lines.append("")
-    lines.append("Paper: Delta xi <~ 1e-6 (xi=11.1, lambda0=6.78e-8, g~1e-5-1e-4, Delta ln mu=60); quark term dominates.")
+    lines.append(f"Paper: Delta xi <~ 1e-6 (xi=11.1, lambda0={fp.lam0:.4e}, g~1e-5-1e-4, Delta ln mu=60); quark term dominates.")
     lines.append("")
     lines.append("| lambda0 | g | Delta xi_lambda0 | Delta xi_g | Delta xi_tot | paper |")
     lines.append("|---|---|---|---|---|---|")
-    for lam0 in (6.78e-8, fp.lam0):
+    for lam0 in (fp.lam0, fpn.lam0):
         for g in (2.3e-5, 1e-4):
             a, b, t = beta_xi_terms(11.1, lam0, g)
             lines.append(f"| {lam0:.2e} | {g:.1e} | {a:.3e} | {b:.3e} | {t:.3e} | <~1e-6 order |")
@@ -71,7 +76,9 @@ def main() -> None:
     lines.append("")
     lines.append("| lambda0 source | m_chi | Gamma_anom (est.) | T_reh=(90 Gamma^2 M_P^2 / pi^2 g*)^{1/4} | paper |")
     lines.append("|---|---|---|---|---|")
-    for tag, lam0, mchi in [("numeric", 6.78e-8, fpn.m_chi), ("analytic", fp.lam0, fp.m_chi)]:
+    for tag, lam0, mchi in [("locked (paper)", fp.lam0, fp.m_chi),
+                            ("legacy draft", fpn.lam0, fpn.m_chi),
+                            ("analytic App.A", fpa.lam0, fpa.m_chi)]:
         G = Gamma_anom(mchi, 11.1)
         T = Treh_const(G)
         lines.append(f"| {tag} | {mchi:.3e} | {G:.3e} GeV | {T:.3e} GeV | ~1e9, Gamma~O(1) GeV |")
@@ -110,7 +117,7 @@ def main() -> None:
     rho_DM = 0.265 * rho_crit
     lines.append(f"- rho_crit(today)={rho_crit:.3e} GeV^4, rho_DM={rho_DM:.3e} GeV^4")
     lines.append(f"- initial condensate rho_cond(a_end) ~ (1/2) m_Phi^2 M_P^2 order:")
-    for tag, lam0 in [("num", 6.78e-8), ("an", fp.lam0)]:
+    for tag, lam0 in [("locked", fp.lam0), ("legacy", fpn.lam0)]:
         mPhi = math.sqrt(2 * lam0) * M_P / math.sqrt(11.1)
         rho0 = 0.5 * mPhi**2 * M_P**2
         # max allowed survival fraction today
