@@ -50,9 +50,9 @@ $env:PYTHONUNBUFFERED=1
 `scripts/run_all.py` is the single entry point. It runs every verification and
 figure script in order and regenerates the reports (`scripts/*.md`, `*.json`)
 and the three figures. Measured end-to-end runtime on the author's machine
-(Python 3.13, numpy 2.4 / scipy 1.18 / matplotlib 3.11) is about **25 minutes**
+(Python 3.13, numpy 2.4 / scipy 1.18 / matplotlib 3.11) is about **20 minutes**
 in total, of which `psi_abundance_oscillating.py` takes ~5.5 min and
-`dm_gap_closure_test.py` ~19 min; `treh_error_band.py` finishes in under a
+`dm_gap_closure_test.py` ~14 min; `treh_error_band.py` finishes in under a
 second. On a Windows console, either run through
 `run_all.py` (it reconfigures the output streams to UTF-8) or set
 `$env:PYTHONIOENCODING='utf-8'` before running a single script.
