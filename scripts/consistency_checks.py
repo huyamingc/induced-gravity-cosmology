@@ -131,17 +131,27 @@ def main():
                teb["M_Pl_reduced_GeV"], "derive_from_action.M_PL", dfa.M_PL, 1e-5,
                "precision",
                note="same 6 ppm constant-precision difference")
+    # lam0_of_N was rewired onto the exact A_s inversion (derive_from_action, via
+    # cosmo_model.lambda0_for_As_locked), so the three entries below are now the SAME
+    # formula evaluated in two places rather than two independent routes.  While
+    # lam0_of_N was the fitted closed form 6.70e-8*(50/N)^2 they were "route" checks
+    # with a 4.46e-4 spread.
     record("constants", "V0 [GeV^4]", "background.V0_of_N(50)", bar.V0_of_N(N_FID),
-           "lock_n_convention.point V0", p50["V0"], 1e-3, "route",
-           note="background_and_reheating.lam0_of_N is the fitted closed form "
-                "6.70e-8*(50/N)^2; lock_n_convention inverts A_s exactly.  The fit is "
-                "documented in that function and is used only for N-trend work.")
+           "lock_n_convention.point V0", p50["V0"], 1e-9, "identity",
+           note="same exact lambda0 and the same V0 = lambda0 M_Pl^4/(4 xi^2); the "
+                "former 4.46e-4 route spread was entirely the fitted-vs-exact lambda0")
     record("constants", "V_end [GeV^4]", "background.V_end_of_N(50)",
            bar.V_end_of_N(N_FID), "lock_n_convention.point V_end",
-           p50["V_end"], 1e-3, "route", note="same fitted-vs-exact lambda0 difference")
+           p50["V_end"], 5e-6, "identity",
+           note="V_end = 0.285204*V0 (bar: the V_end/V0 ratio truncated to 6 digits) vs "
+                "lock_n_convention's own V_end.  The shared lambda0 is now exact, so the "
+                "1.4e-6 residual is entirely that truncated ratio -- truncating "
+                "0.285204360685 to 0.285204 is itself a 1.27e-6 error -- and carries no "
+                "lambda0 or physics content")
     record("constants", "H_inf [GeV]", "background.H_inf_of_N(50)",
            bar.H_inf_of_N(N_FID), "lock_n_convention.point H_inf",
-           p50["H_inf"], 1e-3, "route", note="same fitted-vs-exact lambda0 difference")
+           p50["H_inf"], 1e-9, "identity",
+           note="algebraically identical (M_Pl sqrt(lambda0)/(2 sqrt3 xi)) once lambda0 agrees")
 
     # ---- A. Table I (tab:sens) vs lock_n_convention ---------------------
     # tolerances follow the rounding of the .tex cell, not a wish for agreement

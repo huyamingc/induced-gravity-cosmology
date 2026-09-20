@@ -28,6 +28,7 @@ Output: scripts/background_and_reheating.md / .json
 
 from __future__ import annotations
 
+import functools
 import json
 import math
 import os
@@ -54,16 +55,48 @@ K_PIVOT_OVER_A0H0 = 0.05 / (67.4 / 299792.458)     # = 222.4
 X_END = 0.7636653
 
 
-def lam0_of_N(N: float) -> float:
-    r"""Paper-**locked** convention (tab:sens): lambda0 = 6.70e-8 x (50/N)^2.
+@functools.lru_cache(maxsize=None)
+def _lam0_exact(N: float) -> float:
+    """Exact slow-roll A_s inversion at (N, XI).  Memoised: see lam0_of_N."""
+    from cosmo_model import lambda0_for_As_locked
 
-    Note: the analytic formula in the paper's App.A, lambda0 = 12 pi^2 xi^2 (6+1/xi) A_s/N^2, gives 7.465e-8;
-    that is the other track, explicitly demoted by the main text to "analytic, not the locked-N table value"
-    (L.848). This script always uses the **locked track** 1.675e-4/N^2, which reproduces tab:sens row by row:
-        N=48 -> 7.27e-8 (table 7.24)   N=50 -> 6.70e-8 (table 6.70)
-        N=52 -> 6.19e-8 (table 6.21)   N=55 -> 5.54e-8 (table 5.58)
+    return lambda0_for_As_locked(N, XI)
+
+
+def lam0_of_N(N: float) -> float:
+    r"""Paper-**locked** convention (tab:sens): exact slow-roll A_s inversion.
+
+    lambda0 is fixed by requiring the exact potential slow-roll A_s of
+    V = V0 (1-e^{-x})^2 to equal the observed value at the same (N, xi).  At fixed
+    N (fixed x_*) A_s is linear in V0, hence in lambda0, so the inversion is a
+    single closed-form ratio; the only numerical step is x_*(N), solved by brentq
+    in derive_from_action.  M_Pl cancels identically here, so this value does not
+    inherit the M_Pl rounding used elsewhere.
+
+    This replaces the earlier fitted closed form 1.675e-4/N^2 [= 6.70e-8 (50/N)^2].
+    That fit matched the paper's table at N=50 (4.46e-4) but drifted to about 1% at
+    the edges of the window (0.90% at N=45, 0.95% at N=57, 0.045% at N=50) because
+    the exact relation is not a pure N^-2 power law.  With the fit this script sat
+    4.46e-4 away from lock_n_convention / the paper's Table I; that residual is now
+    zero by construction, and the affected absolute scales move onto the paper's own
+    values (V0, H_inf, m_chi):
+        V0(50):   4.779305e63 -> 4.777175e63 GeV^4   (paper 4.7772e63)
+        H_inf(50):1.639165e13 -> 1.638800e13 GeV     (paper 1.6388e13)
+        m_chi:    3.253992e13 -> 3.253267e13 GeV     (paper 3.2533e13)
+    Dimensionless ratios are untouched, because the e-fold trajectory is invariant
+    under V -> cV: K_end/V_end, V_end/V0 and rho_end/V_end all keep the same value
+    to machine precision, and n_s and r do not involve lambda0 at all.
+
+    NOTE: the analytic formula in the paper's App.A,
+    lambda0 = 12 pi^2 xi^2 (6+1/xi) A_s/N^2, gives 7.465e-8 at N=50, 10.3% above
+    this value.  That is the other track, explicitly demoted by the main text to
+    "analytic, not the locked-N table value" (L.848), and is NOT used here.
+
+    lru_cache is required, not cosmetic: V0_of_N is called about 7.3e5 times per run
+    from inside the RK4 loops (slowroll_to_end ~1.1e4, background up to 7.2e5), so an
+    uncached brentq here would add roughly 23 s per run.
     """
-    return 1.675e-4 / N**2
+    return _lam0_exact(float(N))
 
 
 def V0_of_N(N: float) -> float:
