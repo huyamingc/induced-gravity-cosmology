@@ -23,19 +23,17 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 SCRIPTS = [
-    "extended_checks.py",
-    "derive_from_action.py",
-    "n_definition_check.py",
-    "lock_n_convention.py",
-    "evaluate_paper.py",
+    "derive_from_action.py",           # independent derivation from the action alone
+    "lock_n_convention.py",            # exact locked-N grid; the source of Table I
+    # Audit the .tex once the source of its tables has run.  The figure scripts
+    # below write only .pdf, so neither the .tex nor n_convention_results.json
+    # (which this reads) can change after this point -- a second call used to
+    # sit after them and was an exact duplicate.
     "audit_tex_numbers.py",
-    "quick_claims_check.py",
     # Figures: fig2_ns_r.py uses locked exact PS and writes both filenames
     "fig1_einstein_potential.py",
     "fig2_ns_r.py",
     "fig3_domain_wall.py",
-    # Re-audit after figures regenerate
-    "audit_tex_numbers.py",
     # --- Independent first-principles checks added in the revision (read-only w.r.t. the .tex;
     #     each writes only its own .md/.json next to this file).  Every file's docstring records
     #     the requirement it closes and which P0 it supports.
@@ -52,11 +50,11 @@ SCRIPTS = [
     # Reads dm_gap_closure_test.json, so it must run after it.  Cheap (analytic + one
     # small brentq scan), and it is the script behind the T_reh error-band table of Sec. V.
     "treh_error_band.py",              # T_reh uncertainty -> (N, n_s, r) and (g, m_psi) band
-    # --- Auditors.  Both read the .json artefacts written above AND the .tex table
-    #     bodies, so they must run LAST.  verify_numerics.py recomputes every printed
-    #     claim from the current scripts; consistency_checks.py checks every table cell
-    #     against the script that produces it and every independent route against the
-    #     other.  Together they take well under a second.
+    # --- Auditors.  All three read the .json artefacts written above AND the .tex
+    #     table bodies, so they must run LAST.  verify_numerics.py recomputes every
+    #     printed claim from the current scripts; consistency_checks.py checks every
+    #     table cell against the script that produces it and every independent route
+    #     against the other.  Together they take well under a second.
     "verify_numerics.py",              # paper claims -> code
     "consistency_checks.py",           # paper tables -> code, and code -> code
     "audit_readme_numbers.py",         # README prose numbers -> code

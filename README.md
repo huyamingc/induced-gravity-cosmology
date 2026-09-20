@@ -57,14 +57,13 @@ second. On a Windows console, either run through
 `run_all.py` (it reconfigures the output streams to UTF-8) or set
 `$env:PYTHONIOENCODING='utf-8'` before running a single script.
 
-`scripts/_probe_heavy_branch.py` is a standalone diagnostic that is NOT part of
-`run_all.py`: it probes a few large m/H points on the heavy branch of the
-mode-equation abundance matching, reusing the machinery of
-`dm_gap_closure_test.py`. It writes no files.
-
-Scripts and their role. `exact` means the script solves the stated equations
-numerically and its numbers may be quoted; `order-of-magnitude` means it only
-supports a claimed scaling, never a precise value.
+Scripts and their role. Every script below solves the stated equations
+numerically and its numbers may be quoted. The paper also prints a block of
+order-of-magnitude claims (`f_NL`, `alpha_s`, `q`, `Gamma_therm/H`,
+`sigma_psiN`, the RG shifts `Delta xi` and `Delta lambda0`); those are checked
+inside `verify_numerics.py` against a decade tolerance, described further down.
+There is no longer a separate script whose role is to support a scaling rather
+than a value.
 
 | Script | Role | Content |
 |---|---|---|
@@ -72,19 +71,16 @@ supports a claimed scaling, never a precise value.
 | `derive_from_action.py` | exact / independent derivation | rebuilds the model from the action alone, presupposing none of the paper's formulas; holds the exact A_s inversion and the N(T_reh) matching used everywhere else |
 | `background_and_reheating.py` | exact / cross-check | exact KG integration of the e-fold equations, the N window, and the two reheating channels; recomputes T_reh*(N) from first principles as an independent check on the Table I column. Shares the same exact lambda0 as `lock_n_convention.py` |
 | `cosmo_model.py` | exact / shared constants | common constants, the memoised `lambda0_for_As_locked` wrapper used by the figure scripts, and the **single source** of `x_end`, the end-of-inflation ratios `V_end_over_V0`, `K_over_V_end`, `rho_end_over_V_end`, and the reheating dilution `rho_end` / `dilution` |
+| `order_estimates.py` | exact inputs / order-of-magnitude closes | the **single source** for the closed forms behind every claim the paper prints with a leading `~`: `f_NL`, `alpha_s`, the Mathieu `q`, `Gamma_therm/H`, `sigma_psiN`, the kinematic-closure `g`, and the one-loop RG shifts of `xi` and `lambda0`. `verify_numerics.py` checks the manuscript against this module, and any new script that needs one of these quantities must import it rather than re-derive it |
 | `psi_production_bogoliubov.py` | exact / cross-check | de Sitter exponent 2 pi audit, g matching |
 | `psi_abundance_oscillating.py` | exact / cross-check | cross-transition mode equation (power-law spectrum) |
 | `dm_gap_closure_test.py` | exact / cross-check | small-g light branch and free-streaming length |
 | `treh_error_band.py` | exact / error propagation | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
 | `residual_quintessence.py` | exact / cross-check | two-fluid integration, Delta w budget |
-| `n_definition_check.py` | exact / cross-check | how the definition of N changes r and n_s |
-| `extended_checks.py` | **order-of-magnitude** | RG running, Gamma_anom and Omega_psi scaling, evaluated at the paper's locked-N parameters. Supports the claimed orders of magnitude only: the microscopic coefficients b_s, alpha_s and g_* are not derived from the model |
-| `quick_claims_check.py` | **order-of-magnitude** | small closed-form claims (f_NL, alpha_s, q, sigma_psiN, Gamma_th/H). Its inputs are the exact ones; the claims themselves are order-of-magnitude in the paper |
-| `verify_numerics.py` | audit | recomputes every quantitative claim printed in the paper from the current scripts; the reverse direction of `audit_tex_numbers.py` |
+| `verify_numerics.py` | audit | recomputes every quantitative claim printed in the paper from the current scripts, including the order-of-magnitude block; the reverse direction of `audit_tex_numbers.py` |
 | `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
 | `audit_tex_numbers.py` | audit | scans the `.tex` for superseded values and checks that any survivor sits in a comparison or historical context |
 | `audit_readme_numbers.py` | audit | recomputes the prose numbers in this README from the scripts. Its patterns must still match, so rewording a sentence without updating the audit is itself a failure |
-| `evaluate_paper.py` | audit | structural and cross-reference evaluation of the manuscript |
 | `fig1_einstein_potential.py`, `fig2_ns_r.py`, `fig3_domain_wall.py` | figure | generate `figures/*.pdf` |
 
 The three auditors run last in `run_all.py` (they read the `.json` artefacts, the
@@ -113,13 +109,41 @@ distinction matters when a number is quoted:
   future drift would be a bug, and `consistency_checks.py` fails if a literal
   reappears.
 - **A claim that is order-of-magnitude in the paper.** `f_NL ~ -0.02`,
-  `q ~ (m_t/m_chi)^2`, `Gamma_th/H ~ 1e7`, the anomaly width and the RG running
-  are order-of-magnitude *as physics*: they are closed forms, or they depend on
+  `q ~ (m_t/m_chi)^2`, `Gamma_therm/H ~ 1e7`, `sigma_psiN ~ 1e-104 cm^2`, the
+  anomaly width and the RG shifts `Delta xi`, `Delta lambda0` are
+  order-of-magnitude *as physics*: they are closed forms, or they depend on
   microscopic coefficients (`b_s`, `alpha_s`, `g_*`) that the model does not
-  derive. `quick_claims_check.py` and `extended_checks.py` therefore test them
-  against order-of-magnitude bands. Their inputs are exact; only the verdicts
-  are order-of-magnitude, and neither script should be quoted for a precise
-  value.
+  derive. `verify_numerics.py` checks them in an `order` tolerance class, which
+  measures the distance in decades rather than a relative deviation, so an
+  answer good to a factor 2 passes and one off by a factor 10 does not. Their
+  inputs are exact; only the verdicts are order-of-magnitude, so none of them
+  should be quoted for a precise value.
+
+Five scripts were retired in this pass, and the reason differs by script.
+`extended_checks.py` and `quick_claims_check.py` held the order-of-magnitude
+claims above. The paper still prints every one of those numbers, so deleting
+them outright would have left Secs. III, IV, V, VIII and XII quoting values with
+no executing source. Their formulas were therefore consolidated into one shared
+module, `order_estimates.py`, which `verify_numerics.py` now uses to check the
+manuscript against; what was dropped was the superseded content -- an
+`Omega_DM = 0.12` abundance scaling and a pre-lattice `Gamma_anom` table that the
+mode-equation analysis has since replaced, plus a table of review verdicts the
+revision had already absorbed into the manuscript. A shared module rather than a
+copy inside the audit is the point: the next script that needs one of these
+quantities imports it instead of writing a seventh copy.
+`evaluate_paper.py`, `n_definition_check.py` and `_probe_heavy_branch.py` had no
+dependants at all: nothing imports them, the manuscript never named them, and the
+first had recommended creating `audit_tex_numbers.py`, which is what made its own
+report obsolete. All five are archived outside the submission tree rather than
+deleted.
+
+Two further notes on the auditors. `audit_tex_numbers.py` used to be called
+twice, the second time "after the figures regenerate"; the figure scripts write
+only `.pdf`, so neither the `.tex` nor `n_convention_results.json` can change
+between the two calls, and the duplicate is gone. And `Delta lambda0 ~ 3e-14`
+in Sec. VIII E had no executing source anywhere in the suite until
+`order_estimates.py` supplied one.
+
 
 ## Dark-matter convention (paper Sec. V)
 
