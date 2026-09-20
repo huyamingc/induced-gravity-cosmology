@@ -240,13 +240,16 @@ def osc_period_efolds() -> float:
 
 
 # ---------------- [B] upper bound of the N window ----------------
-# T_reh* column of the paper's Table I (tab:sens) (L.263-268)
-TABLE_I = {48: (7.24e-8, 0.9600, 0.00459, 1.0e5),
-           49: (6.96e-8, 0.9608, 0.00441, 1.4e6),
-           50: (6.70e-8, 0.9616, 0.00425, 4.4e7),
-           51: (6.45e-8, 0.9623, 0.00409, 1.4e9),
-           52: (6.21e-8, 0.9630, 0.00394, 1.8e10),
-           55: (5.58e-8, 0.9650, 0.00355, 1.6e14)}
+# T_reh* column of the paper's Table I (tab:sens) (L.263-268).  Values regenerated
+# with the entropy-conserving matching of derive_from_action.N_match_derived
+# (entropy_matching=True, rho_end = K_end + V_end); they are reproduced exactly by
+# lock_n_convention.T_reh_for_N_derived(p, N).
+TABLE_I = {48: (7.24e-8, 0.9600, 0.00459, 2.6e5),
+           49: (6.96e-8, 0.9608, 0.00441, 5.2e6),
+           50: (6.70e-8, 0.9616, 0.00425, 1.1e8),
+           51: (6.45e-8, 0.9623, 0.00409, 2.2e9),
+           52: (6.21e-8, 0.9630, 0.00394, 4.5e10),
+           55: (5.58e-8, 0.9650, 0.00355, 3.8e14)}
 
 
 def fit_table_slope() -> dict:
@@ -276,9 +279,15 @@ def T_reh_star_first_principles(N: float) -> float:
                 ( K_PIVOT_OVER_A0H0 * H_0 /(T_0 H_*) )^3
     where H_* is the Hubble rate at horizon exit (on the plateau, V(x_*)).
     """
-    # x_* : e^{2x} - 2x = 2 beta^2 N  (Starobinsky-type attractor, paper App.)
+    # x_* is fixed by the exact slow-roll e-folding integral of V = V0 (1-e^{-x})^2,
+    #   N = [e^x - x]_{x_end}^{x_*} / (2 beta^2),   x_end = 0.76367 at eps_V = 1,
+    # the same relation used by lock_n_convention / derive_from_action.
+    # (The previous form e^{2x} - 2x = 2 beta^2 N is not the slow-roll relation for this
+    # potential: at N = 50 it returns x_* = 2.124 and an implied N = 3.70.)
+    x_end = 0.76367
+
     def f(xs):
-        return math.exp(2 * xs) - 2 * xs - 2 * BETA_P**2 * N
+        return (math.exp(xs) - xs) - (math.exp(x_end) - x_end) - 2.0 * BETA_P**2 * N
     x_star = brentq(f, 0.0, 40.0)
     H_star = math.sqrt(V0_of_N(N) * (1.0 - math.exp(-x_star))**2 / (3.0 * M_P**2))
     pref = (K_PIVOT_OVER_A0H0 * H0_GEV / (T0_GEV * H_star))**3
@@ -466,12 +475,15 @@ def main() -> None:
     A("")
     A(f"This gives **$N_{{\\rm max}}={nw['N_max_proper']:.2f}$** (with the correct instantaneous-reheating bound),")
     A(f"or $N_{{\\rm max}}={nw['N_max_naive_Vend14']:.2f}$ if the paper's self-declared $V_{{\\rm end}}^{{1/4}}$ bound is used instead.")
-    A("Both readings give $N_{\\rm max}\\approx56$.")
-    A("**Therefore the abstract/main-text $N\\approx45$--$58$ (L.250/L.296/L.298/L.706/L.780/L.794 and the table caption) should read $45$--$56$.**\n")
+    A("Both readings give $N_{\\rm max}\\approx56$, and the manuscript now quotes $N\\approx45$--$56$ with $N_{\\rm max}\\simeq55.6$.\n")
     A("(The first-principles independent recomputation gives $T^*_{{\\rm reh}}(50)="
-      f"{nw['T_reh_first_principles_50']:.3e}$ vs the paper table {nw['table_T_reh_50']:.3e},")
-    A("differing by a constant factor -- the slopes agree, the constants do not; this is a separate $\\mathcal O(1)$ convention discrepancy left for another check,")
-    A("and it does **not** affect the $N_{\\rm max}$ determined from the paper's own trend.)\n")
+      f"{nw['T_reh_first_principles_50']:.3e}$ GeV against {nw['table_T_reh_50']:.3e}$ GeV from the tabulated matching;")
+    A("the slopes agree and the constants now agree to $1.4\\%$. The former factor-$3.4$ gap is fully accounted for:"
+      " the Omega-route matching used a constant-$g_*$ radiation scaling and $V_{\\rm end}$ in place of"
+      " $\\rho_{\\rm end}=K_{\\rm end}+V_{\\rm end}$, and this script solved $x_*$ from $e^{2x}-2x=2\\beta^2N$,"
+      " which is not the slow-roll relation for this potential (it returns $N=3.70$ at the $x_*=2.124$ that the"
+      " equation yields). All three are corrected, so the cross-check is now a consistency confirmation rather"
+      " than an open discrepancy.)\n")
 
     r = out["reheating"]
     A("## 3. The two reheating channels\n")

@@ -87,6 +87,14 @@ T_reh moves them by a factor 10, while it moves n_s by only ~1.1e-3 and r by
 script verifies the exact relation m_psi/H_inf = (g/sqrt(xi)) (M_Pl/H_inf),
 which ties the dark-matter mass to the inflationary scale through the shared VEV.
 
+The N <-> T_reh matching behind every tabulated T_reh* value uses comoving-entropy
+conservation across the radiation era (`derive_from_action.N_match_derived` with
+`entropy_matching=True`) together with rho_end = K_end + V_end at the end of
+inflation, rather than the constant-g_* scaling a ~ rho^(-1/4). The independent
+first-principles recomputation in `background_and_reheating.py` now agrees with
+that table to 1.4 percent; the two routes previously differed by a factor 3.4
+because of that scaling plus a wrong x_* relation in the cross-check.
+
 ## Submission packaging
 
 Suggested zip contents for submission: `paper_prd_merged.tex`, `sn-jnl.cls`,

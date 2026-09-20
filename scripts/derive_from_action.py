@@ -259,6 +259,11 @@ def N_match_derived(
     Om_m: float = 0.315,
     Om_r: float = 9.0e-5,
     k_mpc: float = 0.05,
+    entropy_matching: bool = True,
+    gs_reh: float = 106.75,
+    gs_eq: float = 3.91,
+    gstar_eq: float = 3.36,
+    rho_end_ratio: float = 1.199916,
 ) -> dict:
     T0 = T0_GeV()
     H0 = H0_GeV_v2()
@@ -277,10 +282,23 @@ def N_match_derived(
     a_eq = Om_r / Om_m
     rho_eq = Om_r * rho_c0 * a_eq ** (-4)
 
-    # a_reh from radiation: rho_reh (a_reh/a_eq)^4 = rho_eq => a_reh = a_eq (rho_eq/rho_reh)^{1/4}
-    a_reh = a_eq * (rho_eq / rho_reh) ** 0.25
-    # a_end from matter-like: rho_end (a_end/a_reh)^3 = rho_reh => a_end/a_reh = (rho_reh/rho_end)^{1/3}
-    a_end = a_reh * (rho_reh / V_end) ** (1.0 / 3.0)
+    # a_reh from radiation.  Two routes are available:
+    #   (i)  rho ~ a^-4 at fixed g_*:      a_reh = a_eq (rho_eq/rho_reh)^{1/4}
+    #   (ii) comoving entropy conservation: a_reh = a_eq (g_s,eq/g_s,reh)^{1/3} (T_eq/T_reh)
+    # Route (i) is valid only while g_* is constant.  Between T_reh and T_eq the
+    # relativistic degrees of freedom fall from g_s,reh = 106.75 to g_s,eq = 3.91, which
+    # shifts a_reh by a factor 1.263 and N by 0.234 e-folds.  Route (ii) is the standard
+    # matching and is the default; route (i) is kept for comparison/regression.
+    if entropy_matching:
+        T_eq = (30.0 * rho_eq / (math.pi ** 2 * gstar_eq)) ** 0.25
+        a_reh = a_eq * (gs_eq / gs_reh) ** (1.0 / 3.0) * (T_eq / T_reh)
+    else:
+        T_eq = (30.0 * rho_eq / (math.pi ** 2 * gstar)) ** 0.25
+        a_reh = a_eq * (rho_eq / rho_reh) ** 0.25
+    # a_end from matter-like condensate domination: rho (a_end/a_reh)^3 = rho_reh.
+    # The energy density at the end of inflation is rho_end = K_end + V_end, not V_end.
+    rho_end = rho_end_ratio * V_end
+    a_end = a_reh * (rho_reh / rho_end) ** (1.0 / 3.0)
     N = math.log(a_end / a_star)
 
     return {
