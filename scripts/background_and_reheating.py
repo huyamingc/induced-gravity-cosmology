@@ -452,10 +452,11 @@ def main() -> None:
       " (that would force $K_{\\rm end}=V_{\\rm end}/3$ and $\\epsilon_H=3/4$ -- an initial value, not a dynamical result).")
     A("Instead this script integrates the e-fold equations from the $\\epsilon_V=0.05$ slow-roll region up to $\\epsilon_V=1$,"
       " letting the dynamics determine $K_{\\rm end}$.\n")
-    A("Paper L.325 writes $K_{\\rm end}=\\frac12\\dot\\chi_{\\rm end}^2=\\epsilon_{\\rm end}V_{\\rm end}\\approx V_{\\rm end}$,")
+    A("An earlier draft of the paper wrote $K_{\\rm end}=\\frac12\\dot\\chi_{\\rm end}^2\\approx V_{\\rm end}$,")
     A("while the exact relation is $K=\\epsilon_H V/(3-\\epsilon_H)$; this integration gives "
       f"$K_{{\\rm end}}/V_{{\\rm end}}={sr['K_over_V_end']:.4f}$,")
-    A("a factor $\\sim5$ smaller than the paper's $\\approx1$, and $K_{\\rm end}/\\Delta V_J$ is reduced accordingly (quantitative version of P0-D).")
+    A("a factor $\\sim5$ below the $\\approx1$ of that draft, and $K_{\\rm end}/\\Delta V_J$ is reduced accordingly (quantitative version of P0-D).")
+    A("The manuscript now quotes the exact value (revision item 10), so this is a resolved historical note rather than an open item.\n")
     A(f"Moreover $\\rho_{{\\rm end}}=K+V={sr['rho_end']/sr['V_end']:.5f}V_{{\\rm end}}$,"
       f"i.e. the round-3 $1.19938\\,V_{{\\rm end}}$.\n")
 
