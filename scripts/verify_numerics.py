@@ -1,262 +1,275 @@
-# -*- coding: utf-8 -*-
-"""Numerical verification of claims in paper_prd_merged.tex.
-
-Writes scripts/verification_report.md and prints a summary.
+#!/usr/bin/env python3
 """
-from __future__ import annotations
-
+Numerical claims audit -- every quantitative claim in the manuscript recomputed
+from the current scripts
+=============================================================================
+Type:           PAPER
+Paper Sec.:     III, IV, V, VI, App. D
+Experiment:     numerical claims audit
+What it does:   The reverse direction of tex_number_audit.py.  That script asks
+                "is a superseded value still present?";  this one asks "is the
+                value that IS present correct?"  Each claim below carries the
+                number as printed in paper_prd_merged.tex, the script that
+                computes it, and the tolerance justified by how the number is
+                quoted.
+Tolerance classes:
+    identity  same formula and inputs                     (1e-9 .. 1e-6)
+    rounding  the manuscript quotes 2-3 significant figs  (1e-2 .. 5e-2)
+    route     two different implementations of one physics
+                (declared; the residual is reported, not hidden)
+Outputs:        verification_report.md, verification_report.json
+Dependencies:   reads background_and_reheating.json, dm_gap_closure_test.json,
+                residual_quintessence.json, psi_production_bogoliubov.json and
+                treh_error_band.json, so it must run after those scripts.
+=============================================================================
+"""
+import io
+import json
 import math
+import os
 import sys
+import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from cosmo_model import (  # noqa: E402
-    A_S,
-    M_P,
-    N_FID,
-    XI_FID,
-    FiducialPoint,
-    F_of_varphi,
-    H0_GeV,
-    N_match,
-    T_reh_from_N,
-    VE_of_varphi,
-    Vc,
-    fiducial,
-    lambda0_analytic,
-    lambda0_paper_A5_wrong,
-    m_chi,
-    r_of,
-    x_end,
-)
+os.environ.setdefault("PYTHONUNBUFFERED", "1")
+if hasattr(sys.stdout, "reconfigure"):          # Python 3.7+
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
 
-OUT = Path(__file__).resolve().parent / "verification_report.md"
-FIGDIR = Path(__file__).resolve().parent.parent / "figures"
-FIGDIR.mkdir(exist_ok=True)
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+OUT_MD = HERE / "verification_report.md"
+OUT_JSON = HERE / "verification_report.json"
+
+sys.path.insert(0, str(HERE))
+import derive_from_action as dfa        # noqa: E402
+import lock_n_convention as lk          # noqa: E402
+import background_and_reheating as bar  # noqa: E402
+
+XI = 11.1
+CLAIMS = []
 
 
-def check(name: str, paper: str, computed: str, ok: bool, note: str = "") -> str:
-    mark = "PASS" if ok else "CHECK"
-    return f"| {name} | {paper} | {computed} | **{mark}** | {note} |"
+def load_json(name):
+    p = HERE / name
+    if not p.exists():
+        return None
+    with io.open(p, encoding="utf-8") as fh:
+        return json.load(fh)
 
 
-def main() -> None:
-    fp = fiducial()
-    fp_num = fiducial(use_numeric_lam0=True)
-    lines: list[str] = [
-        "> # WARNING: OUTDATED (LEGACY) -- not valid for the current paper",
-        ">",
-        "> This report was computed with **OLD parameters**: the analytic A5 normalization lambda0=7.465e-8 (or the old draft value 6.78e-8), and r=0.00487 from the old Table I.",
-        "> The **current paper** uses the locked-$N$ convention: lambda0=6.70e-8, r=0.00425, n_s=0.9616 (N=50, xi=11.1).",
-        ">",
-        "> Therefore the **numerical values and PASS/FAIL verdicts in this report do NOT represent the current paper** -- historical comparison only.",
-        "> For current values see `lock_n_convention.py`, `background_and_reheating.py`, `dm_gap_closure_test.py`.",
-        "",
-    ]
-    lines.append("# Numerical verification report -- paper_prd_merged")
-    lines.append("")
-    lines.append("Script: `scripts/verify_numerics.py` (with companion `scripts/cosmo_model.py`)")
-    lines.append(f"Fiducial point: xi={fp.xi}, N={fp.N}, A_s={A_S}")
-    lines.append("")
-    lines.append("## 1. Parameters and inflationary observables")
-    lines.append("")
-    lines.append("| Quantity | Paper (merged draft) | Independent computation | Verdict | Note |")
-    lines.append("|---|---|---|---|---|")
-    lines.append(
-        check(
-            "beta_p=2/sqrt(6+1/xi)",
-            "0.810",
-            f"{fp.beta_p:.4f}",
-            abs(fp.beta_p - 0.810) < 0.002,
-        )
-    )
-    lines.append(
-        check(
-            "r(N=50,xi=11.1)",
-            "0.00487",
-            f"{fp.r:.6f}",
-            abs(fp.r - 0.00487) < 2e-5,
-            "8/(beta^2 N^2) == 2(6+1/xi)/N^2",
-        )
-    )
-    lam_an = fp.lam0
-    lam_A5_wrong = lambda0_paper_A5_wrong(fp.xi, fp.N)
-    lines.append(
-        check(
-            "lambda0 analytic (A_s relation)",
-            "value quoted in the text 6.78e-8; old-style appendix formula 48pi^2 xi^2 A_s/N^2",
-            f"analytic={lam_an:.4e}; old-style={lam_A5_wrong:.4e}; numeric draft={fp_num.lam0:.4e}",
-            False,
-            "the old-style formula misses (6+1/xi); analytic and numeric differ by ~9%",
-        )
-    )
-    lines.append(
-        check(
-            "n_s LO / NLO (N=50)",
-            "0.959 (NLO)",
-            f"LO={fp.ns_lo:.4f}, NLO={fp.ns_nlo:.4f}",
-            abs(fp.ns_nlo - 0.959) < 0.002,
-        )
-    )
-    lines.append(
-        check(
-            "e^{-x_end}",
-            "0.466",
-            f"{fp.u_end:.4f}",
-            abs(fp.u_end - 0.466) < 0.002,
-        )
-    )
-    lines.append(
-        check(
-            "V_end/V_0",
-            "0.285",
-            f"{fp.V_end_frac:.4f}",
-            abs(fp.V_end_frac - 0.285) < 0.003,
-        )
-    )
-    lines.append(
-        check(
-            "H_inf (analytic lambda0)",
-            "1.65e13 (numeric lambda0) / 1.73e13 (analytic)",
-            f"analytic={fp.H_inf:.4e}; numeric lambda0={fp_num.H_inf:.4e}",
-            True,
-            "self-consistent with each respective lambda0",
-        )
-    )
-    lines.append(
-        check(
-            "U^{1/4}=(3M_P^2H^2)^{1/4}",
-            "should be self-consistent with H (not 4.8e15)",
-            f"analytic={fp.U_quarter:.4e}; numeric={fp_num.U_quarter:.4e}",
-            True,
-            "the old draft value 4.8e15 is inconsistent with H",
-        )
-    )
-    lines.append(
-        check(
-            "m_chi (Einstein)",
-            "3.28e13 (numeric lambda0) / 3.43e13 (analytic)",
-            f"analytic={fp.m_chi:.4e}; numeric={fp_num.m_chi:.4e}",
-            True,
-        )
-    )
-    lines.append(
-        check(
-            "m_Phi (Jordan, at the vacuum)",
-            "~2.6e14",
-            f"{fp.m_Phi:.4e}",
-            True,
-            "sqrt(2 lambda0) Phi_0 = sqrt(2 lambda0) M_P/sqrt(xi)",
-        )
-    )
+def rel(a, b):
+    if b == 0.0:
+        return abs(a - b)
+    return abs(a - b) / abs(b)
 
-    lines.append("")
-    lines.append("## 2. N window and reheating")
-    lines.append("")
-    lam = fp.lam0
-    V0_ = fp.V0
-    V_end = fp.V_end
-    lines.append(f"- V_end(analytic) = {V_end:.4e} GeV^4")
-    for T in (1e9, 4e5, 1e-2, 6e15):
-        Ntry = N_match(T, V_end)
-        lines.append(f"- Eq.(Nmatch): T_reh={T:.2e} GeV -> N~{Ntry:.2f}")
-    lines.append("")
-    N_win = [48, 49, 50, 52, 55]
-    lines.append("| N | r | n_s NLO | lambda0 analytic | T_reh (invert Nmatch) |")
-    lines.append("|---|---|---|---|---|")
-    for N in N_win:
-        lam_N = lambda0_analytic(fp.xi, N)
-        Vend_N = fp.V0 * fp.V_end_frac  # weak N-dependence via lam0; recompute
-        Vend_N = (lam_N * M_P**4 / (4 * fp.xi**2)) * fp.V_end_frac
-        try:
-            T = T_reh_from_N(N, Vend_N)
-        except Exception:
-            T = float("nan")
-        lines.append(
-            f"| {N} | {r_of(fp.xi, N):.5f} | {1-2/N-1.5/N**2:.4f} | {lam_N:.3e} | {T:.3e} GeV |"
-        )
 
-    # Planck consistency
-    lines.append("")
-    lines.append("## 3. Planck consistency")
-    lines.append("")
-    for N in (48, 50, 52, 55):
-        ns = 1 - 2 / N - 1.5 / N**2
-        sigma = (ns - 0.9649) / 0.0042
-        lines.append(f"- N={N}: n_s={ns:.4f}, deviation from the Planck central value {sigma:+.2f} sigma")
+def claim(section, quantity, where, paper, computed, tol, kind="rounding", note=""):
+    if computed is None:
+        CLAIMS.append({"section": section, "quantity": quantity, "where": where,
+                       "paper": paper, "computed": None, "rel": float("nan"),
+                       "tol": tol, "ok": None, "kind": kind,
+                       "note": note or "source artefact missing"})
+        return
+    CLAIMS.append({"section": section, "quantity": quantity, "where": where,
+                   "paper": paper, "computed": computed, "rel": rel(computed, paper),
+                   "tol": tol, "ok": rel(computed, paper) <= tol, "kind": kind,
+                   "note": note})
 
-    lines.append("")
-    lines.append("## 4. Dark energy and mass hierarchy (ruling out single-field quintessence)")
-    lines.append("")
-    H0 = H0_GeV()
-    Vc_val = Vc()
-    lines.append(f"- H_0 = {H0:.4e} GeV")
-    lines.append(f"- V_c(Omega_Lambda=0.683) = {Vc_val:.4e} GeV^4 (paper ~2.7e-47)")
-    lines.append(f"- m_chi/H_0 (analytic lambda0) = {fp.m_chi_over_H0:.4e} -> **frozen, not quintessence**")
-    lines.append(f"- (H_0/m_chi)^2 ~ Delta w_Ricci ~ {(H0/fp.m_chi)**2:.3e} (paper ~2e-111)")
-    lines.append(f"- a homogeneous kinetic energy redshifts as rho_kin propto a^-6: it cannot account for DM/DE today")
 
-    lines.append("")
-    lines.append("## 5. Dark-matter parameter window")
-    lines.append("")
-    Phi0 = fp.Phi0
-    Hinf = fp.H_inf
-    lines.append(f"- Phi_0 = M_P/sqrt(xi) = {Phi0:.4e} GeV")
-    lines.append(f"- H_inf = {Hinf:.4e} GeV")
-    lines.append("| g | m_psi=g Phi_0 | m_psi/H_inf |")
-    lines.append("|---|---|---|")
-    for g in (1e-5, 2.3e-5, 1e-4):
-        mpsi = g * Phi0
-        lines.append(f"| {g:.2e} | {mpsi:.4e} GeV | {mpsi/Hinf:.3f} |")
-    lines.append("")
-    lines.append("Gravitational-production scaling: n_psi ~ H^3 e^{-pi m_psi/H}; dilution is even harsher at T_reh=4e5, requiring lattice simulations for a quantitative result.")
-    Tlow = 4e5
-    # qualitative scaling of dilution with T_reh: (a_end/a0)^3 propto T_reh
-    lines.append(f"- relative to T_reh=1e9, the dilution factor at T_reh={Tlow:.0e} scales as {Tlow/1e9:.2e} (the abundance window shifts)")
+def main():
+    t0 = time.time()
+    print("[%s] START: numerical claims audit" % time.strftime("%H:%M:%S"))
+    br = load_json("background_and_reheating.json")
+    dmg = load_json("dm_gap_closure_test.json")
+    rq = load_json("residual_quintessence.json")
+    bog = load_json("psi_production_bogoliubov.json")
+    teb = load_json("treh_error_band.json")
 
-    lines.append("")
-    lines.append("## 6. Conformal decoupling algebra")
-    lines.append("")
-    lines.append("- Yukawa: mass dimension of Phi*psibar*psi*sqrt(-g): 1 + 3/2 + 3/2 - 4 = **0** -> m_E=g Phi_0 is constant, and the tree-level chi*psibar*psi vertex vanishes")
-    lines.append(f"- G_eff(Phi_0)=1/(8 pi xi Phi_0^2) vs 1/(8 pi M_P^2): {1/(8*math.pi*fp.xi*fp.Phi0**2):.6e} vs {1/(8*math.pi*M_P**2):.6e}  (equal)")
+    p50 = lk.point(XI, 50.0)
+    p55 = lk.point(XI, 55.0)
+    H0 = rq["constants"]["H0_GeV"] if rq else dfa.H0_GeV_v2()
 
-    # Conformal algebra numeric
-    Omega = 3.7
-    Phi = Phi0 * Omega
-    # powers cancel
-    lines.append(f"- numerical spot check Omega={Omega}: Phi Omega^3 Omega^{-4} = Phi*{Omega**3*Omega**-4:.6f} -> ratio = Phi/Phi_0*1")
+    # ---------------------------------------------------------- Sec. III
+    S = "III inflation"
+    claim(S, "lambda0 at N=50", "abstract / Table I", 6.70e-8, p50["lambda0"], 5e-3)
+    claim(S, "n_s at N=50", "abstract / Table I", 0.9616, p50["ns"], 1e-4)
+    claim(S, "r at N=50", "abstract / Table I", 0.00425, p50["r"], 3e-3)
+    claim(S, "n_s at N=55", "Table I", 0.9650, p55["ns"], 1e-4)
+    claim(S, "r at N=55", "Table I", 0.00355, p55["r"], 3e-3)
+    claim(S, "H_inf at N=50", "text / Table I", 1.64e13, p50["H_inf"], 5e-3)
+    claim(S, "m_chi at N=50", "text / Table I", 3.25e13, p50["m_chi"], 5e-3)
+    claim(S, "V0", "Sec. III", 4.78e63, p50["V0"], 5e-3)
+    claim(S, "beta_p", "Eq. (Nint)", 0.8104, p50["beta_p"], 5e-4)
+    claim(S, "x_end", "App. D0", 0.76367, bar.X_END, 1e-4, "identity")
+    claim(S, "eps_H(x_end)", "App. D0", 0.4988,
+          br["slowroll"]["eps_H_end"] if br else None, 5e-4)
+    claim(S, "V_end/V0", "App. D0", 0.28520,
+          br["slowroll"]["V_end_frac_of_V0"] if br else None, 5e-4)
+    claim(S, "K_end/V_end", "Sec. III / App. D0", 0.1994,
+          br["slowroll"]["K_over_V_end"] if br else None, 5e-4)
+    claim(S, "rho_end/V_end", "Sec. III", 1.1994,
+          br["background"]["rho_end_over_V_end"] if br else None, 5e-4)
+    rmax = max(lk.point(XI, float(n))["r"] for n in range(45, 56))
+    claim(S, "max r over the 2-sigma band", "Sec. III", 0.0052, rmax, 2e-2)
 
-    lines.append("")
-    lines.append("## 7. Domain walls and the EFT boundary")
-    lines.append("")
-    lam0 = fp.lam0
-    xi = fp.xi
-    Phi0 = M_P / math.sqrt(xi)
-    sigma = (4.0 / 3.0) * math.sqrt(lam0 / 2.0) * Phi0**3
-    lines.append(f"- sigma_wall = (4/3) sqrt(lambda0/2) Phi_0^3 = {sigma:.4e} GeV^3 (paper: order ~1e50)")
-    lines.append("- F(0)=xi*0=0, F'(0)=0 -> the Israel thin-shell condition at Phi=0 is not algebraically self-consistent (structural)")
+    nw = bar.solve_N_max()
+    claim(S, "N_max (proper rho_end ceiling)", "Sec. III / App. D0", 55.6,
+          nw["N_max_proper"], 2e-3, "route")
+    claim(S, "N_max (naive V_end^{1/4} ceiling)", "App. D0", 55.9,
+          nw["N_max_naive_Vend14"], 2e-3, "route")
 
-    lines.append("")
-    lines.append("## 8. Summary of conclusions")
-    lines.append("")
-    lines.append("| Claim | Verification result |")
-    lines.append("|---|---|")
-    lines.append("| Starobinsky-like n_s(N), r(N) | **holds** (formula and numerics agree) |")
-    lines.append("| N in [48,55] vs BBN+Planck | **roughly holds**; at N=50 n_s is low by ~1.2-1.4 sigma, and larger N moves closer to Planck |")
-    lines.append("| lambda0 old appendix formula | **does not hold**; analytic lambda0 ~ 7.46e-8 while the numeric-draft value 6.78e-8 is a different matching |")
-    lines.append("| Conformal decoupling Omega=Phi/Phi_0 | **holds** |")
-    lines.append("| Single-field quintessence DE | **does not hold** (m_chi/H_0~10^55); DE=V_c frozen **holds** |")
-    lines.append("| DM gravitational production | **mechanism holds**; Omega quantitatively **not verified** (lattice needed) |")
-    lines.append("| Falsifiable window r <~ 0.0053 | **holds** (for the adopted N window and xi=11.1) |")
-    lines.append("")
-    lines.append(f"Figure directory: `{FIGDIR}`")
-    lines.append("")
-    lines.append("[verification complete]")
+    T50 = lk.T_reh_for_N_derived(p50, 50.0)
+    T56 = lk.T_reh_for_N_derived(lk.point(XI, 56.0), 56.0)
+    claim(S, "T_reh*(50)", "Sec. III / Table I", 1.1e8, T50, 5e-2)
+    claim(S, "T_reh*(56)", "Sec. III", 7.8e15, T56, 5e-2)
+    claim(S, "T_reh~1e9 GeV maps to N", "abstract / Sec. III", 50.7,
+          lk.N_derived_for_T(p50, 1.0e9), 2e-3, "route")
+    claim(S, "T_reh~2.1e8 GeV maps to N", "Table 2 row 2", 50.23,
+          lk.N_derived_for_T(p50, 2.1e8), 2e-3, "route")
 
-    OUT.write_text("\n".join(lines), encoding="utf-8")
-    print("\n".join(lines))
-    print(f"\nWrote {OUT}")
+    # ---------------------------------------------------------- Sec. IV
+    S = "IV reheating"
+    claim(S, "T_reh^inst at N=50", "Sec. IV", 2.6e15, bar.T_reh_inst(50.0), 2e-2)
+    claim(S, "T_reh^inst at N=56", "Sec. III (ceiling that excludes N>=56)",
+          2.5e15, bar.T_reh_inst(56.0), 2e-2,
+          note="the ceiling falls as N^-1/2, so the N=56 value must lie BELOW the "
+               "N=50 value quoted in Sec. IV")
+    if br:
+        rows = br["reheating"]["anomaly"]["rows"]
+        phys = [r for r in rows if r["label"].startswith("physical")]
+        if phys:
+            claim(S, "alpha_s(m_chi)", "Sec. IV", 0.0262, phys[0]["alpha_s"], 5e-3)
+            claim(S, "Gamma_chi->gg", "Sec. IV", 0.065, phys[0]["Gamma_GeV"], 5e-2)
+            claim(S, "T_reh^(anomaly)", "Sec. IV", 2.1e8, phys[0]["T_reh_GeV"], 5e-2)
+
+    # ---------------------------------------------------------- Sec. V
+    S = "V dark matter"
+    if dmg and teb:
+        claim(S, "Phi_V", "Sec. V", 7.31e17, teb["Phi_V_GeV"], 5e-3)
+        claim(S, "g (light branch)", "abstract / Sec. V", 1.0e-7,
+              dmg["g_star_powerlaw"], 5e-2)
+        claim(S, "m_psi", "abstract / Sec. V", 7.5e10,
+              dmg["m_star_powerlaw"] * teb["rows"][1]["H_inf_GeV"], 5e-2)
+        claim(S, "m_psi/H_inf", "abstract / Sec. V", 4.6e-3,
+              dmg["m_star_powerlaw"], 5e-2)
+        claim(S, "lambda_fs anchor", "abstract / Table 2", 9.5e-20,
+              dmg["free_streaming"]["lambda_fs_Mpc"], 5e-2)
+        claim(S, "lambda_fs bound margin [orders]", "Sec. V", 17.5,
+              math.log10(0.1 / dmg["free_streaming"]["lambda_fs_Mpc"]), 5e-2)
+        claim(S, "m_psi/H_inf from the mode equation", "Sec. V", 4.6e-3,
+              dmg["m_star_powerlaw"], 5e-2, "identity",
+              note="the anchor of dm_gap_closure_test.json, i.e. the same number "
+                   "the light-branch scan converges to")
+        s = teb["summary"]
+        claim(S, "band: Delta N", "Sec. V", 1.5, s["dN"], 3e-2)
+        claim(S, "band: Delta n_s", "Sec. V", 1.1e-3, s["dns"], 5e-2)
+        claim(S, "band: Delta r / r", "Sec. V", 0.055, s["dr_over_r"], 5e-2)
+        claim(S, "band: g ratio", "Sec. V", 10.0, s["g_ratio"], 1e-3)
+        slope = ((math.log(teb["rows"][-1]["lambda_fs_Mpc"])
+                  - math.log(teb["rows"][0]["lambda_fs_Mpc"]))
+                 / (math.log(teb["rows"][-1]["m_over_H_derived"])
+                    - math.log(teb["rows"][0]["m_over_H_derived"])))
+        claim(S, "dln(lambda_fs)/dln(m_psi)", "Sec. V", -0.55, slope, 3e-2,
+              "route", note="the manuscript quotes -0.54 to -0.55")
+    if bog:
+        claim(S, "Bogoliubov exponent audit present", "Sec. V", 1.0,
+              1.0 if bog["exponent_audit"] else 0.0, 1e-9, "identity")
+
+    # ---------------------------------------------------------- Sec. VI
+    S = "VI dark energy"
+    claim(S, "m_chi/H0 [orders]", "Sec. VI", 55.0,
+          math.log10(p50["m_chi"] / H0), 2e-2)
+    if rq:
+        dw = rq["delta_w"]
+        claim(S, "Delta w (quantum) exponent", "Sec. VI", 121.0,
+              -math.log10(dw["quant_recomputed_H0^4/Vc"]), 2e-2)
+        claim(S, "Delta w (Ricci) exponent", "Sec. VI", 111.0,
+              -math.log10(dw["Ricci_recomputed"]), 2e-2)
+        claim(S, "overclosure bound rho_cond/V_c", "Sec. VI", 0.39,
+              dw["overclosure_bound_OmegaDM_over_OmegaL"], 5e-2)
+        claim(S, "V_c [GeV^4]", "Sec. VI", 2.5e-47, rq["constants"]["V_C"], 2e-2,
+              note="V_c = Omega_Lambda * rho_c with the manuscript's own "
+                   "Omega_Lambda = 0.683; 2.7e-47 would require Omega_Lambda = 0.73")
+        rho_c = rq["constants"]["RHO_C"]
+        claim(S, "rho_DM^(0) [GeV^4]", "Sec. VI / App. D5c", 9.7e-48,
+              0.265 * rho_c, 2e-2,
+              note="= Omega_DM * rho_c with the manuscript's own Omega_DM = 0.265; "
+                   "1.06e-47 would require Omega_DM = 0.288, and the two places that "
+                   "quoted it disagreed with each other")
+
+    # ---------------------------------------------------------- summary
+    graded = [c for c in CLAIMS if c["ok"] is not None]
+    n_fail = sum(1 for c in graded if not c["ok"])
+    n_skip = len(CLAIMS) - len(graded)
+
+    out = []
+    A = out.append
+    A("# Numerical claims audit")
+    A("")
+    A("Every quantitative claim in `paper_prd_merged.tex` recomputed from the current")
+    A("scripts.  This is the reverse direction of `tex_number_audit.py`: that script")
+    A("looks for *superseded* values, this one checks that the values that *are*")
+    A("printed are correct.")
+    A("")
+    A("## Summary")
+    A("")
+    A(f"- Claims checked: **{len(graded)}** ({n_skip} skipped: source artefact absent)")
+    A(f"- Failures: **{n_fail}**")
+    A("")
+    A("| section | claims | failures |")
+    A("|---|---|---|")
+    for sec in dict.fromkeys(c["section"] for c in CLAIMS):
+        sub = [c for c in CLAIMS if c["section"] == sec and c["ok"] is not None]
+        if sub:
+            A("| %s | %d | %d |" % (sec, len(sub),
+                                    sum(1 for c in sub if not c["ok"])))
+    A("")
+    A("## Claims")
+    A("")
+    A("| section | quantity | where | printed | recomputed | rel. dev | tol | verdict |")
+    A("|---|---|---|---|---|---|---|---|")
+    for c in CLAIMS:
+        if c["computed"] is None:
+            A("| %s | %s | %s | %.6g | - | - | %.0e | SKIP |"
+              % (c["section"], c["quantity"], c["where"], c["paper"], c["tol"]))
+        else:
+            A("| %s | %s | %s | %.6g | %.6g | %.2e | %.0e | %s |"
+              % (c["section"], c["quantity"], c["where"], c["paper"], c["computed"],
+                 c["rel"], c["tol"], "OK" if c["ok"] else "**FAIL**"))
+    A("")
+    if n_fail:
+        A("## Failing claims")
+        A("")
+        for c in graded:
+            if not c["ok"]:
+                A("- **%s** (%s): printed %.6g, recomputed %.6g, rel %.3e > tol %.0e"
+                  % (c["quantity"], c["where"], c["paper"], c["computed"],
+                     c["rel"], c["tol"]))
+                if c["note"]:
+                    A("  - %s" % c["note"])
+        A("")
+    else:
+        A("No failing claim.")
+        A("")
+    noted = [c for c in CLAIMS if c["note"] and c["ok"]]
+    if noted:
+        A("## Notes on claims that pass")
+        A("")
+        for c in noted:
+            A("- **%s**: %s" % (c["quantity"], c["note"]))
+        A("")
+    A(f"Runtime: {time.time() - t0:.2f} s")
+
+    OUT_MD.write_text("\n".join(out), encoding="utf-8")
+    with io.open(OUT_JSON, "w", encoding="utf-8") as fh:
+        json.dump({"claims": CLAIMS, "failures": n_fail,
+                   "runtime_s": time.time() - t0}, fh, indent=1)
+    print("\n".join(out))
+    print("[%s] DONE: %d claims, %d failure(s)"
+          % (time.strftime("%H:%M:%S"), len(graded), n_fail))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

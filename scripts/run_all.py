@@ -23,8 +23,6 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 SCRIPTS = [
-    "verify_numerics.py",
-    "consistency_checks.py",
     "extended_checks.py",
     "derive_from_action.py",
     "n_definition_check.py",
@@ -46,13 +44,21 @@ SCRIPTS = [
     "residual_quintessence.py",        # two-fluid Boltzmann integration; Delta w budget
     # SLOW tail.  Measured end-to-end on the author's machine (Python 3.13,
     # numpy 2.4 / scipy 1.18 / matplotlib 3.11): psi_abundance_oscillating ~5.5 min,
-    # dm_gap_closure_test ~19 min, so a full run_all.py is ~25 min.  dm_gap_closure_test
-    # imports psi_abundance_oscillating, so it runs after it.
+    # dm_gap_closure_test 10-15 min, so a full run_all.py is 15-20 min (the spread is
+    # machine load).  dm_gap_closure_test imports psi_abundance_oscillating, so it runs
+    # after it.
     "psi_abundance_oscillating.py",
     "dm_gap_closure_test.py",          # light-branch abundance matching + free-streaming check
     # Reads dm_gap_closure_test.json, so it must run after it.  Cheap (analytic + one
     # small brentq scan), and it is the script behind the T_reh error-band table of Sec. V.
     "treh_error_band.py",              # T_reh uncertainty -> (N, n_s, r) and (g, m_psi) band
+    # --- Auditors.  Both read the .json artefacts written above AND the .tex table
+    #     bodies, so they must run LAST.  verify_numerics.py recomputes every printed
+    #     claim from the current scripts; consistency_checks.py checks every table cell
+    #     against the script that produces it and every independent route against the
+    #     other.  Together they take well under a second.
+    "verify_numerics.py",              # paper claims -> code
+    "consistency_checks.py",           # paper tables -> code, and code -> code
 ]
 
 

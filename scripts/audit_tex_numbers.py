@@ -26,8 +26,8 @@ PRIMARY = {
     "r_max_2s": 0.0052,
     "m_chi_N50": 3.25e13,
     "H_N50": 1.64e13,
-    "N_anomaly": 51,
-    "N_band": (45, 58),
+    "N_anomaly": 50.7,
+    "N_band": (45, 55.6),
 }
 
 # Values that are ONLY OK in comparison/historical notes
@@ -102,11 +102,11 @@ def main() -> None:
         ("lambda0 N=50", r"6\.70"),
         ("r N=50", r"0\.00425"),
         ("r_max 2sigma", r"0\.0052"),
-        ("N anomaly", r"N\\simeq51|N\simeq51"),
+        ("N anomaly", r"N\\simeq50\.7"),
         ("m_chi", r"3\.25"),
         ("H_inf", r"1\.64"),
         ("N band low", r"45"),
-        ("N band high", r"58"),
+        ("N band high", r"56"),
     ]
     for name, pat in checks:
         A(f"| {name} | `{pat}` | {len(re.findall(pat, t))} |")

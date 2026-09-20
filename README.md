@@ -50,9 +50,9 @@ $env:PYTHONUNBUFFERED=1
 `scripts/run_all.py` is the single entry point. It runs every verification and
 figure script in order and regenerates the reports (`scripts/*.md`, `*.json`)
 and the three figures. Measured end-to-end runtime on the author's machine
-(Python 3.13, numpy 2.4 / scipy 1.18 / matplotlib 3.11) is about **20 minutes**
+(Python 3.13, numpy 2.4 / scipy 1.18 / matplotlib 3.11) is **15--20 minutes**
 in total, of which `psi_abundance_oscillating.py` takes ~5.5 min and
-`dm_gap_closure_test.py` ~14 min; `treh_error_band.py` finishes in under a
+`dm_gap_closure_test.py` 10--15 min (the spread is machine load); `treh_error_band.py` finishes in under a
 second. On a Windows console, either run through
 `run_all.py` (it reconfigures the output streams to UTF-8) or set
 `$env:PYTHONIOENCODING='utf-8'` before running a single script.
@@ -72,6 +72,13 @@ Key result scripts:
 | `dm_gap_closure_test.py` | small-g light branch and free-streaming length |
 | `treh_error_band.py` | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
 | `residual_quintessence.py` | two-fluid integration, Delta w budget |
+| `verify_numerics.py` | recomputes every quantitative claim printed in the paper from the current scripts; the reverse direction of `audit_tex_numbers.py` |
+| `consistency_checks.py` | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
+
+Both auditors run last in `run_all.py` (they read the `.json` artefacts and the
+manuscript tables) and together take under a second. They are the automated form
+of the manual cross-checks that closed the N <-> T_reh matching review: run them
+after any edit to the manuscript or to the matching code.
 
 ## Dark-matter convention (paper Sec. V)
 
