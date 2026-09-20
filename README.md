@@ -79,7 +79,7 @@ value.
 | `treh_error_band.py` | exact / error propagation | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
 | `residual_quintessence.py` | exact / cross-check | two-fluid integration, Delta w budget |
 | `verify_numerics.py` | audit | recomputes every quantitative claim printed in the paper from the current scripts, including the order-of-magnitude block; the reverse direction of `audit_tex_numbers.py` |
-| `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
+| `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, compares independent routes against each other, and verifies the figure link in both directions: every `\includegraphics` target exists on disk, and `figures/` holds nothing the manuscript does not include |
 | `audit_tex_numbers.py` | audit | scans the `.tex` for superseded values and checks that any survivor sits in a comparison or historical context |
 | `audit_readme_numbers.py` | audit | recomputes the prose numbers in this README from the scripts. Its patterns must still match, so rewording a sentence without updating the audit is itself a failure |
 | `provenance_map.py` | audit / documentation | parses `verify_numerics.py` and regenerates the "Data provenance" table in this README, so the manuscript-number -> producing-function mapping cannot drift from the audit it describes |

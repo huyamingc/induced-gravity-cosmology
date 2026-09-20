@@ -352,6 +352,23 @@ def main():
            2.6e15, "background.T_reh_inst(50)", bar.T_reh_inst(N_FID), 2e-2,
            "rounding")
 
+    # ---- A. figures: the manuscript must include one that the run produced,
+    # and the run must not leave an unreferenced one behind.  Nothing checked
+    # this link before: a renamed or failed figure script surfaced only as a
+    # LaTeX error at compile time, never as a run_all failure.  Both sides are
+    # scored 1.0/0.0 so the same rel() machinery reports a mismatch either way
+    # (included-but-absent, or present-but-never-included).
+    figdir = ROOT / "figures"
+    included = {os.path.basename(m.group(1)) for m in re.finditer(
+        r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", text)}
+    on_disk = {p.name for p in figdir.glob("*.pdf")}
+    for name in sorted(included | on_disk):
+        record("figures", name, "manuscript includes it",
+               1.0 if name in included else 0.0, "written into figures/",
+               1.0 if name in on_disk else 0.0, 1e-9, "identity",
+               note="both sides must be 1: the manuscript must include the figure "
+                    "AND the run must have produced it (and produce nothing else)")
+
     # ---- write ---------------------------------------------------------
     n_fail = sum(1 for r in LEDGER if not r["ok"])
     worst = max(r["rel"] for r in LEDGER)
