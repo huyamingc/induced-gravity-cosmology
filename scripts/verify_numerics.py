@@ -122,6 +122,15 @@ def main():
     p50 = lk.point(XI, 50.0)
     p55 = lk.point(XI, 55.0)
     H0 = rq["constants"]["H0_GeV"] if rq else dfa.H0_GeV_v2()
+    # Light-branch dark-matter mass, m_psi = (m_psi/H_inf) H_inf.  The ratio is
+    # dm_gap_closure_test.json's anchor and was measured at the fiducial H_inf, so
+    # it must be multiplied by the fiducial H_inf (p50).  The H_inf column of
+    # treh_error_band.json drifts with T_reh and N and belongs to a different
+    # background, so it is the wrong partner here.  Sec. V needs this product for
+    # the abundance-matched point and Sec. XII for its two consistency entries,
+    # so it is formed once.
+    H_INF = p50["H_inf"]
+    M_PSI = (dmg["m_star_powerlaw"] * H_INF) if dmg else None
 
     # ---------------------------------------------------------- Sec. III
     S = "III inflation"
@@ -200,8 +209,7 @@ def main():
         claim(S, "Phi_V", "Sec. V", 7.31e17, teb["Phi_V_GeV"], 5e-3)
         claim(S, "g (light branch)", "abstract / Sec. V", 1.0e-7,
               dmg["g_star_powerlaw"], 5e-2)
-        claim(S, "m_psi", "abstract / Sec. V", 7.5e10,
-              dmg["m_star_powerlaw"] * teb["rows"][1]["H_inf_GeV"], 5e-2)
+        claim(S, "m_psi", "abstract / Sec. V", 7.5e10, M_PSI, 5e-2)
         claim(S, "m_psi/H_inf", "abstract / Sec. V", 4.6e-3,
               dmg["m_star_powerlaw"], 5e-2)
         claim(S, "lambda_fs anchor", "abstract / Table 2", 9.5e-20,
@@ -299,6 +307,27 @@ def main():
     # ---------------------------------------------------------- Sec. XII
     # Closed-form claims from the Discussion list; same order class as above.
     S = "XII discussion"
+    # The two entries of the "additional consistency checks" list that had NO
+    # executing source anywhere in the suite -- current or retired.  Both were
+    # found to carry a stale wimpzilla-scale mass (m ~ 1e13 GeV): 1e-67 cm^2/g
+    # and 1e52 GeV^4 are what these closed forms give at m = 1e13, not at the
+    # m_psi = 7.5e10 GeV that Sec. V actually matches.  The manuscript now
+    # quotes the values checked here.
+    if M_PSI:
+        sig_ov_m = oe.sigma_psipsi_over_m(M_PSI)
+        claim_order(S, "sigma_psipsi/m_psi (graviton exchange)", "Sec. XII (i)",
+                    7.0e-70, sig_ov_m, 0.5,
+                    note="G_N^2 m_psi (hbar c)^2 / G_PER_GEV with the same G_N and "
+                         "the same (hbar c)^2 convention as sigma_psiN; this entry "
+                         "had no source before this migration")
+        claim(S, "bullet-cluster margin [orders]", "Sec. XII (i)", 69.0,
+              -math.log10(sig_ov_m), 2e-2,
+              note="the manuscript writes '~69 orders below the bullet-cluster "
+                   "bound'; the printed cross section must move with it")
+        claim_order(S, "Tremaine-Gunn Q", "Sec. XII (ii)",
+                    3.0e43, oe.tremaine_gunn_Q(M_PSI, H_INF), 0.5,
+                    note="Q = rho/sigma_v^3 = m_psi^4 with rho = m_psi H_inf^3 and "
+                         "sigma_v = H_inf/m_psi; also had no source before")
     claim_order(S, "spectral running alpha_s", "Sec. XII (xiv)", -8.0e-4,
                 oe.alpha_s_attractor(), 0.5,
                 note="attractor closed form -2/N^2 at the locked N=50")

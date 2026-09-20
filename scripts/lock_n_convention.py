@@ -24,7 +24,7 @@ AND T_reh above BBN.
 
 Outputs:
   scripts/n_convention_results.md
-  figures/fig2_ns_r_lockedN.pdf
+  scripts/n_convention_results.json
 """
 from __future__ import annotations
 
@@ -33,11 +33,6 @@ import math
 import sys
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
 from scipy.optimize import brentq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -61,9 +56,6 @@ from derive_from_action import (
     V0_from_lambda,
 )
 
-ROOT = Path(__file__).resolve().parent.parent
-FIGDIR = ROOT / "figures"
-FIGDIR.mkdir(exist_ok=True)
 OUT_MD = Path(__file__).resolve().parent / "n_convention_results.md"
 OUT_JSON = Path(__file__).resolve().parent / "n_convention_results.json"
 
@@ -274,49 +266,12 @@ def main() -> None:
     lines.append("")
 
     # --- Figure 2 locked ---
-    lines.append("## 7. Redraw Fig.2 (locked N)")
+    # Fig. 2 is produced by fig2_ns_r.py, the FIG-class script.  This script used
+    # to redraw it here as figures/fig2_ns_r_lockedN.pdf, which duplicated the
+    # artefact byte-for-byte and left two files claiming to be the same figure.
+    lines.append("## 7. Figure 2")
     lines.append("")
-    xi = 11.1
-    Ns_plot = np.linspace(44, 60, 80)
-    ns_plot, r_plot = [], []
-    for N in Ns_plot:
-        p = point(xi, float(N))
-        ns_plot.append(p["ns"])
-        r_plot.append(p["r"])
-    fig, ax = plt.subplots(figsize=(6.2, 4.6), dpi=200)
-    # schematic Planck
-    th = np.linspace(0, 2 * np.pi, 300)
-    ax.fill(
-        N_S_OBS + SIG_NS * np.cos(th),
-        0.004 * np.sin(th),
-        color="#d6dce4",
-        alpha=0.7,
-        label="Planck 1 sigma (schematic)",
-    )
-    ax.plot(ns_plot, r_plot, color="#1f4e79", lw=2, label=r"locked $N=\ln(a_{\rm end}/a_*)$")
-    # mark N=48,50,52,55
-    for N in (48, 50, 52, 55):
-        p = point(xi, float(N))
-        ax.scatter([p["ns"]], [p["r"]], c="#c00000", s=40, zorder=5)
-        ax.annotate(f"N={N}", (p["ns"], p["r"]), textcoords="offset points", xytext=(6, 4), fontsize=8)
-    ax.axhline(0.036, color="k", ls="--", lw=1, label=r"$r<0.036$ BICEP/Keck")
-    N10 = r_falsify_line(xi, 0.01)
-    if not math.isnan(N10):
-        p10 = point(xi, N10)
-        ax.axhline(0.01, color="#7030a0", ls=":", lw=1.2, label=fr"$r=0.01$ at $N\approx{N10:.1f}$")
-        ax.scatter([p10["ns"]], [p10["r"]], c="#7030a0", marker="x", s=60, zorder=6)
-    ax.set_xlabel(r"$n_s$")
-    ax.set_ylabel(r"$r$")
-    ax.set_title(r"Fig.2 (locked $N$)  $\xi=11.1$, exact slow-roll")
-    ax.set_xlim(0.954, 0.972)
-    ax.set_ylim(-0.002, 0.040)
-    ax.grid(True, alpha=0.25)
-    ax.legend(fontsize=8, loc="upper right")
-    ax.text(0.955, 0.033, "Planck ellipse schematic; N = exact cosmological e-folds", fontsize=7, color="#555")
-    fig.tight_layout()
-    for ext in ("pdf", "png"):
-        fig.savefig(FIGDIR / f"fig2_ns_r_lockedN.{ext}")
-    lines.append(f"- figure written: `figures/fig2_ns_r_lockedN.pdf`")
+    lines.append("- written by fig2_ns_r.py as `figures/fig2_ns_r.pdf`, the file the manuscript includes")
     lines.append("")
 
     # --- Summary ---
@@ -357,7 +312,6 @@ def main() -> None:
     print("\n".join(lines))
     print(f"\nWrote {OUT_MD}")
     print(f"Wrote {OUT_JSON}")
-    print(f"Wrote {FIGDIR/'fig2_ns_r_lockedN.pdf'}")
 
 
 if __name__ == "__main__":

@@ -53,6 +53,7 @@ if hasattr(sys.stdout, "reconfigure"):          # Python 3.7+
 from cosmo_model import G_STAR_REH, M_P, N_FID, XI_FID  # noqa: E402
 
 HBAR_C = 1.973269804e-14       # GeV cm
+G_PER_GEV = 1.782661921e-24    # grams per GeV (c^2 included)
 DLNMU = 60.0                   # running range of Eqs. (dxilam)/(dxig)
 ALPHA_S_THERM = 0.1            # the alpha_s the manuscript uses for Gamma_therm
 G_ANOM = 6.9e-5                # anomaly-framework matching point of Sec. III
@@ -192,12 +193,82 @@ def dn_quartic_over_yukawa(xi: float, lam0: float, g: float,
 # --------------------------------------------------------------------------
 # Sec. XII -- Discussion closed forms
 # --------------------------------------------------------------------------
+def sigma_psipsi_over_m(m_psi: float, m_N: float = 1.0) -> float:
+    """psi--psi self-interaction cross section per unit mass, in cm^2/g.
+
+    sigma_psipsi ~ G_N^2 m_psi^2 (hbar c)^2 (graviton t-channel exchange) and
+    the mass is converted with G_PER_GEV, so this is sigma/m in cm^2/g:
+
+        sigma/m = G_N^2 m_psi (hbar c)^2 / G_PER_GEV .
+
+    ``m_N`` is an unused-by-default reference mass kept in the signature only to
+    mirror sigma_psiN_cm2; the scaling is linear in m_psi, so the result is the
+    SAME G_N and the same (hbar c)^2 convention the manuscript uses for
+    sigma_psiN in Sec. V.
+
+    The manuscript prints ~7e-70 cm^2/g (about 69 orders below the bullet-cluster
+    bound of 1 cm^2/g) at the light-branch m_psi.  NOTE: an earlier draft
+    printed ~1e-67 cm^2/g, which is what this formula gives for m_psi = 1e13 GeV,
+    not for the m_psi = 7.5e10 GeV that Sec. V actually selects.  Sec. XII had
+    kept the old wimpzilla-scale mass; it is now tied to the matching value.
+    """
+    G_N = 1.0 / (8.0 * math.pi * M_P**2)
+    sigma_cm2 = G_N**2 * m_psi**2 * HBAR_C**2
+    m_grams = m_psi * G_PER_GEV
+    return sigma_cm2 / m_grams
+
+
+def tremaine_gunn_Q(m_psi: float, H_inf: float) -> float:
+    """Non-thermal phase-space density Q = rho/sigma_v^3 at production, GeV^4.
+
+    With the parametric number density of Eq. (npsi), n_psi ~ H_inf^3, and the
+    velocity dispersion the manuscript quotes, sigma_v ~ H_inf/m_psi:
+
+        rho     = m_psi n_psi ~ m_psi H_inf^3
+        Q       = rho/sigma_v^3 ~ m_psi H_inf^3 (m_psi/H_inf)^3 = m_psi^4 .
+
+    The closed form is written out rather than collapsed to ``m_psi**4`` so the
+    two cancellations that produce it stay visible.
+
+    The manuscript prints ~3e43 GeV^4 at the light-branch m_psi.  NOTE: an
+    earlier draft printed ~1e52 GeV^4, which is m_psi^4 for m_psi = 1e13 GeV --
+    the same stale mass as in sigma_psipsi_over_m.  Either way Q is far above the
+    dwarf-galaxy lower limit, which is the only statement the entry makes.
+    """
+    n_psi = H_inf**3                 # parametric, Eq. (npsi), up to O(1)
+    rho = m_psi * n_psi
+    sigma_v = H_inf / m_psi
+    return rho / sigma_v**3
+
+
 def alpha_s_attractor(N: float = float(N_FID)) -> float:
     """Spectral running from the attractor closed form, alpha_s ~ -2/N^2.
 
     The manuscript quotes ~-8e-4 at the locked N = 50.
     """
     return -2.0 / N**2
+
+
+def _light_branch():
+    """(m_psi, H_inf) at the abundance-matched light branch, or (None, None).
+
+    m_psi is an OUTPUT of dm_gap_closure_test.py, so it is read from that
+    script's artefact instead of being duplicated here as a constant.  H_inf
+    comes from cosmo_model, the single source for the exact quantities.
+    """
+    import json
+    from pathlib import Path
+
+    from cosmo_model import H_inf as _H_inf
+    from cosmo_model import lambda0_for_As_locked as _lam0
+
+    p = Path(__file__).resolve().parent / "dm_gap_closure_test.json"
+    if not p.exists():
+        return None, None
+    with p.open(encoding="utf-8") as fh:
+        d = json.load(fh)
+    H = _H_inf(_lam0(N_FID, XI_FID), XI_FID)
+    return d["m_star_powerlaw"] * H, H
 
 
 # --------------------------------------------------------------------------
@@ -230,6 +301,15 @@ def _selfcheck() -> None:
     print("  Sec. VIII Delta xi(xi=11.1)   = %.4e   (paper <= 1e-6)"
           % delta_xi_total(XI_FID, lam0, G_ANOM))
     print("  Sec. XII  alpha_s             = %+.4e  (paper ~-8e-4)" % alpha_s_attractor())
+    m_psi, H_i = _light_branch()
+    if m_psi is None:
+        print("  Sec. XII  (dm_gap_closure_test.json absent -- "
+              "sigma_psipsi/m_psi and Tremaine-Gunn Q skipped)")
+    else:
+        print("  Sec. XII  sigma_psipsi/m_psi  = %.4e cm^2/g (paper ~7e-70)"
+              % sigma_psipsi_over_m(m_psi))
+        print("  Sec. XII  Tremaine-Gunn Q     = %.4e GeV^4  (paper ~3e43)"
+              % tremaine_gunn_Q(m_psi, H_i))
     print("  Sec. III  N at r = 0.01       = %.3f    (paper ~32)" % n_at_r(0.01))
     print("[order_estimates self-check complete]")
 

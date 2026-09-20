@@ -2,8 +2,10 @@
 """Fig.2 -- n_s-r under LOCKED cosmological N (exact potential slow-roll).
 
 MUST match paper Table tab:sens / scripts/lock_n_convention.py.
-Writes both fig2_ns_r.pdf and fig2_ns_r_lockedN.pdf so tex includegraphics
-stays valid regardless of filename choice.
+Writes figures/fig2_ns_r.pdf, the file the manuscript includes.  It used to
+also write fig2_ns_r_lockedN.pdf "so tex includegraphics stays valid regardless
+of filename choice"; the manuscript never used that name and
+lock_n_convention.py wrote the same bytes again, so the alias was removed.
 """
 from __future__ import annotations
 
@@ -93,10 +95,9 @@ def main() -> None:
         color="#555555",
     )
     fig.tight_layout()
-    for name in ("fig2_ns_r", "fig2_ns_r_lockedN"):
-        for ext in ("pdf", "png"):
-            fig.savefig(FIGDIR / f"{name}.{ext}")
-    print("Wrote locked-N Fig.2 as fig2_ns_r.pdf and fig2_ns_r_lockedN.pdf")
+    for ext in ("pdf", "png"):
+        fig.savefig(FIGDIR / f"fig2_ns_r.{ext}")
+    print("Wrote locked-N Fig.2 as fig2_ns_r.pdf")
     for N, p in zip(Ns, pts):
         print(f"N={int(N)}: ns={p['ns_ps']:.4f}, r={p['r_ps']:.5f}")
 

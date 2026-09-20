@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import io
 import json
+import math
 import os
 import re
 import sys
@@ -46,6 +47,7 @@ sys.path.insert(0, HERE)
 
 import cosmo_model as cm                 # noqa: E402
 import background_and_reheating as bar   # noqa: E402
+import order_estimates as oe             # noqa: E402
 
 README = os.path.join(ROOT, "README.md")
 OUT_MD = os.path.join(HERE, "readme_numbers_report.md")
@@ -124,6 +126,37 @@ def build_checks():
         [0.05],
         "cosmo_model.rho_end() vs the removed literal 1.63485e63",
     ))
+
+    # 6. The two Sec. XII consistency entries.  These had NO executing source
+    #    until this pass; they were quoted at a stale m = 1e13 GeV and now come
+    #    from order_estimates, the single source for both.
+    if dmg:
+        m_psi = dmg["m_star_powerlaw"] * bar.H_INF
+        sig = oe.sigma_psipsi_over_m(m_psi)
+        checks.append((
+            "Sec. XII self-interaction",
+            r"`~([0-9.]+e-70) cm\^2/g`,\s+`~([0-9]+)`\s+orders below the bullet-cluster",
+            [sig, -math.log10(sig)],
+            [0.1, 0.02],
+            "order_estimates.sigma_psipsi_over_m at the light-branch m_psi",
+        ))
+        checks.append((
+            "Sec. XII Tremaine-Gunn Q",
+            r"`~([0-9.]+e43) GeV\^4`",
+            [oe.tremaine_gunn_Q(m_psi, bar.H_INF)],
+            [0.1],
+            "order_estimates.tremaine_gunn_Q at the light-branch m_psi",
+        ))
+        if teb:
+            checks.append((
+                "m_psi drift from the wrong H_inf",
+                r"understated `m_psi` by ([0-9.]+) percent",
+                [100.0 * rel(dmg["m_star_powerlaw"] * teb["rows"][1]["H_inf_GeV"],
+                             m_psi)],
+                [0.05],
+                "m_star_powerlaw paired with the drifted treh_error_band H_inf "
+                "vs with bar.H_INF",
+            ))
 
     return checks
 

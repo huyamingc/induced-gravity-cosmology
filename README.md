@@ -71,7 +71,7 @@ than a value.
 | `derive_from_action.py` | exact / independent derivation | rebuilds the model from the action alone, presupposing none of the paper's formulas; holds the exact A_s inversion and the N(T_reh) matching used everywhere else |
 | `background_and_reheating.py` | exact / cross-check | exact KG integration of the e-fold equations, the N window, and the two reheating channels; recomputes T_reh*(N) from first principles as an independent check on the Table I column. Shares the same exact lambda0 as `lock_n_convention.py` |
 | `cosmo_model.py` | exact / shared constants | common constants, the memoised `lambda0_for_As_locked` wrapper used by the figure scripts, and the **single source** of `x_end`, the end-of-inflation ratios `V_end_over_V0`, `K_over_V_end`, `rho_end_over_V_end`, and the reheating dilution `rho_end` / `dilution` |
-| `order_estimates.py` | exact inputs / order-of-magnitude closes | the **single source** for the closed forms behind every claim the paper prints with a leading `~`: `f_NL`, `alpha_s`, the Mathieu `q`, `Gamma_therm/H`, `sigma_psiN`, the kinematic-closure `g`, and the one-loop RG shifts of `xi` and `lambda0`. `verify_numerics.py` checks the manuscript against this module, and any new script that needs one of these quantities must import it rather than re-derive it |
+| `order_estimates.py` | exact inputs / order-of-magnitude closes | the **single source** for the closed forms behind every claim the paper prints with a leading `~`: `f_NL`, `alpha_s`, the Mathieu `q`, `Gamma_therm/H`, `sigma_psiN`, the kinematic-closure `g`, the one-loop RG shifts of `xi` and `lambda0`, and the two Sec. XII consistency entries `sigma_psipsi/m_psi` and the Tremaine-Gunn `Q`. `verify_numerics.py` checks the manuscript against this module, and any new script that needs one of these quantities must import it rather than re-derive it |
 | `psi_production_bogoliubov.py` | exact / cross-check | de Sitter exponent 2 pi audit, g matching |
 | `psi_abundance_oscillating.py` | exact / cross-check | cross-transition mode equation (power-law spectrum) |
 | `dm_gap_closure_test.py` | exact / cross-check | small-g light branch and free-streaming length |
@@ -81,7 +81,7 @@ than a value.
 | `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
 | `audit_tex_numbers.py` | audit | scans the `.tex` for superseded values and checks that any survivor sits in a comparison or historical context |
 | `audit_readme_numbers.py` | audit | recomputes the prose numbers in this README from the scripts. Its patterns must still match, so rewording a sentence without updating the audit is itself a failure |
-| `fig1_einstein_potential.py`, `fig2_ns_r.py`, `fig3_domain_wall.py` | figure | generate `figures/*.pdf` |
+| `fig1_einstein_potential.py`, `fig2_ns_r.py`, `fig3_domain_wall.py` | figure | generate `figures/*.pdf`. Each figure has exactly one writer: `fig2_ns_r.py` alone produces `figures/fig2_ns_r.pdf` |
 
 The three auditors run last in `run_all.py` (they read the `.json` artefacts, the
 manuscript tables and this README) and together take under a second.
@@ -143,6 +143,34 @@ only `.pdf`, so neither the `.tex` nor `n_convention_results.json` can change
 between the two calls, and the duplicate is gone. And `Delta lambda0 ~ 3e-14`
 in Sec. VIII E had no executing source anywhere in the suite until
 `order_estimates.py` supplied one.
+
+A second pass closed the two remaining gaps. Sec. XII's "additional consistency
+checks" list printed `sigma_psipsi/m_psi ~ 1e-67 cm^2/g` and `Q ~ m_psi^4 ~
+1e52 GeV^4`, and no script -- current or retired -- had ever computed either
+one; every other entry in that list states a parametric bound for which the
+manuscript gives no closed form, so none of them carries an executable claim.
+Both turned
+out to carry a stale wimpzilla-scale mass: those two numbers are exactly what
+the printed closed forms give at `m = 1e13 GeV`, not at the `m_psi = 7.5e10 GeV`
+that Sec. V actually matches. `order_estimates.py` now computes them
+(`sigma_psipsi_over_m`, `tremaine_gunn_Q`) from the same `m_star_powerlaw`
+anchor Sec. V uses, `verify_numerics.py` checks them, and the manuscript quotes
+the matching values (`~7e-70 cm^2/g`, `~69` orders below the bullet-cluster
+bound; `~3e43 GeV^4`).
+
+The light-branch mass is now formed once, as `m_star_powerlaw * H_inf`. It had
+taken its `H_inf` from the `T_reh` sweep table of `treh_error_band.json`, whose
+`H_inf` column drifts with `T_reh` and `N` and belongs to a different
+background; the anchor ratio is measured at the fiducial `H_inf`, so pairing it
+with a drifted value understated `m_psi` by 0.43 percent.
+
+Fig. 2 has a single writer. `fig2_ns_r.py` wrote both `fig2_ns_r.pdf` and a
+byte-identical `fig2_ns_r_lockedN.pdf` alias, and `lock_n_convention.py` redrew
+the same figure again under the alias name, while the manuscript includes only
+`figures/fig2_ns_r.pdf`. The alias is gone, `lock_n_convention.py` no longer
+plots (it is a numerical script, and its `n_convention_results.json` is
+unchanged), and `figures/` no longer accumulates an untracked duplicate on
+every run.
 
 
 ## Dark-matter convention (paper Sec. V)
