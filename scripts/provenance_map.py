@@ -194,6 +194,24 @@ def main() -> int:
     tree = ast.parse(source)
     rows = collect_claims(tree)
     syms = collect_symbols(tree)
+
+    # Fail loudly if any claim's producing expression could not be read.  This
+    # parser takes the FIFTH POSITIONAL argument of each claim(...) call; if a
+    # future edit passes ``computed`` as a keyword (or reorders the signature),
+    # args[4] silently becomes something else and the table would describe the
+    # wrong expression without anyone noticing.  A "?" in the produced-by column
+    # is useless to a maintainer, so treat it as a hard error instead.
+    unresolved = [r for r in rows if r[3] == "?"]
+    if unresolved:
+        print("ERROR: %d claim(s) have no resolvable producing expression:"
+              % len(unresolved))
+        for sec, q, w, _, _ in unresolved:
+            print("  [%s] %s  (%s)" % (sec, q, w))
+        print("       provenance_map.py reads the fifth POSITIONAL argument of")
+        print("       each claim(...)/claim_order(...) call.  Keep `computed`")
+        print("       positional, or teach this parser about the new call form.")
+        return 1
+
     body = render(rows, syms)
 
     readme = io.open(README, encoding="utf-8").read()
