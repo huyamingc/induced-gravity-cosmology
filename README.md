@@ -71,7 +71,7 @@ supports a claimed scaling, never a precise value.
 | `lock_n_convention.py` | **exact / source of Table I** | the authoritative locked-N grid: lambda0 inverted from A_s at fixed N, exact potential slow roll, and the T_reh*(N) matching. Every cell of Table I (`tab:sens`) is produced here |
 | `derive_from_action.py` | exact / independent derivation | rebuilds the model from the action alone, presupposing none of the paper's formulas; holds the exact A_s inversion and the N(T_reh) matching used everywhere else |
 | `background_and_reheating.py` | exact / cross-check | exact KG integration of the e-fold equations, the N window, and the two reheating channels; recomputes T_reh*(N) from first principles as an independent check on the Table I column. Shares the same exact lambda0 as `lock_n_convention.py` |
-| `cosmo_model.py` | exact / shared constants | common constants, the memoised `lambda0_for_As_locked` wrapper used by the figure scripts, and the **single source** of the end-of-inflation ratios `V_end_over_V0`, `K_over_V_end`, `rho_end_over_V_end` |
+| `cosmo_model.py` | exact / shared constants | common constants, the memoised `lambda0_for_As_locked` wrapper used by the figure scripts, and the **single source** of `x_end`, the end-of-inflation ratios `V_end_over_V0`, `K_over_V_end`, `rho_end_over_V_end`, and the reheating dilution `rho_end` / `dilution` |
 | `psi_production_bogoliubov.py` | exact / cross-check | de Sitter exponent 2 pi audit, g matching |
 | `psi_abundance_oscillating.py` | exact / cross-check | cross-transition mode equation (power-law spectrum) |
 | `dm_gap_closure_test.py` | exact / cross-check | small-g light branch and free-streaming length |
@@ -83,14 +83,20 @@ supports a claimed scaling, never a precise value.
 | `verify_numerics.py` | audit | recomputes every quantitative claim printed in the paper from the current scripts; the reverse direction of `audit_tex_numbers.py` |
 | `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
 | `audit_tex_numbers.py` | audit | scans the `.tex` for superseded values and checks that any survivor sits in a comparison or historical context |
+| `audit_readme_numbers.py` | audit | recomputes the prose numbers in this README from the scripts. Its patterns must still match, so rewording a sentence without updating the audit is itself a failure |
 | `evaluate_paper.py` | audit | structural and cross-reference evaluation of the manuscript |
 | `fig1_einstein_potential.py`, `fig2_ns_r.py`, `fig3_domain_wall.py` | figure | generate `figures/*.pdf` |
 
-The two consistency auditors, `verify_numerics.py` and `consistency_checks.py`,
-run last in `run_all.py` (they read the `.json` artefacts and the manuscript
-tables) and together take under a second. They are the automated form of the
-manual cross-checks that closed the N <-> T_reh matching review: run them after
-any edit to the manuscript or to the matching code.
+The three auditors run last in `run_all.py` (they read the `.json` artefacts, the
+manuscript tables and this README) and together take under a second.
+`verify_numerics.py` and `consistency_checks.py` are the automated form of the
+manual cross-checks that closed the N <-> T_reh matching review; run them after any
+edit to the manuscript or to the matching code.
+
+`run_all.py` catches the `SystemExit` that each auditor raises, so a failing audit
+makes the whole run exit non-zero instead of silently truncating it. Until that was
+fixed the loop stopped at `verify_numerics.py`: `consistency_checks.py` never ran as
+part of a full regression, and an audit appended after it would have been dead code.
 
 Two different things were previously conflated under one label, and the
 distinction matters when a number is quoted:
@@ -134,7 +140,7 @@ conservation across the radiation era (`derive_from_action.N_match_derived` with
 `entropy_matching=True`) together with rho_end = K_end + V_end at the end of
 inflation, rather than the constant-g_* scaling a ~ rho^(-1/4). The independent
 first-principles recomputation in `background_and_reheating.py` now agrees with
-that table to 0.094 percent at N=50 and 0.090 percent at N=55, i.e. a single
+that table to 0.092 percent at N=50 and 0.087 percent at N=55, i.e. a single
 N-independent constant offset; the two routes previously differed by a factor 3.4
 because of that scaling plus a wrong x_* relation in the cross-check.
 

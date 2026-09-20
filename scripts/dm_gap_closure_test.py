@@ -55,17 +55,20 @@ REUSE = "--reuse" in sys.argv          # reuse the scan results from the existin
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
+import cosmo_model as cm                   # noqa: E402
 from psi_abundance_oscillating import (  # noqa: E402
     H_INF, PHI_V, RHO_C, npsi_from_spectrum,
 )
 
-# dil(T_reh) = 1.0204e-101 * T_reh   (T_reh in GeV)  -- same convention as [2b] Sec. 2c
-DIL_PER_GEV = 1.0204e-101
+# dil(T_reh) = DIL_PER_GEV * T_reh   (T_reh in GeV), from the shared
+# entropy-conserving function.  This was a hand-copied 1.0204e-101 ("same
+# convention as [2b] Sec. 2c") that no audit cross-checked.
+DIL_PER_GEV = cm.dilution(1e9) / 1e9
 OMEGA_TARGET = 0.265
 OMEGA_DM = 0.265
 T_REH_MODEL = 2.1e8          # T_reh [GeV] from the anomaly channel (physical alpha_s)
 T_REH_FIDUCIAL = 1.0e9       # paper fiducial
-A_END_OVER_A0 = (1.0204e-92) ** (1.0 / 3.0)
+A_END_OVER_A0 = cm.dilution(1e9) ** (1.0 / 3.0)
 
 FREEZE_TARGET = 0.3          # require k_max/(m a_final) <= 0.3
 MASSES = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0]

@@ -47,6 +47,9 @@ import derive_from_action as dfa        # noqa: E402
 import lock_n_convention as lk          # noqa: E402
 import background_and_reheating as bar  # noqa: E402
 import dm_gap_closure_test as dg        # noqa: E402
+import psi_abundance_oscillating as pa  # noqa: E402
+import psi_production_bogoliubov as pb  # noqa: E402
+import residual_quintessence as rq      # noqa: E402
 
 XI = 11.1
 N_FID = 50.0
@@ -181,6 +184,50 @@ def main():
                     "was computed under the OLD fitted lambda0 = 6.70e-8 and had "
                     "drifted 4.3e-4 from the current exact value; it now derives "
                     "from the exact lambda0")
+
+    # ---- end-of-inflation scalars: one source, guarded ------------------
+    # x_end is a closed form in cosmo_model, and the dilution factor now comes from
+    # cosmo_model.dilution.  Both used to be literals in two or three scripts
+    # (0.7636653 / 0.76367, 1.0204e-92, 1.0204e-101 twice).
+    record("end of inflation", "x_end", "background.X_END", bar.X_END,
+           "cosmo_model.x_end(11.1)", cm.x_end(XI), 1e-12, "identity")
+    record("end of inflation", "x_end", "psi_production.X_END", pb.X_END,
+           "cosmo_model.x_end(11.1)", cm.x_end(XI), 1e-12, "identity")
+    record("end of inflation", "dilution at T_reh=1e9",
+           "dm_gap.DIL_PER_GEV * 1e9", dg.DIL_PER_GEV * 1e9,
+           "cosmo_model.dilution(1e9)", cm.dilution(1e9), 1e-12, "identity")
+    record("end of inflation", "dilution at T_reh=1e9",
+           "residual.A_END_OVER_A0_CUBED_1E9", rq.A_END_OVER_A0_CUBED_1E9,
+           "cosmo_model.dilution(1e9)", cm.dilution(1e9), 1e-12, "identity")
+
+    # ---- derived scales: paper-display references, guarded --------------
+    # Several self-contained cross-check scripts quote a scale straight from the
+    # manuscript and keep the manuscript's digits (H_inf = 1.6388e13 and so on).
+    # That is deliberate, but it must not silently drift -- going stale unnoticed
+    # is exactly how psi_abundance's RHO_END survived until the previous round.
+    # Each tolerance is the rounding that script declares, not a wish for agreement.
+    lam0_x = cm.lambda0_for_As_locked(N_FID, XI)
+    scales = [
+        ("lambda0", "psi_production.LAM0", pb.LAM0, lam0_x, 1e-9),
+        ("V0 [GeV^4]", "psi_production.V0", pb.V0, cm.V0(lam0_x, XI), 1e-9),
+        ("V0 [GeV^4]", "residual.V0", rq.V0, cm.V0(lam0_x, XI), 1e-5),
+        ("H_inf [GeV]", "psi_production.H_INF", pb.H_INF,
+         cm.H_inf(lam0_x, XI), 1e-9),
+        ("H_inf [GeV]", "psi_abundance.H_INF", pa.H_INF,
+         cm.H_inf(lam0_x, XI), 2e-7),
+        ("H_inf [GeV]", "residual.H_INF", rq.H_INF, cm.H_inf(lam0_x, XI), 2e-7),
+        ("m_chi [GeV]", "psi_production.M_CHI", pb.M_CHI,
+         cm.m_chi(lam0_x, XI), 1e-9),
+        ("m_chi [GeV]", "residual.M_CHI", rq.M_CHI, cm.m_chi(lam0_x, XI), 2e-5),
+        ("Phi_V [GeV]", "psi_abundance.PHI_V", pa.PHI_V,
+         cm.M_P / math.sqrt(XI), 1e-5),
+    ]
+    for name, label, val, exact, tol in scales:
+        record("derived scales", "%s (%s)" % (name, label), label, val,
+               "single source", exact, tol, "precision",
+               note="this script quotes the manuscript's own digits; the tolerance "
+                    "is that declared rounding, so a re-truncation or a value going "
+                    "stale against a moved lambda0 fails here")
 
     # ---- A. Table I (tab:sens) vs lock_n_convention ---------------------
     # tolerances follow the rounding of the .tex cell, not a wish for agreement

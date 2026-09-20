@@ -59,16 +59,36 @@ SCRIPTS = [
     #     other.  Together they take well under a second.
     "verify_numerics.py",              # paper claims -> code
     "consistency_checks.py",           # paper tables -> code, and code -> code
+    "audit_readme_numbers.py",         # README prose numbers -> code
 ]
 
 
 def main() -> None:
+    # runpy executes each script in THIS process, so any script ending in
+    # sys.exit(code) aborts the whole run at that point.  verify_numerics.py,
+    # consistency_checks.py and audit_readme_numbers.py all do exactly that, so
+    # the loop used to stop at verify_numerics.py: consistency_checks.py never
+    # ran and "ALL SCRIPTS DONE" was never reached.  Catch SystemExit per script,
+    # count the non-zero ones, and fail the run if any audit reported a problem.
+    failed = []
     for name in SCRIPTS:
         print("=" * 60)
         print("RUN", name)
         print("=" * 60)
-        runpy.run_path(str(HERE / name), run_name="__main__")
-    print("\nALL SCRIPTS DONE")
+        try:
+            runpy.run_path(str(HERE / name), run_name="__main__")
+        except SystemExit as exc:
+            code = exc.code
+            if code not in (0, None):
+                failed.append((name, code))
+                print("!! %s exited with code %r" % (name, code))
+    print()
+    if failed:
+        for name, code in failed:
+            print("FAILED: %s (exit %r)" % (name, code))
+        print("ALL SCRIPTS DONE with %d failing script(s)" % len(failed))
+        raise SystemExit(1)
+    print("ALL SCRIPTS DONE")
 
 
 if __name__ == "__main__":

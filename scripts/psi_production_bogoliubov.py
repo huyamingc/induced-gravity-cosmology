@@ -41,7 +41,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cosmo_model import (  # noqa: E402
     K_over_V_end,
     V_end_over_V0,
+    lambda0_for_As_locked,
     rho_end_over_V_end,
+    x_end,
 )
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +51,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 # ---- Paper-locked values (N=50, xi=11.1; same convention as lock_n_convention.py) ----
 M_P = 2.435e18          # GeV, reduced Planck mass
 XI = 11.1
-LAM0 = 6.6970e-8        # back-solved from A_s (derive_from_action.lambda0_for_As(50,11.1))
+N_LOCKED = 50.0         # paper locked-N fiducial
+LAM0 = lambda0_for_As_locked(N_LOCKED, XI)     # exact A_s inversion, no truncation
 BETA_P = 2.0 / math.sqrt(6.0 + 1.0 / XI)      # 0.810435
 PHI_V = M_P / math.sqrt(XI)                    # 7.3087e17 GeV
 V0 = LAM0 * M_P**4 / (4.0 * XI**2)             # 4.7772e63
@@ -59,7 +62,7 @@ M_CHI = math.sqrt(2.0 * V0 * BETA_P**2 / M_P**2)
 # end-of-inflation: the ratios come from the single source in cosmo_model.  The
 # former literals 0.285204 / 0.19938 / 1.19938 were 6- and 5-digit truncations of
 # those exact values (relative errors 1.4e-6 / 1.4e-4 / 2.3e-5).
-X_END = 0.7636653
+X_END = x_end(XI)                              # closed form from eps_V = 1
 V_END_FRAC = V_end_over_V0(XI)
 V_END = V_END_FRAC * V0
 K_END = K_over_V_end() * V_END

@@ -52,7 +52,15 @@ G_STAR_S0 = 3.91
 RHO_C = 3.0 * H0_GEV**2 * M_P**2
 K_PIVOT_OVER_A0H0 = 0.05 / (67.4 / 299792.458)     # = 222.4
 
-X_END = 0.7636653
+def _x_end_exact(xi: float) -> float:
+    """x_end from eps_V = 1, i.e. u_e = 1/(1+sqrt(2) beta_p).  Lazy import, as above."""
+    from cosmo_model import x_end
+
+    return x_end(xi)
+
+
+# Exact closed form (cosmo_model.x_end), not a copy of the round-3 number.
+X_END = _x_end_exact(XI)
 
 
 @functools.lru_cache(maxsize=None)
@@ -334,7 +342,7 @@ def T_reh_star_first_principles(N: float) -> float:
     # the same relation used by lock_n_convention / derive_from_action.
     # (The previous form e^{2x} - 2x = 2 beta^2 N is not the slow-roll relation for this
     # potential: at N = 50 it returns x_* = 2.124 and an implied N = 3.70.)
-    x_end = 0.76367
+    x_end = X_END   # exact closed form; this used to be a 5-digit 0.76367
 
     def f(xs):
         return (math.exp(xs) - xs) - (math.exp(x_end) - x_end) - 2.0 * BETA_P**2 * N

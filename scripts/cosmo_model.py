@@ -155,6 +155,35 @@ def rho_end_over_V_end() -> float:
     return 1.0 + K_over_V_end()
 
 
+# Cosmological constants entering the reheating dilution factor.  They live here
+# so that the scripts which quote a dilution no longer each carry their own copy.
+T0_GEV = 2.3491e-13       # CMB temperature today
+G_STAR_REH = 106.75       # g_* at reheating
+G_STAR_S0 = 3.91          # g_{*s} today
+
+
+def rho_end(N: float = N_FID, xi: float = XI_FID) -> float:
+    """Energy density at the end of inflation: V0 (V_end/V0)(rho_end/V_end)."""
+    lam0 = lambda0_for_As_locked(N, xi)
+    return V0(lam0, xi) * V_end_over_V0(xi) * rho_end_over_V_end()
+
+
+def dilution(T_reh: float, N: float = N_FID, xi: float = XI_FID) -> float:
+    """(a_end/a_0)^3 at reheating temperature T_reh, entropy-conserving.
+
+    Matter-like condensate domination between a_end and a_reh, radiation after:
+        rho_end (a_end/a_reh)^3 = rho_rad(T_reh)
+        a_reh/a_0 = (g_s,0/g_s,reh)^(1/3) (T_0/T_reh)
+
+    psi_abundance_oscillating, dm_gap_closure_test and residual_quintessence all
+    quote this one quantity.  It used to exist as three separate literals
+    (1.0204e-92, and 1.0204e-101 in two places), which is why it is a function here.
+    """
+    rho_e = rho_end(N, xi)
+    return (((math.pi**2 / 30.0) * G_STAR_REH * T_reh**4 / rho_e)
+            * (G_STAR_S0 * T0_GEV**3) / (G_STAR_REH * T_reh**3))
+
+
 def VE_of_varphi(varphi, lam0: float, xi: float, Vc_val: float) -> np.ndarray:
     varphi = np.asarray(varphi, dtype=float)
     return (lam0 * M_P**4 / (4.0 * xi**2)) * (1.0 - np.exp(-2.0 * varphi)) ** 2 + Vc_val * np.exp(-4.0 * varphi)

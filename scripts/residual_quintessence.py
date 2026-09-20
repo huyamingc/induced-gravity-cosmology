@@ -53,7 +53,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from cosmo_model import V_end_over_V0, rho_end_over_V_end  # noqa: E402
+from cosmo_model import dilution, V_end_over_V0, rho_end_over_V_end  # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,9 +77,9 @@ M_CHI = 3.2533e13
 N_EFF = 10.0
 RHO_PULSE = N_EFF * H_INF**4 / (192.0 * math.pi**2)
 
-# a_0/a_end: inferred from (a_end/a_0)^3 = 1.0204e-92 at T_reh = 1e9
-A_END_OVER_A0_CUBED_1E9 = 1.0204e-92
-N_TO_A0 = -math.log(A_END_OVER_A0_CUBED_1E9) / 3.0     # ~70.74
+# a_0/a_end: (a_end/a_0)^3 at T_reh = 1e9, from the shared function (was 1.0204e-92)
+A_END_OVER_A0_CUBED_1E9 = dilution(1e9)
+N_TO_A0 = -math.log(A_END_OVER_A0_CUBED_1E9) / 3.0
 
 
 def T_of_rho_rad(rho: float, g_star: float = G_STAR) -> float:

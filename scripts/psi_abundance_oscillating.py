@@ -76,6 +76,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cosmo_model import (  # noqa: E402
     V0 as _V0,
     V_end_over_V0,
+    dilution as _cm_dilution,
     lambda0_for_As_locked,
     rho_end_over_V_end,
 )
@@ -103,8 +104,8 @@ mp.mp.dps = 40
 
 
 def dilution(T_reh: float) -> float:
-    return ((math.pi**2 / 30.0) * G_STAR * T_reh**4 / RHO_END) * \
-           (G_STAR_S0 * T0_GEV**3) / (G_STAR * T_reh**3)
+    """(a_end/a_0)^3; delegates to the shared entropy-conserving function."""
+    return _cm_dilution(T_reh)
 
 
 def a_of(eta: float, p: float = 2.0) -> float:
