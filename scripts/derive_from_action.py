@@ -257,7 +257,9 @@ def N_match_derived(
     N_guess: float,
     gstar: float = 106.75,
     Om_m: float = 0.315,
-    Om_r: float = 9.0e-5,
+    # Planck 2018: Omega_r h^2 = 4.15e-5 with h = 0.674 gives Omega_r = 9.15e-5.
+    # (An earlier version used the rounded 9.0e-5, which shifted T_reh* by 1.2%.)
+    Om_r: float = 9.15e-5,
     k_mpc: float = 0.05,
     entropy_matching: bool = True,
     gs_reh: float = 106.75,

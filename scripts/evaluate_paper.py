@@ -100,7 +100,7 @@ new_pats = {
     "lambda0~6.70e-8": r"6\.70",
     "r~0.00425": r"0\.00425",
     "r<~0.0052": r"0\.0052",
-    "N~51": r"N\\simeq51|N\\approx51|N\simeq51",
+    "N~50.7": r"N\\simeq50\.7",
     "m_chi~3.25": r"3\.25",
     "H_inf~1.64": r"1\.64",
     "N band 45-58": r"45",
@@ -145,7 +145,7 @@ A("|---|---|---|")
 A("| Induced gravity generates M_Pl | F=xi Phi^2, Phi_0=M_Pl/sqrt(xi), G_eff formula | **closed** |")
 A("| Starobinsky plateau and (n_s,r) | conformal transformation -> V_E; locked N + exact PS + A_s | **closed** (convention stated) |")
 A("| N window | Planck 2 sigma intersected with matched T_reh^* >~ BBN | **closed** (relies on the matching assumption, declared) |")
-A("| T_reh~1e9 <-> N~51 | matching Eq. matchN + Table | **closed** |")
+A("| T_reh~1e9 <-> N~50.7 | matching Eq. matchN + Table | **closed** |")
 A("| r>0.01 falsifiable | within the 2 sigma window r_max~0.0052 | **closed** |")
 A("| Same-field quintessence not viable | m_chi/H0~10^{55} + KG oscillation w->0 | **closed** |")
 A("| DE = frozen V_c | constant term of the potential; calibrated Omega_Lambda | **closed** (not a dynamical prediction) |")
@@ -158,7 +158,7 @@ A("")
 
 A("### Potential logical tensions (worth knowing, not necessarily errors)")
 A("")
-A("1. **Physical N point vs the table row**: the anomalous T_reh corresponds to N~51; the table still lists N=50 for comparison -- stated explicitly, not a contradiction.")
+A("1. **Physical N point vs the table row**: the anomalous T_reh corresponds to N~50.2 (physical alpha_s) or N~50.7 (fiducial 1e9 GeV); the table lists N=50 for comparison -- stated explicitly, not a contradiction.")
 A("2. **Attractor closed form vs exact PS**: the Intro/abstract note that the closed form is only a guide; the main-text table uses exact values.")
 A("3. **Kinematic protection of m_psi varies with g**: the main text already restricts the double protection to the high-g end.")
 A("4. **Use of the word \"unified\"**: the framework is unified at the action level, while DE is a calibrated V_c -- the abstract already states the calibration.")

@@ -244,12 +244,12 @@ def osc_period_efolds() -> float:
 # with the entropy-conserving matching of derive_from_action.N_match_derived
 # (entropy_matching=True, rho_end = K_end + V_end); they are reproduced exactly by
 # lock_n_convention.T_reh_for_N_derived(p, N).
-TABLE_I = {48: (7.24e-8, 0.9600, 0.00459, 2.6e5),
-           49: (6.96e-8, 0.9608, 0.00441, 5.2e6),
-           50: (6.70e-8, 0.9616, 0.00425, 1.1e8),
-           51: (6.45e-8, 0.9623, 0.00409, 2.2e9),
-           52: (6.21e-8, 0.9630, 0.00394, 4.5e10),
-           55: (5.58e-8, 0.9650, 0.00355, 3.8e14)}
+TABLE_I = {48: (7.24e-8, 0.9600, 0.00459, 2.5289e5),
+           49: (6.96e-8, 0.9608, 0.00441, 5.1766e6),
+           50: (6.70e-8, 0.9616, 0.00425, 1.0593e8),
+           51: (6.45e-8, 0.9623, 0.00409, 2.1667e9),
+           52: (6.21e-8, 0.9630, 0.00394, 4.4306e10),
+           55: (5.58e-8, 0.9650, 0.00355, 3.7813e14)}
 
 
 def fit_table_slope() -> dict:
@@ -353,7 +353,8 @@ def reheating_channels(N_eff: float = 10.0) -> dict:
         rows.append({"label": label, "alpha_s": a_s, "Gamma_GeV": G,
                      "T_reh_GeV": T,
                      "T_reh_over_H_inf": T / H_INF,
-                     "N_implied_from_T_reh": 50.0 + math.log(T / 4.4e7)
+                     "N_implied_from_T_reh": 50.0 + math.log(
+                         T / T_reh_star_from_table(50.0, fit_table_slope()))
                      / fit_table_slope()["slope"]})
     out["anomaly"] = {"m_chi": M_CHI, "rows": rows}
     out["bbn_floor_GeV"] = 1e-2
@@ -507,7 +508,7 @@ def main() -> None:
     A("The 1-loop running gives $\\alpha_s(3.25\\times10^{13}\\,{\\rm GeV})\\simeq"
       f"{r['anomaly']['rows'][0]['alpha_s']:.4f}$, **not 0.1**.")
     A("Substituting the physical value lowers $T_{\\rm reh}$ to $\\sim3\\times10^8$ GeV,")
-    A("and the anomaly-channel operating point moves from $N\\simeq51$ to $N\\simeq50.6$.")
+    A("and the anomaly-channel operating point moves from $N\\simeq50.7$ to $N\\simeq50.2$.")
     A(f"BBN floor $10$ MeV: {'satisfied' if r['bbn_ok'] else 'violated'}.\n")
 
     md = "\n".join(L) + "\n"
