@@ -8,6 +8,9 @@
 \usepackage{hyperref}
 %% The class default \orcid prints the Orcid logo image (Orcidlogo.eps), which
 %% is not shipped with this source; typeset the identifier as a plain link.
+%% NOTE: sn-jnl defines \orcid with \gdef (it expands in place, storing nothing),
+%% so it MUST sit inside the \author* argument. Calling it after \author*
+%% emits the ORCID text before \maketitle and yields a near-empty first page.
 \renewcommand{\orcid}[1]{~\href{https://orcid.org/#1}{ORCID: #1}}
 \providecommand{\gtrsim}{\geq}
 \providecommand{\lesssim}{\leq}
@@ -28,7 +31,7 @@
 \title[Induced-Gravity Cosmology]{Induced-Gravity Cosmology: Inflation, Dark Energy, and Dark Matter from a Common Scalar Origin}
 
 %% Independent researcher: EPJC records city/country of residence.
-\author*{\fnm{Yaming} \sur{Hu}}\email{64687555@qq.com}\orcid{0009-0003-1406-0485}
+\author*{\fnm{Yaming} \sur{Hu}\email{64687555@qq.com}\orcid{0009-0003-1406-0485}}
 \affil*{\orgaddress{\city{Guiyang}, \state{Guizhou}, \country{China}}}
 
 \abstract{We construct a scalar-tensor cosmology within pure induced gravity, in which a single real scalar field $\Phi$ with a $\Ztwo$-symmetric potential $V_J(\Phi)=\frac{\lambda_0}{4}(\Phi^2-\PhiV^2)^2+V_c$ and non-minimal coupling $\xi\Phi^2R$ replaces the Einstein--Hilbert term, generating the Planck mass via $\vev{\Phi}=\MP/\sqrt{\xi}$. Conformal transformation to the Einstein frame yields a Starobinsky-type slow-roll plateau. With locked $N\equiv\ln(a_{\rm end}/a_*)$ and exact potential slow-roll, $\xi=11.1$ gives $N=50\Rightarrow\lambda_0\simeq6.70\times10^{-8}$, $r\simeq0.00425$, $n_s\simeq0.962$; anomaly $T_{\rm reh}\simeq10^9$ GeV maps to $N\simeq50.7$. Planck $2\sigma$ selects $N\approx45$--$56$ ($r\leq0.0052$); LiteBIRD $r>0.01$ would exclude the model class. A Dirac fermion $\psi$ with $-g\Phi\bar\psi\psi$ is a cold-dark-matter \emph{candidate}: $m_\psi=g\PhiV$ shares the same VEV; stability uses a discrete $\Ztwopsi$ symmetry and a conformally vanishing $\chi\psi\bar\psi$ vertex (both structural consequences of $F=\xi\Phi^2$), conditional on an anomaly-free UV completion. Matching $\Omega_{\rm DM}$ with the exact mode-equation spectrum at the end-of-inflation transition selects $g\simeq1.0\times10^{-7}$ ($m_\psi\simeq7.5\times10^{10}$ GeV $\simeq4.6\times10^{-3}H_{\rm inf}$), cold kinematics ($\lambda_{\rm fs}\sim10^{-19}$ Mpc); absolute normalization awaits a lattice computation. The potential minimum furnishes a frozen cosmological constant with $w=-1$ (residual-condensate corrections $\leq10^{-10}$); \textbf{this dark-energy sector is calibrated, not predicted}, with $V_c$ fixed by $\Omega_\Lambda=0.683$ and the $10^{110}$ hierarchy unexplained. The identity $\Omega=\Phi/\PhiV$ decouples $\chi$ from $\psi$ at tree level; large $m_\chi\sim10^{13}$ GeV suppresses SM fifth forces. Tree-level $\chi\to h\bar h$ and $\chi\to\psi\bar\psi$ are closed; reheating is via conformal anomaly. The SM embedding is RG-stable ($\Delta\xi\leq10^{-6}$); the late-time $w_0=-1$ prediction is shared with $\Lambda$CDM and is therefore not independently discriminating, so the sharp falsification handles remain the inflationary observables.}
