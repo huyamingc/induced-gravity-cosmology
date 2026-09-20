@@ -267,8 +267,8 @@ def main() -> None:
 
     # --- Figure 2 locked ---
     # Fig. 2 is produced by fig2_ns_r.py, the FIG-class script.  This script used
-    # to redraw it here as figures/fig2_ns_r_lockedN.pdf, which duplicated the
-    # artefact byte-for-byte and left two files claiming to be the same figure.
+    # to redraw it here under an alias name, which duplicated the artefact
+    # byte-for-byte and left two files claiming to be the same figure.
     lines.append("## 7. Figure 2")
     lines.append("")
     lines.append("- written by fig2_ns_r.py as `figures/fig2_ns_r.pdf`, the file the manuscript includes")

@@ -3,9 +3,10 @@
 
 MUST match paper Table tab:sens / scripts/lock_n_convention.py.
 Writes figures/fig2_ns_r.pdf, the file the manuscript includes.  It used to
-also write fig2_ns_r_lockedN.pdf "so tex includegraphics stays valid regardless
-of filename choice"; the manuscript never used that name and
-lock_n_convention.py wrote the same bytes again, so the alias was removed.
+also write a second, byte-identical copy under an alias name "so tex
+includegraphics stays valid regardless of filename choice"; the manuscript never
+used that name and lock_n_convention.py wrote the same bytes again, so the alias
+was removed.
 """
 from __future__ import annotations
 

@@ -57,6 +57,9 @@ SCRIPTS = [
     #     against the other.  Together they take well under a second.
     "verify_numerics.py",              # paper claims -> code
     "consistency_checks.py",           # paper tables -> code, and code -> code
+    # Regenerates the provenance block IN README.md from verify_numerics.py, so
+    # it must run after that file is final and before the README audit reads it.
+    "provenance_map.py",               # manuscript number -> producing function
     "audit_readme_numbers.py",         # README prose numbers -> code
 ]
 
