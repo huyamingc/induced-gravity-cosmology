@@ -62,23 +62,35 @@ second. On a Windows console, either run through
 mode-equation abundance matching, reusing the machinery of
 `dm_gap_closure_test.py`. It writes no files.
 
-Key result scripts:
+Scripts and their role. `exact` means the script solves the stated equations
+numerically and its numbers may be quoted; `order-of-magnitude` means it only
+supports a claimed scaling, never a precise value.
 
-| Script | Content |
-|---|---|
-| `background_and_reheating.py` | exact KG integration, N window, reheating channels |
-| `psi_production_bogoliubov.py` | de Sitter exponent 2 pi audit, g matching |
-| `psi_abundance_oscillating.py` | cross-transition mode equation (power-law spectrum) |
-| `dm_gap_closure_test.py` | small-g light branch and free-streaming length |
-| `treh_error_band.py` | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
-| `residual_quintessence.py` | two-fluid integration, Delta w budget |
-| `verify_numerics.py` | recomputes every quantitative claim printed in the paper from the current scripts; the reverse direction of `audit_tex_numbers.py` |
-| `consistency_checks.py` | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
+| Script | Role | Content |
+|---|---|---|
+| `lock_n_convention.py` | **exact / source of Table I** | the authoritative locked-N grid: lambda0 inverted from A_s at fixed N, exact potential slow roll, and the T_reh*(N) matching. Every cell of Table I (`tab:sens`) is produced here |
+| `derive_from_action.py` | exact / independent derivation | rebuilds the model from the action alone, presupposing none of the paper's formulas; holds the exact A_s inversion and the N(T_reh) matching used everywhere else |
+| `background_and_reheating.py` | exact / cross-check | exact KG integration of the e-fold equations, the N window, and the two reheating channels; recomputes T_reh*(N) from first principles as an independent check on the Table I column. Shares the same exact lambda0 as `lock_n_convention.py` |
+| `cosmo_model.py` | exact / shared constants | common constants and the memoised `lambda0_for_As_locked` wrapper used by the figure scripts |
+| `psi_production_bogoliubov.py` | exact / cross-check | de Sitter exponent 2 pi audit, g matching |
+| `psi_abundance_oscillating.py` | exact / cross-check | cross-transition mode equation (power-law spectrum) |
+| `dm_gap_closure_test.py` | exact / cross-check | small-g light branch and free-streaming length |
+| `treh_error_band.py` | exact / error propagation | propagates the T_reh uncertainty to (N, n_s, r) and to the (g, m_psi) window |
+| `residual_quintessence.py` | exact / cross-check | two-fluid integration, Delta w budget |
+| `n_definition_check.py` | exact / cross-check | how the definition of N changes r and n_s |
+| `extended_checks.py` | **order-of-magnitude** | RG running, Gamma_anom and Omega_psi scaling: supports the claimed orders of magnitude only, not precise values |
+| `quick_claims_check.py` | **order-of-magnitude** | small closed-form claims (f_NL, alpha_s, q, sigma_psiN, Gamma_th/H) |
+| `verify_numerics.py` | audit | recomputes every quantitative claim printed in the paper from the current scripts; the reverse direction of `audit_tex_numbers.py` |
+| `consistency_checks.py` | audit | parses the Table I and Table 2 bodies out of the `.tex` and checks each cell against the script that produces it, then compares independent routes against each other |
+| `audit_tex_numbers.py` | audit | scans the `.tex` for superseded values and checks that any survivor sits in a comparison or historical context |
+| `evaluate_paper.py` | audit | structural and cross-reference evaluation of the manuscript |
+| `fig1_einstein_potential.py`, `fig2_ns_r.py`, `fig3_domain_wall.py` | figure | generate `figures/*.pdf` |
 
-Both auditors run last in `run_all.py` (they read the `.json` artefacts and the
-manuscript tables) and together take under a second. They are the automated form
-of the manual cross-checks that closed the N <-> T_reh matching review: run them
-after any edit to the manuscript or to the matching code.
+The two consistency auditors, `verify_numerics.py` and `consistency_checks.py`,
+run last in `run_all.py` (they read the `.json` artefacts and the manuscript
+tables) and together take under a second. They are the automated form of the
+manual cross-checks that closed the N <-> T_reh matching review: run them after
+any edit to the manuscript or to the matching code.
 
 ## Dark-matter convention (paper Sec. V)
 
@@ -99,8 +111,15 @@ conservation across the radiation era (`derive_from_action.N_match_derived` with
 `entropy_matching=True`) together with rho_end = K_end + V_end at the end of
 inflation, rather than the constant-g_* scaling a ~ rho^(-1/4). The independent
 first-principles recomputation in `background_and_reheating.py` now agrees with
-that table to 1.4 percent; the two routes previously differed by a factor 3.4
+that table to 0.094 percent at N=50 and 0.090 percent at N=55, i.e. a single
+N-independent constant offset; the two routes previously differed by a factor 3.4
 because of that scaling plus a wrong x_* relation in the cross-check.
+
+Both routes now share the same lambda0: `background_and_reheating.lam0_of_N`
+delegates to the exact slow-roll A_s inversion in `derive_from_action`, through
+`cosmo_model.lambda0_for_As_locked`, memoised. What remains is an implementation
+difference, not a difference in approximation level, and the fitted closed form
+6.70e-8 (50/N)^2 that this script used before is gone.
 
 ## Submission packaging
 

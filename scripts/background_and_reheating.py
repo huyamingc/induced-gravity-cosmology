@@ -513,7 +513,9 @@ def main() -> None:
     A("Both readings give $N_{\\rm max}\\approx56$, and the manuscript now quotes $N\\approx45$--$56$ with $N_{\\rm max}\\simeq55.6$.\n")
     A("(The first-principles independent recomputation gives $T^*_{{\\rm reh}}(50)="
       f"{nw['T_reh_first_principles_50']:.3e}$ GeV against {nw['table_T_reh_50']:.3e}$ GeV from the tabulated matching;")
-    A("the slopes agree and the constants now agree to $1.4\\%$. The former factor-$3.4$ gap is fully accounted for:"
+    A(f"the slopes agree and the constants now agree to $"
+      f"{100.0 * abs(nw['T_reh_first_principles_50'] - nw['table_T_reh_50']) / nw['table_T_reh_50']:.3g}\\%$. "
+      "The former factor-$3.4$ gap is fully accounted for:"
       " the Omega-route matching used a constant-$g_*$ radiation scaling and $V_{\\rm end}$ in place of"
       " $\\rho_{\\rm end}=K_{\\rm end}+V_{\\rm end}$, and this script solved $x_*$ from $e^{2x}-2x=2\\beta^2N$,"
       " which is not the slow-roll relation for this potential (it returns $N=3.70$ at the $x_*=2.124$ that the"
