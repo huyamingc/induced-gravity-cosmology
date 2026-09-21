@@ -47,6 +47,11 @@ SCRIPTS = [
     # after it.
     "psi_abundance_oscillating.py",
     "dm_gap_closure_test.py",          # light-branch abundance matching + free-streaming check
+    # Reads dm_gap_closure_test.json and psi_abundance_oscillating.json (the V1
+    # anchor), so it must run after both.  ~4 min with the numba sequential
+    # core; it is the exact-background computation behind the primary
+    # dark-matter normalization of Sec. V (g = 1.5e-7).
+    "psi_mode_oscillating.py",         # exact-background mode integration -> final matching
     # Reads dm_gap_closure_test.json, so it must run after it.  Cheap (analytic + one
     # small brentq scan), and it is the script behind the T_reh error-band table of Sec. V.
     "treh_error_band.py",              # T_reh uncertainty -> (N, n_s, r) and (g, m_psi) band
@@ -57,6 +62,11 @@ SCRIPTS = [
     #     against the other.  Together they take well under a second.
     "verify_numerics.py",              # paper claims -> code
     "consistency_checks.py",           # paper tables -> code, and code -> code
+    # Reverse direction: every scientific magnitude in the .tex must be claim-
+    # covered, a checked table cell, a declared external input, historical
+    # wording, or an entry of the EXEMPT table (with a reason).  Reads
+    # verify_numerics.py, so it runs after it.
+    "audit_provenance.py",             # .tex magnitudes -> source or exemption
     # Regenerates the provenance block IN README.md from verify_numerics.py, so
     # it must run after that file is final and before the README audit reads it.
     "provenance_map.py",               # manuscript number -> producing function
@@ -67,10 +77,11 @@ SCRIPTS = [
 def main() -> None:
     # runpy executes each script in THIS process, so any script ending in
     # sys.exit(code) aborts the whole run at that point.  verify_numerics.py,
-    # consistency_checks.py and audit_readme_numbers.py all do exactly that, so
-    # the loop used to stop at verify_numerics.py: consistency_checks.py never
-    # ran and "ALL SCRIPTS DONE" was never reached.  Catch SystemExit per script,
-    # count the non-zero ones, and fail the run if any audit reported a problem.
+    # audit_tex_numbers.py, consistency_checks.py and audit_readme_numbers.py
+    # all do exactly that, so the loop used to stop at verify_numerics.py:
+    # consistency_checks.py never ran and "ALL SCRIPTS DONE" was never
+    # reached.  Catch SystemExit per script, count the non-zero ones, and
+    # fail the run if any audit reported a problem.
     failed = []
     for name in SCRIPTS:
         print("=" * 60)

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Fig.1 -- Einstein-frame potential V_E(varphi): plateau + frozen V_c."""
+"""Fig.1 -- Einstein-frame potential V_E(varphi): plateau + frozen V_c.
+
+Type: FIG
+"""
 from __future__ import annotations
 
 import sys

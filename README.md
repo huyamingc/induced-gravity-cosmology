@@ -14,9 +14,24 @@ $w_0=-1$ and is therefore exposed to DESI DR2.
 
 **Last full verification** (author machine, Python 3.13 / numpy 2.4 /
 scipy 1.18 / matplotlib 3.11): `scripts/run_all.py` exit 0;
-`verify_numerics` 75/0; `consistency_checks` 93/0; `audit_readme_numbers`
-0 fail; `audit_tex_numbers` FLAG=0; compiled PDF 55 pages, title page on
-page 1.
+`verify_numerics` 144/0; `consistency_checks` 93/0; `audit_readme_numbers`
+0 fail; `audit_tex_numbers` FLAG=0; `audit_provenance` 0 untraced; compiled
+PDF 57 pages, title page on page 1.
+
+## Project map (roles → files)
+
+| Role | File |
+|---|---|
+| ORCH | `scripts/run_all.py` |
+| LIB | `scripts/cosmo_model.py`, `scripts/derive_from_action.py`, `scripts/order_estimates.py` |
+| COMPUTE (PAPER) | `scripts/lock_n_convention.py`, `scripts/background_and_reheating.py`, `scripts/psi_*.py`, `scripts/dm_gap_closure_test.py`, `scripts/treh_error_band.py`, `scripts/residual_quintessence.py` |
+| PLOT | `scripts/fig1_einstein_potential.py`, `scripts/fig2_ns_r.py`, `scripts/fig3_domain_wall.py` |
+| CLAIM | `scripts/verify_numerics.py` |
+| TABLE | `scripts/consistency_checks.py` |
+| STALE | `scripts/audit_tex_numbers.py`, `scripts/audit_provenance.py` |
+| RNUM | `scripts/audit_readme_numbers.py` |
+| PMAP | `scripts/provenance_map.py` |
+| Manuscript | `paper_prd_merged.tex` |
 
 ## Repository layout
 
@@ -83,11 +98,11 @@ $env:PYTHONUNBUFFERED=1
 `scripts/run_all.py` is the single entry point. It runs every verification and
 figure script in order and regenerates the reports (`scripts/*.md`, `*.json`)
 and the three figures. Measured end-to-end runtime on the author's machine is
-**15–20 minutes**, of which `psi_abundance_oscillating.py` takes ~5.5 min and
-`dm_gap_closure_test.py` 10–15 min; `treh_error_band.py` finishes in under a
-second. On a Windows console, either run through `run_all.py` (it reconfigures
-the output streams to UTF-8) or set `$env:PYTHONIOENCODING='utf-8'` before
-running a single script.
+**20–25 minutes**, of which `psi_abundance_oscillating.py` takes ~5.5 min,
+`dm_gap_closure_test.py` 10–15 min and `psi_mode_oscillating.py` ~4 min (numba
+sequential core); `treh_error_band.py` finishes in under a second. On a Windows
+console, either run through `run_all.py` (it reconfigures the output streams to
+UTF-8) or set `$env:PYTHONIOENCODING='utf-8'` before running a single script.
 
 **Fast path (audits only).** If `scripts/*.json` artefacts from a previous full
 run are already present, the documentation/table audits finish in well under a
@@ -98,6 +113,8 @@ $env:PYTHONUNBUFFERED='1'
 & scripts\.venv\Scripts\python.exe scripts\verify_numerics.py
 & scripts\.venv\Scripts\python.exe scripts\consistency_checks.py
 & scripts\.venv\Scripts\python.exe scripts\audit_tex_numbers.py
+& scripts\.venv\Scripts\python.exe scripts\audit_provenance.py
+& scripts\.venv\Scripts\python.exe scripts\provenance_map.py
 & scripts\.venv\Scripts\python.exe scripts\audit_readme_numbers.py
 ```
 
@@ -109,12 +126,9 @@ propagates that as a non-zero run status.
 
 Every computational script below solves the stated equations numerically and
 its numbers may be quoted. The paper also prints a block of order-of-magnitude
-claims (`f_NL`, `alpha_s`, `q`, `Gamma_therm/H`, `sigma_psiN`, the dark-matter
-self-interaction and Tremaine–Gunn pair, the RG shifts `Delta xi` and
-`Delta lambda0`, the `Lambda_J` threshold suppressions, the Higgs portal
-`delta lambda_PhiH`, and the quartic `Delta w` chain); those are checked inside
-`verify_numerics.py` against a decade tolerance (see below). `cosmo_model.py`
-and `order_estimates.py` are
+claims; those are checked inside `verify_numerics.py` against a decade
+tolerance (convention: "Exact values vs order-of-magnitude claims" below).
+`cosmo_model.py` and `order_estimates.py` are
 libraries: they are imported by other scripts and are not standalone entries in
 `run_all.py`.
 
@@ -124,24 +138,115 @@ libraries: they are imported by other scripts and are not standalone entries in
 | `derive_from_action.py` | exact / independent derivation | Rebuilds the model from the action alone; holds the exact $A_s$ inversion and the $N(T_{\rm reh})$ matching used elsewhere |
 | `background_and_reheating.py` | exact / cross-check | Exact KG integration of the e-fold equations, the $N$ window, and reheating channels; recomputes $T_{\rm reh}^*(N)$ from first principles as a check on Table I |
 | `cosmo_model.py` | exact / shared library | Single source of $x_{\rm end}$, end-of-inflation ratios, reheating dilution, and the memoised `lambda0_for_As_locked` wrapper |
-| `order_estimates.py` | exact inputs / order-of-magnitude library | Single source for the closed forms behind every claim the paper prints with a leading `~`, including the one-loop running $\alpha_s$ (anchored to the Sec. IV chain, cross-checked against $\alpha_s(m_\chi)=0.0262$), the $\Lambda_J$ threshold suppressions, the gravity-induced Higgs portal, and the quartic $\Delta w$ chain of Discussion \#14 |
+| `order_estimates.py` | exact inputs / order-of-magnitude library | Single source for the closed forms behind every claim the paper prints with a leading `~` (convention: "Exact values vs order-of-magnitude claims" below) |
 | `psi_production_bogoliubov.py` | exact / cross-check | de Sitter exponent $2\pi$ audit, $g$ matching |
 | `psi_abundance_oscillating.py` | exact / cross-check | Cross-transition mode equation (power-law spectrum) |
 | `dm_gap_closure_test.py` | exact / cross-check | Small-$g$ light branch and free-streaming length |
+| `psi_mode_oscillating.py` | **exact / primary normalization** | Mode integration on the exact homogeneous background through the oscillating-condensate era: controlled backgrounds (`p2` anchor, period-averaged and exact), the convergence/unitarity/conformal validation battery, and the final abundance matching of Sec. V. Reports the oscillating-condensate factor $R=n_{\rm exact}/n_{\rm avg}\simeq1.24$ and the transition-shape systematic separately |
 | `treh_error_band.py` | exact / error propagation | $T_{\rm reh}$ uncertainty $\to$ $(N,n_s,r)$ and the $(g,m_\psi)$ window |
 | `residual_quintessence.py` | exact / cross-check | Two-fluid integration, $\Delta w$ budget |
 | `verify_numerics.py` | audit | Recomputes every quantitative claim printed in the paper from the current scripts |
 | `consistency_checks.py` | audit | Parses Table I and Table 2 from the `.tex`, checks cells against producing scripts, compares independent routes, and verifies figure links in both directions |
-| `audit_tex_numbers.py` | audit | Scans the `.tex` for superseded values (blacklist covers the stale route factor `2.04`, the stale section pointer, and the anchoring-round hand-written magnitudes: the `<= 1e-10` threshold bound, the `~1e-15` portal, the Discussion \#14 chain `1e-6 * (1e-46)^2`, the `Gamma_therm/H ~ 1e7` hand estimate, the `0.5e-7` window rounding, the `6.6e-8` $\lambda_0$ drift, the abstract's "both consequences" attribution, and the stale caption/handle wording); survivors must sit in comparison/historical context, and every quote of the `45--56` band must carry the `N_max = 55.6` cap nearby (required in the abstract and the Table I caption) |
+| `audit_tex_numbers.py` | audit | Scans the `.tex` for superseded values and stale wording; the pattern list lives at the top of the script (regression patterns from every round). Survivors must sit in comparison/historical context, and every quote of the `45--56` band must carry the `N_max = 55.6` cap nearby |
+| `audit_provenance.py` | audit | Reverse sweep of the `.tex` magnitudes; writes `provenance_coverage.json/.md` (mechanism and classification: "Reverse provenance" below) |
 | `audit_readme_numbers.py` | audit | Recomputes the prose numbers in this README from the scripts; a reworded sentence that loses coverage is a failure |
 | `provenance_map.py` | audit / documentation | Parses `verify_numerics.py` and regenerates the Data-provenance block in this README |
 | `fig1_einstein_potential.py`, `fig2_ns_r.py`, `fig3_domain_wall.py` | figure | Generate `figures/*.pdf`. Each figure has exactly one writer |
 
 `provenance_map.py` must run after `verify_numerics.py` and before
 `audit_readme_numbers.py`, because it rewrites a block of this README that the
-README audit then reads.
+README audit then reads. `audit_provenance.py` also runs after
+`verify_numerics.py`, because it resolves the printed values from the claim
+registrations.
 
-### Exact values vs order-of-magnitude claims
+## Forward provenance
+
+Every number the manuscript quotes from the model is produced by a script in
+`scripts/`, stored as a `.json`/`.md` artefact, and re-checked by
+`verify_numerics.py` (every registered `claim(...)` call) and
+`consistency_checks.py` (every table cell). The generated block at the bottom
+of this file maps each claim to the exact expression the audit evaluates.
+
+## Reverse provenance
+
+The forward chain cannot see a number that was never registered, so
+`scripts/audit_provenance.py` runs the reverse direction: it extracts every
+scientific magnitude from `paper_prd_merged.tex` (a `x 10^b` in any notation
+plus bare `10^b` with `|b| >= 3`, cross-references masked) and requires each
+one to be a registered claim, a checked table cell, a declared external input
+(observational value, definitional constant, parameter choice), historical
+comparison wording, or an entry of its `EXEMPT` table -- otherwise
+`run_all.py` fails.
+
+Coverage: **450 scientific magnitudes** classified, **144 registered claim call sites**, **0 untraced magnitudes** (any untraced value fails `run_all.py`).
+
+## Exemptions
+
+The `EXEMPT` dictionary in `scripts/audit_provenance.py` is the only door for
+sourceless magnitudes, one reason per entry. Four categories live there:
+bound targets whose enforcement is itself a registered boolean claim
+(`Delta xi <= 1e-6`, unitarity `1e-12`, `Delta w <= 1e-10`), decade roundings
+of registered values (`m_chi ~ 1e13`, `V_0 ~ 1e63`, `Phi_V ~ 1e17`), pure
+parametric estimates the text marks with `~`/`leq` and no closed form
+(magnetic seeds, mixing angles, indirect-detection orders), and values guarded
+by the other auditors (`7.46e-8` by `audit_tex_numbers`, the dilution factor
+by `consistency_checks`).
+
+## New-number workflow
+
+1. Write the number into `paper_prd_merged.tex`.
+2. Produce it: a closed form in `order_estimates.py`, or an artefact from the
+   script that computes it.
+3. Register it: a `claim(...)` in `verify_numerics.py` (table cells go through
+   `consistency_checks.py` instead); sourceless magnitudes go to `EXEMPT`
+   (rules: "Exemptions" below).
+4. Run the audits (fast path above) — all must exit 0.
+5. Re-run `provenance_map.py` so the generated block below stays current.
+
+## Known corrections (found by the reverse sweep, not a referee)
+
+- *Numerical errors (2):* App. D quoted an `$m_\chi/H$` floor of `1e50`, which
+  overstates the smallest ratio by ~37 decades (real values: `~5e14` at the
+  model's own reheating temperature, `2.3e55` today) — rewritten. The App. D5c
+  required-suppression factor `2e26–2e77` disagreed with the same sentence's
+  own `rho_cond(a_end) ~ 3e63` by 29x — corrected to `4e27–4e78`.
+- *Decade roundings (4):* the Sec. VI radiative-correction decade `1e41` (real
+  `8.7e41`) and tuning decade `1e88–1e99` (real `3.5e88–2.8e98`), and the
+  domain-wall `e^{-3N} ~ 1e-65` (real `8.7e-67`), were moved to the decades the
+  locked constants actually give.
+
+## Dark-matter convention (paper Sec. V)
+
+With the true mode-equation spectrum on the exact homogeneous background — the
+end-of-inflation transition **and** the oscillating-condensate era — abundance
+matching lands on the **light branch**: g ~ 1.5e-7, m_psi ~ 1.1e11 GeV (cold
+dark matter). `psi_mode_oscillating.py` produces this primary value and
+separates its two systematics, the oscillating condensate and the slow-roll
+transition shape; the earlier transition-only calculation
+(`psi_abundance_oscillating.py` / `dm_gap_closure_test.py`) gives the labelled
+baseline g = 1.0e-7, m_psi = 7.5e10 GeV. The heavy branch of the exponential
+closed form overproduces at the model's own $T_{\rm reh}$. The systematics
+chain, validation battery, and remaining (3D lattice) cross-check are in paper
+Sec. V / App. D0 and in the generated claim table below.
+
+`treh_error_band.py` shows that the matching point is a window, not a number:
+on the light branch $g$ and $m_\psi$ scale as $T_{\rm reh}^{-1/2}$, so a
+factor-100 band in $T_{\rm reh}$ moves them by a factor 10, while it moves n_s by only ~1.1e-3 and r by ~5.5 percent.
+The branch stays cold dark matter across the whole band, and the
+exact-background multiplier 1.48 scales the whole window unchanged. The same
+script verifies the exact relation
+$m_\psi/H_{\rm inf} = (g/\sqrt{\xi})\,(M_{\rm Pl}/H_{\rm inf})$.
+
+The $N\leftrightarrow T_{\rm reh}$ matching behind every tabulated $T_{\rm reh}^*$
+uses comoving-entropy conservation across the radiation era
+(`derive_from_action.N_match_derived` with `entropy_matching=True`) together
+with $\rho_{\rm end}=K_{\rm end}+V_{\rm end}$. The independent first-principles
+recomputation in `background_and_reheating.py` agrees with that table to 0.092 percent at N=50 and 0.087 percent at N=55.
+Both routes share the same exact $\lambda_0$
+(`cosmo_model.lambda0_for_As_locked`); what remains is an implementation
+difference, not a difference in approximation level.
+
+## Exact values vs order-of-magnitude claims
 
 - **A value produced by an exact script** (`lock_n_convention.py`,
   `derive_from_action.py`, `background_and_reheating.py`, …) may be quoted to
@@ -155,38 +260,11 @@ README audit then reads.
   quote them for precise values. Their formulas live in `order_estimates.py`;
   new scripts must import that module rather than re-derive them.
 
-## Dark-matter convention (paper Sec. V)
-
-With the true mode-equation spectrum, abundance matching lands on the
-**light branch**: g ~ 1.0e-7, m_psi ~ 7.5e10 GeV (cold dark matter). The heavy
-branch of the exponential closed form overproduces at the model's own
-$T_{\rm reh}$. The absolute normalization awaits a lattice/Floquet computation.
-
-`treh_error_band.py` shows that this matching point is a window, not a number:
-on the light branch $g$ and $m_\psi$ scale as $T_{\rm reh}^{-1/2}$, so a
-factor-100 band in $T_{\rm reh}$ moves them by a factor 10, while it moves n_s by only ~1.1e-3 and r by ~5.5 percent.
-The branch stays cold dark matter across the whole band. The same script
-verifies the exact relation $m_\psi/H_{\rm inf} = (g/\sqrt{\xi})\,(M_{\rm Pl}/H_{\rm inf})$.
-
-The $N\leftrightarrow T_{\rm reh}$ matching behind every tabulated $T_{\rm reh}^*$
-uses comoving-entropy conservation across the radiation era
-(`derive_from_action.N_match_derived` with `entropy_matching=True`) together
-with $\rho_{\rm end}=K_{\rm end}+V_{\rm end}$. The independent first-principles
-recomputation in `background_and_reheating.py` agrees with that table to 0.092 percent at N=50 and 0.087 percent at N=55.
-Both routes share the same exact $\lambda_0$
-(`cosmo_model.lambda0_for_As_locked`); what remains is an implementation
-difference, not a difference in approximation level.
-
 ## Data provenance: manuscript number → producing function
 
-**Maintenance rule.** When you add a number to `paper_prd_merged.tex`, register
-a `claim(...)` for it in `verify_numerics.py`; when you change a function that
-a claim reads, re-run `run_all.py`. The table below is regenerated
-automatically — do not hand-edit it.
-
-`provenance_map.py` extracts the table by parsing `verify_numerics.py`: the
-fifth argument of every `claim(...)` call is the expression that produces the
-number, so the table cannot describe anything other than what the audit runs.
+**Maintenance rule.** To add or change a manuscript number, follow the
+"New-number workflow" above. The table below is regenerated automatically by
+`scripts/provenance_map.py` from the `claim(...)` calls — do not hand-edit it.
 
 <!-- BEGIN PROVENANCE (generated by scripts/provenance_map.py) -->
 Every quantitative claim in `paper_prd_merged.tex` is registered exactly once
@@ -194,8 +272,8 @@ as a `claim(...)` call in `scripts/verify_numerics.py`.  The table below is
 extracted from that file, so it cannot drift from the audit it describes:
 the third column IS the expression the audit evaluates.
 
-- call sites listed below: **73**
-- of which inside a loop (so one site evaluates several times): **1**
+- call sites listed below: **144**
+- of which inside a loop (so one site evaluates several times): **0**
 - entries `verify_numerics.py` reports at run time: see the header of
   `scripts/verification_report.md`
 
@@ -203,38 +281,64 @@ Symbols appearing in the third column:
 
 | symbol | resolves to |
 |---|---|
+| `BETA` | `p50['beta_p']` |
+| `G_EXACT` | `pm['matching']['exact']['g'] if pm else None` |
 | `H0` | `rq['constants']['H0_GeV'] if rq else dfa.H0_GeV_v2()` |
+| `H0C` | `rq['constants']['H0_GeV']` |
 | `H_INF` | `p50['H_inf']` |
+| `M_CHI` | `p50['m_chi']` |
+| `M_OVER_H_EXACT` | `pm['matching']['exact']['m_over_Hinf'] if pm else None` |
 | `M_PSI` | `dmg['m_star_powerlaw'] * H_INF if dmg else None` |
+| `M_PSI_EXACT` | `pm['matching']['exact']['m_psi_GeV'] if pm else None` |
+| `PhiV` | `teb['Phi_V_GeV'] if teb else None` |
+| `RHO_DM` | `0.265 * rq['constants']['RHO_C']` |
+| `RHO_END` | `rq['constants']['rho_end']` |
 | `T50` | `lk.T_reh_for_N_derived(p50, 50.0)` |
 | `T51` | `lk.T_reh_for_N_derived(lk.point(XI, 51.0), 51.0)` |
 | `T56` | `lk.T_reh_for_N_derived(lk.point(XI, 56.0), 56.0)` |
+| `V_C` | `rq['constants']['V_C']` |
+| `V_END` | `rq['constants']['V_end']` |
 | `XI` | `11.1` |
+| `_drift` | `max((c[b]['unitarity_drift_max'] for c in pm['convergence'].values() for b in ('avg', 'exact')))` |
+| `_v1dev` | `max((abs(r['ratio'] - 1.0) for r in pm['reproduction_p2']))` |
 | `bar` | `background_and_reheating` module |
 | `bog` | `psi_production_bogoliubov.json` |
 | `br` | `background_and_reheating.json` |
+| `dA` | `XI * 9.2 * H0C ** 2 / (lam0 * PhiV ** 2)` |
 | `dmg` | `dm_gap_closure_test.json` |
 | `dw` | `rq['delta_w']` |
 | `dxi_tot` | `oe.delta_xi_total(XI, lam0, oe.G_ANOM)` |
 | `fnl` | `oe.f_nl_local(p50['ns'])` |
+| `g10` | `next((r['g'] for r in teb['rows'] if abs(r['T_reh_GeV'] - 10000000000.0) / 10000000000.0 < 0.001), None)` |
+| `g_am` | `G_EXACT if G_EXACT else 1.5e-07` |
 | `g_hi` | `next((r['g'] for r in teb['rows'] if abs(r['T_reh_GeV'] - 100000000.0) / 100000000.0 < 0.001), None)` |
 | `g_kin` | `oe.g_kinematic(p50['m_chi'], XI)` |
 | `g_lo` | `next((r['g'] for r in teb['rows'] if abs(r['T_reh_GeV'] - 1000000000.0) / 1000000000.0 < 0.001), None)` |
+| `hi` | `RHO_DM * (1000000000000000.0 / 2.36e-13) ** 3` |
 | `lam0` | `p50['lambda0']` |
 | `lk` | `lock_n_convention` module |
+| `lo` | `RHO_DM * (0.01 / 2.36e-13) ** 3` |
+| `m10` | `next((r['m_psi_GeV'] for r in teb['rows'] if abs(r['T_reh_GeV'] - 10000000000.0) / 10000000000.0 < 0.001), None)` |
+| `m_hi` | `next((r['m_psi_GeV'] for r in teb['rows'] if abs(r['T_reh_GeV'] - 100000000.0) / 100000000.0 < 0.001), None)` |
 | `m_lo` | `next((r['m_psi_GeV'] for r in teb['rows'] if abs(r['T_reh_GeV'] - 1000000000.0) / 1000000000.0 < 0.001), None)` |
+| `mult` | `pm['g_shift']['g_avg_over_paper_transition_only'] * pm['g_shift']['g_exact_over_g_avg']` |
 | `nw` | `bar.solve_N_max()` |
 | `oe` | `order_estimates` module |
+| `omega3` | `0.265 * (3.0 * rows_n[3.0]) / (m_match * dmg['n_star_powerlaw'])` |
 | `p50` | `lk.point(XI, 50.0)` |
 | `p55` | `lk.point(XI, 55.0)` |
 | `phys` | `[r for r in rows if r['label'].startswith('physical')]` |
+| `pm` | `psi_mode_oscillating.json` |
 | `rho_c` | `rq['constants']['RHO_C']` |
+| `rho_psi` | `m_row * dmg['n_star_powerlaw'] * (g_row / dmg['g_star_powerlaw']) * H_INF ** 3` |
 | `rmax` | `max((lk.point(XI, float(n))['r'] for n in range(45, 56)))` |
 | `rq` | `residual_quintessence.json` |
 | `s` | `teb['summary']` |
-| `sig_ov_m` | `oe.sigma_psipsi_over_m(M_PSI)` |
+| `sc` | `rq.get('stable_condensate', {}).get('no_pulse', {})` |
+| `sig_ov_m` | `oe.sigma_psipsi_over_m(M_PSI_EXACT)` |
 | `slope` | `(math.log(teb['rows'][-1]['lambda_fs_Mpc']) - math.log(teb['rows'][0]['lambda_fs_Mpc'])) / (math.log(teb['rows'][-1]['m_over_H_derived']) - math.log(teb['rows'][0]['m_over_H_derived']))` |
 | `teb` | `treh_error_band.json` |
+| `treh_hi` | `pao['T_reh_required'].get('3')` |
 
 **III inflation** (23 call sites)
 
@@ -264,7 +368,7 @@ Symbols appearing in the third column:
 | T_reh~1e9 GeV maps to N | abstract / Sec. III | `lk.N_derived_for_T(p50, 1000000000.0)` |
 | T_reh~2.1e8 GeV maps to N | Table 2 row 2 | `lk.N_derived_for_T(p50, 210000000.0)` |
 
-**IV reheating** (8 call sites)
+**IV reheating** (9 call sites)
 
 | manuscript quantity | where | produced by |
 |---|---|---|
@@ -276,15 +380,16 @@ Symbols appearing in the third column:
 | parametric-resonance q (top) | Sec. IV | `oe.mathieu_q(oe.M_TOP, p50['m_chi'])` |
 | Gamma_therm/H at T=1e9 | Sec. IV / Sec. XII | `oe.gamma_therm_over_H(1000000000.0)` |
 | alpha_s at T=1e9 GeV | Sec. XII #17 | `oe.alpha_s_running(1000000000.0)` |
+| initial gravitational pulse rho_rad(a_end) | Sec. IV | `rq['constants']['rho_pulse']` |
 
-**V dark matter** (18 call sites)
+**V dark matter** (50 call sites)
 
 | manuscript quantity | where | produced by |
 |---|---|---|
 | Phi_V | Sec. V | `teb['Phi_V_GeV']` |
-| g (light branch) | abstract / Sec. V | `dmg['g_star_powerlaw']` |
-| m_psi | abstract / Sec. V | `M_PSI` |
-| m_psi/H_inf | abstract / Sec. V | `dmg['m_star_powerlaw']` |
+| g (transition-only baseline) | Sec. V (labelled baseline) | `dmg['g_star_powerlaw']` |
+| m_psi (transition-only baseline) | Sec. V (labelled baseline) | `M_PSI` |
+| m_psi/H_inf (transition-only baseline) | Sec. V (labelled baseline) | `dmg['m_star_powerlaw']` |
 | lambda_fs anchor | abstract / Table 2 | `dmg['free_streaming']['lambda_fs_Mpc']` |
 | lambda_fs bound margin [orders] | Sec. V | `math.log10(0.1 / dmg['free_streaming']['lambda_fs_Mpc'])` |
 | m_psi/H_inf from the mode equation | Sec. V | `dmg['m_star_powerlaw']` |
@@ -295,12 +400,44 @@ Symbols appearing in the third column:
 | g window lower edge (T=1e9 row) | Sec. V / Table 2 | `g_lo` |
 | g window upper edge (T=1e8 row) | Sec. V / Table 2 | `g_hi` |
 | m_psi window lower edge (T=1e9 row) | Sec. V / Table 2 | `m_lo` |
+| exact-background g window, low edge (T=1e9 row x 1.48) | Sec. V | `g_lo * mult` |
+| exact-background g window, high edge (T=1e8 row x 1.48) | Sec. V | `g_hi * mult` |
+| exact-background m_psi window, low edge (T=1e9 row x 1.48) | Sec. V | `m_lo * mult` |
+| exact-background m_psi window, high edge (T=1e8 row x 1.48) | Sec. V | `m_hi * mult` |
 | dln(lambda_fs)/dln(m_psi) | Sec. V | `slope` |
+| g (exact background, primary) | abstract / Sec. V | `G_EXACT` |
+| m_psi (exact background, primary) | abstract / Sec. V | `M_PSI_EXACT` |
+| m_psi/H_inf (exact background) | abstract / Sec. V | `M_OVER_H_EXACT` |
+| condensate enhancement R = n_exact/n_avg | Sec. V / App. D0 | `pm['scan']['0.0046']['R']` |
+| g_exact/g_avg (condensate effect) | Sec. V | `pm['g_shift']['g_exact_over_g_avg']` |
+| transition baseline factor (n_p2/n_avg) | Sec. V / App. D0 | `1.4e-05 / pm['convergence']['m=0.0046']['avg']['base_dphase0.04']` |
+| transition-shape systematic in g (sqrt of the n-space factor) | abstract / Sec. V | `pm['g_shift']['g_avg_over_paper_transition_only']` |
+| Table-2 multiplier g_exact/g_transition_only | Sec. V / Table 2 | `pm['g_shift']['g_avg_over_paper_transition_only'] * pm['g_shift']['g_exact_over_g_avg']` |
+| V1 anchor: p=2 reproduction at the 1e-9 level | App. D0 | `1.0 if _v1dev <= 1e-09 else 0.0` |
+| massless limit (conformal invariance) | App. D0 | `max((v['n_over_H3'] for v in pm['massless_limit'].values()))` |
+| unitarity drift within the printed 1e-12 bound | App. D0 | `1.0 if _drift <= 1e-12 else 0.0` |
 | sigma_psiN (graviton exchange) | Sec. V (direct detection) | `oe.sigma_psiN_cm2()` |
 | g at kinematic closure (m_psi = m_chi/2) | Sec. IV / Sec. V | `1.0 if 1e-05 <= g_kin <= 0.0001 else 0.0` |
 | Bogoliubov exponent audit present | Sec. V | `1.0 if bog['exponent_audit'] else 0.0` |
+| heavy-branch closure mass m_psi = 3.1 H_inf | Sec. V | `3.1 * H_INF` |
+| heavy-branch closure coupling g = m_psi / Phi_V | Sec. V | `3.1 * H_INF / PhiV` |
+| de Sitter closure g = H_inf / (2 pi Phi_V) | Sec. V | `H_INF / (2.0 * math.pi * PhiV)` |
+| rho_psi at production (T_reh = 1e9 row) | Sec. V | `rho_psi` |
+| rho_psi / rho_end | Sec. V | `rho_psi / RHO_END` |
+| n_psi / H_inf^3 (exact background) | Sec. V | `pm['matching']['exact']['n_over_H3']` |
+| n_psi / H_inf^3 (transition-only baseline) | Sec. V | `dmg['n_star_powerlaw']` |
+| adiabaticity numerator m_Phi Phi_osc / Phi_V^2 | Sec. V | `0.8 * math.sqrt(2.0 * lam0)` |
+| adiabaticity parameter at g_exact | Sec. V | `0.8 * math.sqrt(2.0 * lam0) / G_EXACT` |
+| adiabaticity ratio light / heavy branch | Sec. V | `3.1 * H_INF / PhiV / G_EXACT` |
+| heavy-branch Omega_psi at m/H = 3 (low end) | Sec. V | `omega3` |
+| heavy-branch overproduction ratio | Sec. V | `omega3 / 0.265` |
+| heavy-branch required T_reh | Sec. V | `treh_hi` |
+| g at the T_reh = 1e10 row | Sec. V | `g10` |
+| m_psi at the T_reh = 1e10 row | Sec. V | `m10` |
+| lambda_fs order (abstract rounding) | abstract / Sec. V | `dmg['free_streaming']['lambda_fs_Mpc']` |
+| m_chi order (decade rounding) | abstract / Secs. II-VIII | `M_CHI if M_CHI else None` |
 
-**VI dark energy** (6 call sites)
+**VI dark energy** (19 call sites)
 
 | manuscript quantity | where | produced by |
 |---|---|---|
@@ -310,27 +447,46 @@ Symbols appearing in the third column:
 | overclosure bound rho_cond/V_c | Sec. VI | `dw['overclosure_bound_OmegaDM_over_OmegaL']` |
 | V_c [GeV^4] | Sec. VI | `rq['constants']['V_C']` |
 | rho_DM^(0) [GeV^4] | Sec. VI / App. D5c | `0.265 * rho_c` |
+| V_0 / V_c hierarchy | abstract / VI / XII | `p50['V0'] / V_C` |
+| radiative correction delta V_c (psi) | Sec. VI | `M_PSI_EXACT ** 4 / (16.0 * math.pi ** 2) if M_PSI_EXACT else None` |
+| radiative correction delta V_c (chi) | Sec. VI | `M_CHI ** 4 / (16.0 * math.pi ** 2)` |
+| tuning vs V_c (psi end) | Sec. VI | `M_PSI_EXACT ** 4 / (16.0 * math.pi ** 2) / V_C if M_PSI_EXACT else None` |
+| tuning vs V_c (chi end) | Sec. VI | `M_CHI ** 4 / (16.0 * math.pi ** 2) / V_C` |
+| rho_cond(a_reh) bound, low edge | App. D5c | `lo` |
+| rho_cond(a_reh) bound, high edge | App. D5c | `hi` |
+| rho_cond(a_end) = m_chi^2 M_Pl^2 / 2 | App. D5c | `0.5 * M_CHI ** 2 * oe.M_P ** 2` |
+| required suppression factor, low | App. D5c | `0.5 * M_CHI ** 2 * oe.M_P ** 2 / hi` |
+| required suppression factor, high | App. D5c | `0.5 * M_CHI ** 2 * oe.M_P ** 2 / lo` |
+| stable-condensate overclosure vs rho_DM | App. D5c | `sc['rho_cond_a0'] / RHO_DM` |
+| stable-condensate rho_cond(a0)/V_c | App. D5c | `sc['rho_cond_a0_over_Vc']` |
+| V_c order (decade rounding) | Sec. VI / VIII | `V_C` |
 
-**VIII embedding** (9 call sites)
+**VIII embedding** (15 call sites)
 
 | manuscript quantity | where | produced by |
 |---|---|---|
 | Delta lambda0 | Sec. VIII E | `oe.delta_lambda0(lam0)` |
 | Delta xi (quartic drive) | Sec. VIII E (Eq. dxilam) | `oe.delta_xi_quartic(XI, lam0)` |
-| 'Delta xi (Yukawa), g=%.1e' % g_y | Sec. VIII E (Eq. dxig) | `oe.delta_xi_yukawa(XI, g_y)` *(loop)* |
-| quartic / Yukawa dominance | Sec. VIII E | `oe.dn_quartic_over_yukawa(XI, lam0, 1e-07)` |
+| Delta xi (Yukawa), g=1.5e-07 | Sec. VIII E (Eq. dxig) | `oe.delta_xi_yukawa(XI, g_am)` |
+| Delta xi (Yukawa), g=2.3e-05 | Sec. VIII E (Eq. dxig) | `oe.delta_xi_yukawa(XI, 2.3e-05)` |
+| Delta xi (Yukawa), g=1.0e-04 | Sec. VIII E (Eq. dxig) | `oe.delta_xi_yukawa(XI, 0.0001)` |
+| quartic / Yukawa dominance | Sec. VIII E | `oe.dn_quartic_over_yukawa(XI, lam0, g_am)` |
 | prefactor (xi - 1/6) at xi=1 | Sec. VIII E | `1.0 - 1.0 / 6.0` |
 | prefactor (xi - 1/6) at xi=100 | Sec. VIII E | `100.0 - 1.0 / 6.0` |
 | Delta xi(xi) at xi=1 | Sec. VIII E | `oe.delta_xi_total(1.0, lam0, oe.G_ANOM)` |
 | Delta xi(xi) at xi=100 | Sec. VIII E | `oe.delta_xi_total(100.0, lam0, oe.G_ANOM)` |
 | Delta xi(xi=11.1) <= 1e-6 (bound holds) | Sec. VIII E | `1.0 if dxi_tot <= 1e-06 else 0.0` |
+| Coleman-Weinberg VEV shift | Sec. VIII E | `lam0 / (16.0 * math.pi ** 2)` |
+| quartic VEV-shift coefficient lam0 / xi^2 | Sec. XII (field space) | `lam0 / XI ** 2` |
+| 2-loop gamma_Phi | Sec. VIII E | `(lam0 / (16.0 * math.pi ** 2)) ** 2` |
+| c_3 cubic term of V_E | App. A | `BETA * M_CHI ** 2 / (2.0 * oe.M_P)` |
 
 **VII embedding** (3 call sites)
 
 | manuscript quantity | where | produced by |
 |---|---|---|
 | threshold suppression (chi) | Sec. VII | `oe.threshold_suppression(p50['m_chi'])` |
-| threshold suppression (psi) | Sec. VII | `oe.threshold_suppression(M_PSI)` |
+| threshold suppression (psi) | Sec. VII | `oe.threshold_suppression(M_PSI_EXACT)` |
 | delta lambda_PhiH (gravity-induced portal) | Sec. VII | `oe.delta_lambda_PhiH(lam0)` |
 
 **XII discussion** (6 call sites)
@@ -339,12 +495,41 @@ Symbols appearing in the third column:
 |---|---|---|
 | sigma_psipsi/m_psi (graviton exchange) | Sec. XII (i) | `sig_ov_m` |
 | bullet-cluster margin [orders] | Sec. XII (i) | `-math.log10(sig_ov_m)` |
-| Tremaine-Gunn Q | Sec. XII (ii) | `oe.tremaine_gunn_Q(M_PSI, H_INF)` |
+| Tremaine-Gunn Q | Sec. XII (ii) | `oe.tremaine_gunn_Q(M_PSI_EXACT, H_INF)` |
 | spectral running alpha_s | Sec. XII (xiv) | `oe.alpha_s_attractor()` |
 | Delta w quartic chain (Discussion #14) | Sec. XII (#14) | `oe.dw_quartic_ricci(lam0, XI, p50['m_chi'])` |
 | N at which r = 0.01 | Sec. III (LiteBIRD) | `oe.n_at_r(0.01, XI)` |
 
-Generated by `scripts/provenance_map.py` from `scripts/verify_numerics.py` -- 73 claim call sites.
+**II model scales** (12 call sites)
+
+| manuscript quantity | where | produced by |
+|---|---|---|
+| m_Phi = sqrt(2 lam0) Phi_V | Sec. II / V / VIII | `math.sqrt(2.0 * lam0) * PhiV` |
+| U^(1/4) = V0^(1/4) | Sec. III / App. A | `p50['V0'] ** 0.25` |
+| V_end^(1/4) | Sec. IV | `V_END ** 0.25` |
+| Gamma(chi -> tt) / m_chi | Sec. II E | `(173.0 / (oe.M_P * math.sqrt(6.0 + 1.0 / XI))) ** 2 / (16.0 * math.pi)` |
+| Gamma(chi -> tt) absolute | Sec. II E | `(173.0 / (oe.M_P * math.sqrt(6.0 + 1.0 / XI))) ** 2 * M_CHI / (16.0 * math.pi)` |
+| V_end (absolute) | Sec. III | `V_END` |
+| rho_end (absolute) | Sec. IV | `RHO_END` |
+| K_end (absolute) | Sec. III | `br['slowroll']['K_over_V_end'] * V_END` |
+| Lambda_J = M_Pl / xi | Sec. II E / Sec. VII | `oe.lambda_J(XI)` |
+| m_chi / H_0 today | Sec. VI / App. D | `M_CHI / H0C` |
+| m_chi / H at the model T_reh | App. D (quasi-static) | `M_CHI / math.sqrt(math.pi ** 2 / 30.0 * 106.75 * 210000000.0 ** 4 / (3.0 * oe.M_P ** 2))` |
+| wall tension sigma_wall | Sec. II F | `4.0 / 3.0 * math.sqrt(lam0 / 2.0) * PhiV ** 3 if PhiV else None` |
+
+**App D residual budget** (7 call sites)
+
+| manuscript quantity | where | produced by |
+|---|---|---|
+| Delta A / A today (Ricci) | Sec. VI / App. D5b | `dA` |
+| delta Phi / Phi_V (Ricci, today) | App. D5 | `(H0C / M_CHI) ** 2` |
+| Delta w_Ricci mantissa | App. D5 / Sec. VI | `(H0C / M_CHI) ** 2` |
+| Delta alpha/alpha scenario (ii) | Sec. VI | `dA` |
+| Delta w quantum fluctuations | App. D5b | `H0C ** 4 / V_C` |
+| domain-wall suppression e^{-3N} | Sec. II / XII | `math.exp(-3.0 * 50.7)` |
+| orders below DESI 3-sigma | App. D5b | `10.0 ** math.log10(0.001 / (H0C / M_CHI) ** 2)` |
+
+Generated by `scripts/provenance_map.py` from `scripts/verify_numerics.py` -- 144 claim call sites.
 <!-- END PROVENANCE -->
 
 ## Submission packaging
@@ -358,9 +543,8 @@ Suggested zip contents for the journal:
 
 The cover letter may note SCOAP3 (EPJC APC = 0). Code and numerical
 reproducibility are provided by this repository (not required inside the
-journal zip). Declarations in the manuscript record: independent researcher,
-no funding, competing interests none, code/data availability pointing at the
-scripts, and the AI-assisted-tools statement.
+journal zip). The Declarations content is listed once in "Document class and
+format" above.
 
 ## Git
 

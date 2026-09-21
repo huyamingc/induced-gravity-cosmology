@@ -83,15 +83,18 @@ def build_checks():
         "background_and_reheating: first principles vs TABLE_I",
     ))
 
-    # 2. The dark-matter light-branch anchor (public README).
-    dmg = load_json("dm_gap_closure_test.json")
-    if dmg:
+    # 2. The dark-matter abundance-matched coupling (public README).  Since the
+    #    exact-background computation (psi_mode_oscillating) the README quotes
+    #    the primary value in the "g ~ ..., m_psi ~ ... GeV" form and the
+    #    transition-only baseline with "=", so this pattern is unambiguous.
+    pm = load_json("psi_mode_oscillating.json")
+    if pm:
         checks.append((
-            "dark-matter anchor",
+            "dark-matter anchor (exact background, primary)",
             r"g ~ ([0-9.]+e-?[0-9]+), m_psi ~ ([0-9.]+e[0-9]+) GeV",
-            [dmg["g_star_powerlaw"], dmg["m_star_powerlaw"] * bar.H_INF],
+            [pm["matching"]["exact"]["g"], pm["matching"]["exact"]["m_psi_GeV"]],
             [0.05, 0.05],
-            "dm_gap_closure_test.json (light branch)",
+            "psi_mode_oscillating.json (exact background, primary)",
         ))
 
     # 3. What the T_reh band does to g, n_s and r (public README).
@@ -105,6 +108,23 @@ def build_checks():
             [s["g_ratio"], s["dns"], 100.0 * s["dr_over_r"]],
             [0.05, 0.05, 0.05],
             "treh_error_band.json summary",
+        ))
+
+    # 4. Reverse provenance coverage (audit_provenance.py output).  The README
+    #    states how many magnitudes the reverse sweep classifies, how many
+    #    claims are registered, and how many are untraced; all three must match
+    #    the machine report exactly (integer counts, zero tolerance).
+    cov = load_json("provenance_coverage.json")
+    if cov:
+        checks.append((
+            "reverse provenance coverage",
+            r"\*\*(\d+) scientific magnitudes\*\* classified, "
+            r"\*\*(\d+) registered claim call sites\*\*, "
+            r"\*\*(\d+) untraced magnitudes\*\*",
+            [float(cov["total"]), float(cov["claims_parsed"]),
+             float(cov["totals"]["UNTRACED"])],
+            [0.0, 0.0, 0.0],
+            "audit_provenance.py -> provenance_coverage.json",
         ))
 
     return checks
@@ -130,6 +150,14 @@ def main() -> None:
 
     failures = 0
     total = 0
+    # A missing upstream artefact must FAIL loudly: with the old `if dmg:` /
+    # `if teb:` guards the affected checks silently vanished from the report
+    # and the audit stayed green while the dark-matter anchor went unchecked.
+    for name in ("dm_gap_closure_test.json", "treh_error_band.json",
+                 "psi_mode_oscillating.json", "provenance_coverage.json"):
+        if load_json(name) is None:
+            A("| (upstream artefact) | *%s missing* | -- | -- | -- | **FAIL** |" % name)
+            failures += 1
     for label, pattern, measured, tols, source in build_checks():
         m = re.search(pattern, text)
         if m is None:

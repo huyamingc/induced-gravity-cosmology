@@ -7,6 +7,8 @@ also write a second, byte-identical copy under an alias name "so tex
 includegraphics stays valid regardless of filename choice"; the manuscript never
 used that name and lock_n_convention.py wrote the same bytes again, so the alias
 was removed.
+
+Type: FIG
 """
 from __future__ import annotations
 

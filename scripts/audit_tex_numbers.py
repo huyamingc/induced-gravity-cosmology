@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """Audit paper_prd_merged.tex scientific numbers against locked-N convention.
 
+Type:           PAPER
 Primary source: scripts/n_convention_results.json (if present) + locked table values.
 Flags:
   OK_EXACT   - locked-N primary values
   OK_NOTE    - allowed only as attractor/historical comparison (context window)
   FLAG       - old-convention value used as if current prediction
+Exit code:      0 when no FLAG, 1 when any FLAG -- so run_all.py's failure
+                detection covers this audit the same way as the other auditors.
 """
 from __future__ import annotations
 
@@ -282,7 +285,8 @@ def main() -> None:
     OUT.write_text("\n".join(out), encoding="utf-8")
     print("\n".join(out))
     print("Wrote", OUT)
+    return 0 if total_issues == 0 else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
