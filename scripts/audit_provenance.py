@@ -7,9 +7,9 @@ Type:           AUDIT
 Role:           STALE (reverse coverage); complements verify_numerics (CLAIM),
                 consistency_checks (TABLE) and audit_tex_numbers (STALE)
 Paper Sec.:     n/a (repository traceability)
-Manuscript:     paper_prd_merged.tex
+Manuscript:     main.tex
 Produces:       scripts/provenance_coverage.json, scripts/provenance_coverage.md
-Reads:          paper_prd_merged.tex, scripts/verify_numerics.py
+Reads:          main.tex, scripts/verify_numerics.py
 
 What it does:   verify_numerics.py runs the FORWARD direction -- each
                 registered claim recomputes a printed number -- but nothing
@@ -60,7 +60,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-TEX = ROOT / "paper_prd_merged.tex"
+TEX = ROOT / "main.tex"
 VERIFY = HERE / "verify_numerics.py"
 OUT_JSON = HERE / "provenance_coverage.json"
 OUT_MD = HERE / "provenance_coverage.md"
@@ -240,7 +240,7 @@ def main() -> int:
     A = out.append
     A("# Reverse provenance coverage")
     A("")
-    A("Every scientific magnitude of `paper_prd_merged.tex` (a x 10^b plus bare")
+    A("Every scientific magnitude of `main.tex` (a x 10^b plus bare")
     A("10^b with |b| >= 3, cross-references masked) classified by source:")
     A("")
     A("| class | occurrences |")

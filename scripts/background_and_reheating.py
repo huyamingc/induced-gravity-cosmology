@@ -470,7 +470,7 @@ def main() -> None:
     L = []
     A = L.append
     A("# Background-evolution integration and the two reheating channels (P0 backfill #1 / #3)\n")
-    A("Targets: `paper_prd_merged.tex` L.319 ($V_{\\rm end}$), L.325 ($K_{\\rm end}$),")
+    A("Targets: `main.tex` L.319 ($V_{\\rm end}$), L.325 ($K_{\\rm end}$),")
     A("L.345 ($T_{\\rm reh,max}$), L.349-357 ($N$ window and Table I), L.361-367 (pulse channel),")
     A("L.338-342 (anomaly channel). This script genuinely integrates the KG equation and uses the paper's own table to set the upper bound of the $N$ window.\n")
 

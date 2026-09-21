@@ -7,7 +7,7 @@ Type:           CORE
 Paper Sec.:     III, IV, V, VIII E, XII
 Experiment:     order-of-magnitude claim support
 What it does:   Holds the closed forms behind the order-of-magnitude numbers
-                printed in paper_prd_merged.tex: primordial non-Gaussianity,
+                printed in main.tex: primordial non-Gaussianity,
                 the spectral running, the Mathieu parameter of parametric
                 resonance, the thermalization rate (with the one-loop running
                 coupling anchored to the same alpha_s chain Sec. IV prints),

@@ -14,7 +14,7 @@ What it does:   Two directions that no other script covers.
                 (B) code -> code: the same physical quantity computed by two
                     independent scripts is compared, with the residual reported
                     against the uncertainty the manuscript declares.
-Inputs:         paper_prd_merged.tex, dm_gap_closure_test.json,
+Inputs:         main.tex, dm_gap_closure_test.json,
                 treh_error_band.json
 Outputs:        consistency_report.md, consistency_report.json
 Dependencies:   must run AFTER every script that writes a .json artefact
@@ -37,7 +37,7 @@ if hasattr(sys.stdout, "reconfigure"):          # Python 3.7+
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-TEX = ROOT / "paper_prd_merged.tex"
+TEX = ROOT / "main.tex"
 OUT_MD = HERE / "consistency_report.md"
 OUT_JSON = HERE / "consistency_report.json"
 
@@ -243,7 +243,7 @@ def main():
                     lk.T_reh_for_N_derived(p, N)]
         for k in range(1, 6):
             record("Table I", "%s at N=%d" % (cols[k], int(N)),
-                   "paper_prd_merged.tex", vals[k],
+                   "main.tex", vals[k],
                    "lock_n_convention", computed[k], tol_i[k], "rounding")
         n_tab1 += 1
 
@@ -264,7 +264,7 @@ def main():
             labels = ["T_reh", "N", "n_s", "r", "g", "m_psi", "lambda_fs"]
             for k in range(1, 7):
                 record("Table 2", "%s at T_reh=%.1e" % (labels[k], T),
-                       "paper_prd_merged.tex", vals[k],
+                       "main.tex", vals[k],
                        "treh_error_band", comp[k], tol_t[k], "rounding")
             n_tab2 += 1
 
@@ -292,10 +292,10 @@ def main():
     record("N window", "rho_end/V_end at N=50",
            "background.rho_end_of_N/V_end_of_N",
            bar.rho_end_of_N(N_FID) / bar.V_end_of_N(N_FID),
-           "paper_prd_merged.tex (App. D0)", 1.1994, 1e-3, "rounding")
+           "main.tex (App. D0)", 1.1994, 1e-3, "rounding")
     record("N window", "K_end/V_end at N=50", "1.1994 - 1",
            bar.rho_end_of_N(N_FID) / bar.V_end_of_N(N_FID) - 1.0,
-           "paper_prd_merged.tex (Sec. III)", 0.199, 1e-2, "rounding")
+           "main.tex (Sec. III)", 0.199, 1e-2, "rounding")
 
     # ---- B. dark-matter sector -----------------------------------------
     if dmg and teb:
@@ -380,7 +380,7 @@ def main():
     A("Table 2 recomputed from the script that produces it) and **(B) code -> code**")
     A("(the same quantity from two independent scripts).")
     A("")
-    A("Sources: `paper_prd_merged.tex`, `dm_gap_closure_test.json`,")
+    A("Sources: `main.tex`, `dm_gap_closure_test.json`,")
     A("`treh_error_band.json`.")
     A("")
     A("## Summary")

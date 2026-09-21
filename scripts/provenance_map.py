@@ -156,7 +156,7 @@ def render(rows, syms):
     A = out.append
     n_sites = len(rows)
     n_loops = sum(1 for r in rows if r[4])
-    A("Every quantitative claim in `paper_prd_merged.tex` is registered exactly once")
+    A("Every quantitative claim in `main.tex` is registered exactly once")
     A("as a `claim(...)` call in `scripts/verify_numerics.py`.  The table below is")
     A("extracted from that file, so it cannot drift from the audit it describes:")
     A("the third column IS the expression the audit evaluates.")

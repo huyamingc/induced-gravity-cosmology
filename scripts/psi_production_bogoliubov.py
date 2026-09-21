@@ -5,7 +5,7 @@ psi_production_bogoliubov.py  (P0 backfill #2)
 Original requirement (the review workspace review_workspace/ was removed after the final draft; excerpt kept) Sec. C:
   "[P0] psi gravitational-production abundance: numerically solve the mode equation to get Bogoliubov beta_k -> n_psi, Omega_psi(m_psi,T_reh)"
 
-Paper claims (paper_prd_merged.tex):
+Paper claims (main.tex):
   L.423  n_psi(a_end) ~ H_inf^3 exp(-pi  m_psi/H_inf)          (eq:npsi)
   L.439  Omega_psi   ~ m_psi H_inf^3 exp(-pi m_psi/H_inf)(a_end/a_0)^3/rho_c
   L.442  (a_end/a_0)^3 propto T_reh,  ~1e-92 at T_reh=1e9 GeV
@@ -250,7 +250,7 @@ def main() -> None:
     L: list[str] = []
     A = L.append
     A("# psi gravitational-production abundance: independent recomputation and exponent-coefficient audit (P0 backfill #2)\n")
-    A("Target: `paper_prd_merged.tex` L.421-465 (`eq:npsi`, `Omega_psi`, the g window, density ratios).")
+    A("Target: `main.tex` L.421-465 (`eq:npsi`, `Omega_psi`, the g window, density ratios).")
     A("Method: derive the mode equation from the Dirac equation -> recompute the exact Bogoliubov exponent at high precision -> independently recompute the dilution factor")
     A("-> solve `Omega_psi = 0.265` with the two exponent coefficients, and check consistency with the paper's self-reported window.\n")
 

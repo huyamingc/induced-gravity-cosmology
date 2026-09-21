@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Audit paper_prd_merged.tex scientific numbers against locked-N convention.
+"""Audit main.tex scientific numbers against locked-N convention.
 
 Type:           PAPER
 Primary source: scripts/n_convention_results.json (if present) + locked table values.
@@ -17,7 +17,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TEX = ROOT / "paper_prd_merged.tex"
+TEX = ROOT / "main.tex"
 JSON = Path(__file__).resolve().parent / "n_convention_results.json"
 OUT = Path(__file__).resolve().parent / "tex_number_audit.md"
 

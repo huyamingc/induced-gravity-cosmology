@@ -11,7 +11,7 @@ the final draft; excerpt kept) Sec. C:
         script, and the Delta w_quant paper value 1e-118
         disagrees with its own formula 1.7e-121 by 3 orders of magnitude."
 
-Paper claims (paper_prd_merged.tex; cited by section -- line numbers drift
+Paper claims (main.tex; cited by section -- line numbers drift
 between revisions and are no longer hardcoded):
   Sec. VI   Delta w_Ricci  ~ (H_0/m_chi)^2        ~ 2e-111
   Sec. VI   Delta w_quant  ~ H_0^4/V_c            ~ 2e-121  (corrected in
@@ -225,7 +225,7 @@ def main() -> None:
     L = []
     A = L.append
     A("# Residual quintessence recheck: condensate Boltzmann integration and the three $\\Delta w$ terms (P0 backfill #4)\n")
-    A("Target: `paper_prd_merged.tex` Sec. VI ($\\Delta w\\leq10^{-10}$, Ricci, quantum,")
+    A("Target: `main.tex` Sec. VI ($\\Delta w\\leq10^{-10}$, Ricci, quantum,")
     A("$\\leq0.39$ and \"exponentially negligible\") and App. D5a-c (term-by-term derivation).\n")
 
     c = out["constants"]

@@ -294,7 +294,7 @@ def main() -> None:
     lines.append("")
     lines.append("## 9. Implications for the manuscript")
     lines.append("")
-    lines.append("| Item | Suggested text for paper_prd_merged.tex |")
+    lines.append("| Item | Suggested text for main.tex |")
     lines.append("|---|---|")
     lines.append("| Definition of N | state N=ln(a_end/a_*) and the matching assumptions (k, w=0 reheating, Omega) explicitly |")
     lines.append("| r, n_s value table | replace the vague single statement \"N=50 => r=0.00487\" with this locked table |")

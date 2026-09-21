@@ -9,7 +9,7 @@ Experiment:     numerical claims audit
 What it does:   The reverse direction of audit_tex_numbers.py.  That script asks
                 "is a superseded value still present?";  this one asks "is the
                 value that IS present correct?"  Each claim below carries the
-                number as printed in paper_prd_merged.tex, the script that
+                number as printed in main.tex, the script that
                 computes it, and the tolerance justified by how the number is
                 quoted.
 Tolerance classes:
@@ -26,7 +26,7 @@ Dependencies:   reads background_and_reheating.json, dm_gap_closure_test.json,
                 treh_error_band.json, psi_abundance_oscillating.json and
                 psi_mode_oscillating.json, so it must run after those scripts.
 Limitation:     the ``paper`` values below are hardcoded mirrors of what
-                paper_prd_merged.tex prints; this script does NOT parse the
+                main.tex prints; this script does NOT parse the
                 tex.  If a number is edited in the manuscript without editing
                 the matching claim here, this audit stays green while the
                 mirror drifts -- audit_tex_numbers.py (superseded-value
@@ -682,7 +682,7 @@ def main():
     A = out.append
     A("# Numerical claims audit")
     A("")
-    A("Every quantitative claim in `paper_prd_merged.tex` recomputed from the current")
+    A("Every quantitative claim in `main.tex` recomputed from the current")
     A("scripts.  This is the reverse direction of `audit_tex_numbers.py`: that script")
     A("looks for *superseded* values, this one checks that the values that *are*")
     A("printed are correct.")

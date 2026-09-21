@@ -1,5 +1,5 @@
 # Shared constants and model functions for induced-gravity cosmology checks.
-# Fiducial parameters follow paper_prd_merged.tex (analytic A5 normalization).
+# Fiducial parameters follow main.tex (analytic A5 normalization).
 from __future__ import annotations
 
 import functools
