@@ -37,14 +37,15 @@ def main() -> None:
     ax.axhline(Vc_val, color="#c45911", ls="--", lw=1.5, label=rf"$V_c\approx{Vc_val:.1e}\,\mathrm{{GeV^4}}$ (DE)")
     ax.axhline(fp.V0, color="#548235", ls=":", lw=1.5, label=rf"$V_0\approx{fp.V0:.2e}\,\mathrm{{GeV^4}}$ (plateau)")
     ax.axvline(1.0, color="gray", ls="-.", lw=0.8)
-    ax.text(1.05, 1e60, "1: inflation", fontsize=9, color="gray")
+    # Keep the inflation marker away from the upper-left legend.
+    ax.text(1.05, 1e40, r"$\varphi=1$: inflation", fontsize=9, color="gray")
     ax.text(-1.7, Vc_val * 30, "0: DE", fontsize=9, color="#c45911")
     ax.set_xlabel(r"$\varphi=\ln(\Phi/\Phi_0)$")
     ax.set_ylabel(r"$V_E$  [GeV$^4$]")
     ax.set_title(r"Fig.1  Einstein-frame potential $V_E(\varphi)$")
     ax.set_ylim(1e-50, 1e67)
     ax.grid(True, which="both", alpha=0.25)
-    ax.legend(fontsize=8, loc="upper left")
+    ax.legend(fontsize=8, loc="lower left")
     fig.tight_layout()
     for ext in ("pdf", "png"):
         fig.savefig(FIGDIR / f"fig1_VE_potential.{ext}")

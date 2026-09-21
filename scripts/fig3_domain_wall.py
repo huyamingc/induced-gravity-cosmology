@@ -53,8 +53,17 @@ def main() -> None:
     ax.set_ylabel(r"$V_E$ [GeV$^4$]")
     ax.set_title(r"Einstein: $V_E\to\infty$ as $\varphi\to-\infty$")
     ax.grid(True, which="both", alpha=0.25)
-    ax.legend(fontsize=8)
-    ax.annotate("conformal artifact", xy=(-2.5, 1e65), fontsize=8, color="#833c0c")
+    ax.legend(fontsize=8, loc="lower right")
+    # Place the note inside the axes, away from the top edge and the curve.
+    ax.annotate(
+        "conformal artifact",
+        xy=(-2.4, 1e40),
+        xytext=(-2.4, 1e30),
+        fontsize=8,
+        color="#833c0c",
+        ha="left",
+        va="top",
+    )
 
     fig.suptitle("Fig.3  Domain-wall / EFT boundary at $\\Phi=0$ (two frames)", fontsize=11)
     fig.tight_layout()

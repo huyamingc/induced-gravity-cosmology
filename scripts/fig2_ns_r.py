@@ -74,12 +74,22 @@ def main() -> None:
     )
     for N, x, y in zip(Ns, ns, r):
         ax.scatter([x], [y], c="#c00000", s=40, zorder=5)
+        # Stagger labels so the crowded N=48..52 cluster stays readable.
+        label = f"N={int(N)}"
+        if N <= 52:
+            idx = int(N) - 48
+            # Spread the crowded N=48..52 cluster in a diagonal fan.
+            offsets = [(-18, 12), (-6, 18), (4, 8), (12, -4), (2, -14)]
+            xytext = offsets[idx]
+        else:
+            xytext = (10, 2)
         ax.annotate(
-            f"N={int(N)}",
+            label,
             (x, y),
             textcoords="offset points",
-            xytext=(6, 4),
+            xytext=xytext,
             fontsize=8,
+            ha="left" if N <= 52 else "left",
         )
     ax.axhline(0.036, color="k", ls="--", lw=1, label=r"$r<0.036$ BICEP/Keck")
     ax.axhline(0.01, color="#7030a0", ls=":", lw=1.2, label=r"$r=0.01$ LiteBIRD")
