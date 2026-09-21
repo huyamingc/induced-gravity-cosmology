@@ -16,7 +16,7 @@ $w_0=-1$ and is therefore exposed to DESI DR2.
 scipy 1.18 / matplotlib 3.11): `scripts/run_all.py` exit 0;
 `verify_numerics` 144/0; `consistency_checks` 93/0; `audit_readme_numbers`
 0 fail; `audit_tex_numbers` FLAG=0; `audit_provenance` 0 untraced; compiled
-PDF 57 pages, title page on page 1.
+PDF 55 pages, title page on page 1.
 
 ## Project map (roles → files)
 
@@ -178,7 +178,7 @@ one to be a registered claim, a checked table cell, a declared external input
 comparison wording, or an entry of its `EXEMPT` table -- otherwise
 `run_all.py` fails.
 
-Coverage: **450 scientific magnitudes** classified, **144 registered claim call sites**, **0 untraced magnitudes** (any untraced value fails `run_all.py`).
+Coverage: **428 scientific magnitudes** classified, **144 registered claim call sites**, **0 untraced magnitudes** (any untraced value fails `run_all.py`).
 
 ## Exemptions
 
@@ -547,6 +547,9 @@ journal zip). The Declarations content is listed once in "Document class and
 format" above.
 
 ## Git
+
+Remote: <https://github.com/huyamingc/induced-gravity-cosmology> (SSH:
+`git@github.com:huyamingc/induced-gravity-cosmology.git`, branch `main`).
 
 Do not commit: `scripts/.venv/`, `__pycache__/`, LaTeX intermediates, generated
 `scripts/*.md` and `scripts/*.json` (see `.gitignore`). Local-only files such
