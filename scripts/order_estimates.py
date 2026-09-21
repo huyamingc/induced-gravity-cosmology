@@ -9,9 +9,13 @@ Experiment:     order-of-magnitude claim support
 What it does:   Holds the closed forms behind the order-of-magnitude numbers
                 printed in paper_prd_merged.tex: primordial non-Gaussianity,
                 the spectral running, the Mathieu parameter of parametric
-                resonance, the thermalization rate, the direct-detection cross
-                section, the kinematic-closure coupling, and the one-loop RG
-                shifts of xi and lambda0.
+                resonance, the thermalization rate (with the one-loop running
+                coupling anchored to the same alpha_s chain Sec. IV prints),
+                the direct-detection cross section, the kinematic-closure
+                coupling, the Lambda_J threshold suppressions and the
+                gravity-induced Higgs portal (Sec. VII), the one-loop RG
+                shifts of xi and lambda0, and the quartic Delta-w chain of
+                Discussion #14.
 
                 This module exists so that each of those formulas has exactly
                 ONE implementation.  They used to live in two standalone
@@ -50,12 +54,15 @@ if hasattr(sys.stdout, "reconfigure"):          # Python 3.7+
     sys.stdout.reconfigure(line_buffering=True)
     sys.stderr.reconfigure(line_buffering=True)
 
-from cosmo_model import G_STAR_REH, M_P, N_FID, XI_FID  # noqa: E402
+from cosmo_model import G_STAR_REH, H0_GeV, M_P, N_FID, XI_FID  # noqa: E402
+from cosmo_model import m_Phi, m_chi  # noqa: E402
 
 HBAR_C = 1.973269804e-14       # GeV cm
 G_PER_GEV = 1.782661921e-24    # grams per GeV (c^2 included)
 DLNMU = 60.0                   # running range of Eqs. (dxilam)/(dxig)
-ALPHA_S_THERM = 0.1            # the alpha_s the manuscript uses for Gamma_therm
+M_Z = 91.19                    # GeV, Z pole: the alpha_s anchor of Sec. IV
+ALPHA_S_MZ = 0.1179            # alpha_s(m_Z), the value the manuscript prints
+B3_THERM = 7.0                 # SM b_3 (n_f = 5), the same coefficient Sec. IV uses
 G_ANOM = 6.9e-5                # anomaly-framework matching point of Sec. III
 M_TOP = 173.0                  # GeV
 
@@ -75,6 +82,30 @@ def f_nl_local(ns: float) -> float:
 # --------------------------------------------------------------------------
 # Sec. IV -- reheating
 # --------------------------------------------------------------------------
+def alpha_s_running(Q: float, Q_ref: float = M_Z,
+                    alpha_s_ref: float = ALPHA_S_MZ,
+                    b3: float = B3_THERM) -> float:
+    """One-loop running alpha_s(Q) = alpha_s(Q_ref)/(1 + b3 alpha_s/(2pi) ln(Q/Q_ref)).
+
+    Anchored to the SAME chain the manuscript prints in Sec. IV
+    (alpha_s(m_Z) = 0.1179, b_3 = 7).  Cross-check: running this anchor up to
+    m_chi = 3.25e13 GeV reproduces the printed alpha_s(m_chi) = 0.0262 to
+    better than 1%, so the thermalization coupling below is not a second,
+    inconsistent estimate.
+
+    The manuscript once used a hand-estimated alpha_s ~ 0.1 here, which
+    inflated Gamma_therm/H by about one decade (1e7 instead of ~1e6).
+    """
+    return alpha_s_ref / (1.0 + (b3 * alpha_s_ref / (2.0 * math.pi))
+                          * math.log(Q / Q_ref))
+
+
+# Thermalization coupling at T = 1e9 GeV: one-loop running of the Sec. IV
+# anchor.  Computed once here so that gamma_therm_over_H's default argument
+# is a single, locked constant (0.0377).
+ALPHA_S_THERM = alpha_s_running(1.0e9)   # = 0.0377
+
+
 def mathieu_q(m_f: float, m_chi: float) -> float:
     """Mathieu parameter of parametric resonance, q ~ (m_f/m_chi)^2.
 
@@ -88,8 +119,10 @@ def gamma_therm_over_H(T: float, alpha_s: float = ALPHA_S_THERM,
                        g_star: float = G_STAR_REH) -> float:
     """Thermalization rate over Hubble, Gamma_therm/H, at temperature T.
 
-    Gamma_therm ~ alpha_s^2 T and H = sqrt(pi^2 g_*/90) T^2/M_Pl.  The
-    manuscript quotes ~1e7 at T = 1e9 GeV (Sec. IV and Sec. XII).
+    Gamma_therm ~ alpha_s^2 T and H = sqrt(pi^2 g_*/90) T^2/M_Pl, with the
+    default alpha_s = ALPHA_S_THERM the one-loop running value 0.0377 at
+    T = 1e9 GeV.  The manuscript quotes ~1e6 at T = 1e9 GeV (Sec. IV and
+    Sec. XII); the retired hand estimate alpha_s ~ 0.1 gave ~1e7.
     """
     gamma = alpha_s**2 * T
     H = math.sqrt(math.pi**2 * g_star / 90.0) * T**2 / M_P
@@ -136,6 +169,38 @@ def n_at_r(r_target: float, xi: float = XI_FID,
     from scipy.optimize import brentq
 
     return brentq(lambda n: r_of_locked_at_N(n, xi) - r_target, n_lo, n_hi)
+
+
+# --------------------------------------------------------------------------
+# Sec. VII -- SM embedding: decoupling and the induced Higgs portal
+# --------------------------------------------------------------------------
+def lambda_J(xi: float = XI_FID) -> float:
+    """Induced-gravity UV cutoff Lambda_J = M_Pl/xi.
+
+    The manuscript quotes Lambda_J ~ 2.2e17 GeV at xi = 11.1.
+    """
+    return M_P / xi
+
+
+def threshold_suppression(m: float, xi: float = XI_FID) -> float:
+    """Heavy-field threshold suppression (m/Lambda_J)^2.
+
+    Sec. VII: (m_chi/Lambda_J)^2 ~ 2.2e-8 and (m_psi/Lambda_J)^2 ~ 1.2e-13.
+    An earlier draft printed a single bound <= 1e-10, which the chi value
+    exceeds by two orders; the two decoupled values are what the manuscript
+    now prints.
+    """
+    return (m / lambda_J(xi)) ** 2
+
+
+def delta_lambda_PhiH(lam0: float, xi: float = XI_FID) -> float:
+    """Gravity-induced Higgs portal, delta_lambda_PhiH ~ xi lambda0/(16 pi^2) (m_Phi/M_Pl)^2.
+
+    Sec. VII: with m_Phi = sqrt(2 lambda0) M_Pl/sqrt(xi) ~ 2.7e14 GeV this
+    gives ~6e-17.  An earlier draft printed ~1e-15, which overstated the
+    portal by about two orders (the conclusion of negligibility is unchanged).
+    """
+    return xi * lam0 / (16.0 * math.pi**2) * (m_Phi(lam0, xi) / M_P) ** 2
 
 
 # --------------------------------------------------------------------------
@@ -249,6 +314,23 @@ def alpha_s_attractor(N: float = float(N_FID)) -> float:
     return -2.0 / N**2
 
 
+def dw_quartic_ricci(lam0: float, xi: float = XI_FID,
+                     m_chi_val: float = 0.0) -> float:
+    """Quartic correction to w at the Ricci-frozen field value (Discussion #14).
+
+    The chain is delta w/w ~ (lambda0/xi^2) varphi^2 with the frozen
+    displacement varphi ~ (H0/m_chi)^2 ~ 2e-111 (the Sec. VI Ricci driving),
+    so the correction is (lambda0/xi^2) (H0/m_chi)^4 ~ 2e-231.  An earlier
+    draft printed the inconsistent chain 1e-6 * (1e-46)^2 = 1e-98: the
+    coefficient was lambda0/xi^2 = 5.4e-10, not 1e-6, and the frozen value is
+    the squared ratio, not H0/m_chi itself.
+    """
+    if m_chi_val <= 0.0:
+        m_chi_val = m_chi(lam0, xi)
+    varphi = (H0_GeV() / m_chi_val) ** 2
+    return (lam0 / xi**2) * varphi**2
+
+
 def _light_branch():
     """(m_psi, H_inf) at the abundance-matched light branch, or (None, None).
 
@@ -285,9 +367,15 @@ def _selfcheck() -> None:
           % (XI_FID, N_FID, lam0, mchi))
     print("  Sec. III  f_NL^local          = %+.4e   (paper ~-0.02)" % f_nl_local(ns))
     print("  Sec. IV   q (top)             = %.4e   (paper 2.8e-23)" % mathieu_q(M_TOP, mchi))
-    print("  Sec. IV   Gamma_therm/H       = %.4e   (paper ~1e7)" % gamma_therm_over_H(1.0e9))
+    print("  Sec. IV   Gamma_therm/H       = %.4e   (paper ~1e6)" % gamma_therm_over_H(1.0e9))
+    print("  Sec. IV   alpha_s(1e9 GeV)    = %.4e   (paper ~0.038; -> alpha_s(m_chi)=%.4e)"
+          % (ALPHA_S_THERM, alpha_s_running(3.25e13, 1.0e9, ALPHA_S_THERM)))
     print("  Sec. V    sigma_psiN [cm^2]   = %.4e   (paper ~1e-104)" % sigma_psiN_cm2())
     print("  Sec. V    g kinematic         = %.4e   (paper few x 1e-5)" % g_kinematic(mchi))
+    print("  Sec. VII  (m_chi/Lambda_J)^2  = %.4e   (paper 2.2e-8)"
+          % threshold_suppression(mchi))
+    print("  Sec. VII  delta lambda_PhiH   = %.4e   (paper ~6e-17)"
+          % delta_lambda_PhiH(lam0))
     print("  Sec. VIII Delta lambda0       = %.4e   (paper ~3e-14)" % delta_lambda0(lam0))
     print("  Sec. VIII Delta xi quartic    = %.4e   (paper ~8.5e-7)" % delta_xi_quartic(XI_FID, lam0))
     for g in (1.0e-7, 2.3e-5, 1.0e-4):
@@ -301,11 +389,15 @@ def _selfcheck() -> None:
     print("  Sec. VIII Delta xi(xi=11.1)   = %.4e   (paper <= 1e-6)"
           % delta_xi_total(XI_FID, lam0, G_ANOM))
     print("  Sec. XII  alpha_s             = %+.4e  (paper ~-8e-4)" % alpha_s_attractor())
+    print("  Sec. XII  Delta w quartic     = %.4e   (paper ~2e-231)"
+          % dw_quartic_ricci(lam0, XI_FID, mchi))
     m_psi, H_i = _light_branch()
     if m_psi is None:
         print("  Sec. XII  (dm_gap_closure_test.json absent -- "
               "sigma_psipsi/m_psi and Tremaine-Gunn Q skipped)")
     else:
+        print("  Sec. VII  (m_psi/Lambda_J)^2  = %.4e   (paper 1.2e-13)"
+              % threshold_suppression(m_psi))
         print("  Sec. XII  sigma_psipsi/m_psi  = %.4e cm^2/g (paper ~7e-70)"
               % sigma_psipsi_over_m(m_psi))
         print("  Sec. XII  Tremaine-Gunn Q     = %.4e GeV^4  (paper ~3e43)"

@@ -171,6 +171,11 @@ def main():
     T56 = lk.T_reh_for_N_derived(lk.point(XI, 56.0), 56.0)
     claim(S, "T_reh*(50)", "Sec. III / Table I", 1.1e8, T50, 5e-2)
     claim(S, "T_reh*(56)", "Sec. III", 7.8e15, T56, 5e-2)
+    T51 = lk.T_reh_for_N_derived(lk.point(XI, 51.0), 51.0)
+    claim(S, "T_reh*(51)", "App. A / Table I", 2.2e9, T51, 5e-2,
+          note="guards the App. A verbatim listing, which once printed 1.4e9 with "
+               "no source anywhere in the suite; Table I and the "
+               "n_convention_results.json T_reh_selfcons entry give 2.166e9")
     claim(S, "T_reh~1e9 GeV maps to N", "abstract / Sec. III", 50.7,
           lk.N_derived_for_T(p50, 1.0e9), 2e-3, "route")
     claim(S, "T_reh~2.1e8 GeV maps to N", "Table 2 row 2", 50.23,
@@ -199,9 +204,16 @@ def main():
                 note="q ~ (m_f/m_chi)^2; the electrons and gauge bosons sit "
                      "further below still")
     claim_order(S, "Gamma_therm/H at T=1e9", "Sec. IV / Sec. XII",
-                1.0e7, oe.gamma_therm_over_H(1.0e9), 0.5,
-                note="Gamma_therm ~ alpha_s^2 T ~ 1e7 GeV against "
+                1.0e6, oe.gamma_therm_over_H(1.0e9), 0.5,
+                note="Gamma_therm ~ alpha_s^2 T ~ 1.4e6 GeV with the one-loop "
+                     "running alpha_s(1e9)=0.0377 (same anchor chain as the "
+                     "Sec. IV alpha_s(m_chi)=0.0262; the retired hand estimate "
+                     "alpha_s~0.1 inflated this to ~1e7) against "
                      "H ~ sqrt(pi^2 g_*/90) T^2/M_Pl ~ 1.4 GeV")
+    claim(S, "alpha_s at T=1e9 GeV", "Sec. XII #17", 0.038,
+          oe.alpha_s_running(1.0e9), 5e-2,
+          note="one-loop from alpha_s(m_Z)=0.1179, b_3=7; running the result "
+               "back up to m_chi reproduces the printed 0.0262 to 1%")
 
     # ---------------------------------------------------------- Sec. V
     S = "V dark matter"
@@ -225,6 +237,21 @@ def main():
         claim(S, "band: Delta n_s", "Sec. V", 1.1e-3, s["dns"], 5e-2)
         claim(S, "band: Delta r / r", "Sec. V", 0.055, s["dr_over_r"], 5e-2)
         claim(S, "band: g ratio", "Sec. V", 10.0, s["g_ratio"], 1e-3)
+        # Window endpoints of the T_reh band must agree with the printed
+        # table rows; the prose window lower edge once drifted to 0.5e-7
+        # while the tabulated T=1e9 row reads 4.7e-8.
+        g_lo = next((r["g"] for r in teb["rows"]
+                     if abs(r["T_reh_GeV"] - 1.0e9) / 1.0e9 < 1e-3), None)
+        g_hi = next((r["g"] for r in teb["rows"]
+                     if abs(r["T_reh_GeV"] - 1.0e8) / 1.0e8 < 1e-3), None)
+        m_lo = next((r["m_psi_GeV"] for r in teb["rows"]
+                     if abs(r["T_reh_GeV"] - 1.0e9) / 1.0e9 < 1e-3), None)
+        claim(S, "g window lower edge (T=1e9 row)", "Sec. V / Table 2",
+              4.7e-8, g_lo, 5e-2)
+        claim(S, "g window upper edge (T=1e8 row)", "Sec. V / Table 2",
+              1.5e-7, g_hi, 5e-2)
+        claim(S, "m_psi window lower edge (T=1e9 row)", "Sec. V / Table 2",
+              3.4e10, m_lo, 5e-2)
         slope = ((math.log(teb["rows"][-1]["lambda_fs_Mpc"])
                   - math.log(teb["rows"][0]["lambda_fs_Mpc"]))
                  / (math.log(teb["rows"][-1]["m_over_H_derived"])
@@ -304,6 +331,25 @@ def main():
           1.0, 1.0 if dxi_tot <= 1.0e-6 else 0.0, 1e-9, "identity",
           note="the manuscript states an upper bound; computed %.3e" % dxi_tot)
 
+    # ---------------------------------------------------------- Sec. VII
+    # Decoupling and the induced Higgs portal.  Migrated into order_estimates
+    # in the anchoring round: before that, the threshold suppressions and
+    # delta lambda_PhiH had NO executing source anywhere in the suite, and the
+    # manuscript printed a stale <= 1e-10 threshold bound and a ~1e-15 portal.
+    S = "VII embedding"
+    claim_order(S, "threshold suppression (chi)", "Sec. VII", 2.2e-8,
+                oe.threshold_suppression(p50["m_chi"]), 0.5,
+                note="(m_chi/Lambda_J)^2 with Lambda_J = M_Pl/xi; an earlier "
+                     "draft printed a single <= 1e-10 bound, which this "
+                     "chi value exceeds by two orders")
+    if M_PSI:
+        claim_order(S, "threshold suppression (psi)", "Sec. VII", 1.2e-13,
+                    oe.threshold_suppression(M_PSI), 0.5)
+    claim(S, "delta lambda_PhiH (gravity-induced portal)", "Sec. VII",
+          6.0e-17, oe.delta_lambda_PhiH(lam0), 2e-1,
+          note="xi lambda0/(16 pi^2) (m_Phi/M_Pl)^2; an earlier draft "
+               "printed ~1e-15, two orders too large")
+
     # ---------------------------------------------------------- Sec. XII
     # Closed-form claims from the Discussion list; same order class as above.
     S = "XII discussion"
@@ -331,6 +377,11 @@ def main():
     claim_order(S, "spectral running alpha_s", "Sec. XII (xiv)", -8.0e-4,
                 oe.alpha_s_attractor(), 0.5,
                 note="attractor closed form -2/N^2 at the locked N=50")
+    claim_order(S, "Delta w quartic chain (Discussion #14)", "Sec. XII (#14)",
+                2.0e-231, oe.dw_quartic_ricci(lam0, XI, p50["m_chi"]), 0.5,
+                note="(lambda0/xi^2)(H0/m_chi)^4 with the Sec. VI Ricci "
+                     "displacement; the draft chain 1e-6 * (1e-46)^2 = 1e-98 "
+                     "was internally inconsistent")
     claim(S, "N at which r = 0.01", "Sec. III (LiteBIRD)", 32.0,
           oe.n_at_r(0.01, XI), 5e-2,
           note="exact slow-roll inversion; the manuscript writes N ~ 32, "

@@ -22,6 +22,10 @@ README and capture the numbers in order) with a callable-free list of values
 recomputed here.  A pattern that stops matching is also a failure: it means the
 sentence was reworded and the audit no longer covers it.
 
+Only prose that remains in the public front-door README.md is audited.
+Historical maintainer notes live in the gitignored MAINTENANCE.md and are
+deliberately not required here (see that file if present on this machine).
+
 Tolerances are the rounding the README itself uses, not a wish for agreement:
 a value printed as "1.0e-7" cannot be checked more tightly than a few percent.
 
@@ -31,7 +35,6 @@ from __future__ import annotations
 
 import io
 import json
-import math
 import os
 import re
 import sys
@@ -45,14 +48,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
-import cosmo_model as cm                 # noqa: E402
 import background_and_reheating as bar   # noqa: E402
-import order_estimates as oe             # noqa: E402
 
 README = os.path.join(ROOT, "README.md")
 OUT_MD = os.path.join(HERE, "readme_numbers_report.md")
-
-XI = 11.1
 
 
 def rel(a: float, b: float) -> float:
@@ -71,12 +70,12 @@ def build_checks():
     """Return a list of (label, regex, measured values, tolerances, source)."""
     checks = []
 
-    # 1. The two independent N <-> T_reh routes.
+    # 1. The two independent N <-> T_reh routes (public README, Dark-matter section).
     fp50 = bar.T_reh_star_first_principles(50.0)
     fp55 = bar.T_reh_star_first_principles(55.0)
     checks.append((
         "T_reh* agreement at N=50/55",
-        r"agrees with\s+that table to ([0-9.]+) percent at N=50 "
+        r"agrees with that table to ([0-9.]+) percent at N=50 "
         r"and ([0-9.]+) percent at N=55",
         [100.0 * rel(fp50, bar.TABLE_I[50][3]),
          100.0 * rel(fp55, bar.TABLE_I[55][3])],
@@ -84,7 +83,7 @@ def build_checks():
         "background_and_reheating: first principles vs TABLE_I",
     ))
 
-    # 2. The dark-matter light-branch anchor.
+    # 2. The dark-matter light-branch anchor (public README).
     dmg = load_json("dm_gap_closure_test.json")
     if dmg:
         checks.append((
@@ -95,17 +94,7 @@ def build_checks():
             "dm_gap_closure_test.json (light branch)",
         ))
 
-    # 3. Closed form against the dynamical integration for V_end/V0.
-    diff = rel(bar.slowroll_to_end()["V_end_frac_of_V0"], cm.V_end_over_V0(XI))
-    checks.append((
-        "closed form vs integration",
-        r"dynamical integration sits ([0-9.]+e-[0-9]+) from it",
-        [diff],
-        [0.05],
-        "cosmo_model.V_end_over_V0 vs background.slowroll_to_end",
-    ))
-
-    # 4. What the T_reh band does to g, n_s and r.
+    # 3. What the T_reh band does to g, n_s and r (public README).
     teb = load_json("treh_error_band.json")
     if teb:
         s = teb["summary"]
@@ -117,46 +106,6 @@ def build_checks():
             [0.05, 0.05, 0.05],
             "treh_error_band.json summary",
         ))
-
-    # 5. The drift that this repository actually suffered, quoted as history.
-    checks.append((
-        "historical RHO_END drift",
-        r"drifted ([0-9.]+e-[0-9]+) away from",
-        [rel(1.63485e63, cm.rho_end())],
-        [0.05],
-        "cosmo_model.rho_end() vs the removed literal 1.63485e63",
-    ))
-
-    # 6. The two Sec. XII consistency entries.  These had NO executing source
-    #    until this pass; they were quoted at a stale m = 1e13 GeV and now come
-    #    from order_estimates, the single source for both.
-    if dmg:
-        m_psi = dmg["m_star_powerlaw"] * bar.H_INF
-        sig = oe.sigma_psipsi_over_m(m_psi)
-        checks.append((
-            "Sec. XII self-interaction",
-            r"`~([0-9.]+e-70) cm\^2/g`,\s+`~([0-9]+)`\s+orders below the bullet-cluster",
-            [sig, -math.log10(sig)],
-            [0.1, 0.02],
-            "order_estimates.sigma_psipsi_over_m at the light-branch m_psi",
-        ))
-        checks.append((
-            "Sec. XII Tremaine-Gunn Q",
-            r"`~([0-9.]+e43) GeV\^4`",
-            [oe.tremaine_gunn_Q(m_psi, bar.H_INF)],
-            [0.1],
-            "order_estimates.tremaine_gunn_Q at the light-branch m_psi",
-        ))
-        if teb:
-            checks.append((
-                "m_psi drift from the wrong H_inf",
-                r"understated `m_psi` by ([0-9.]+) percent",
-                [100.0 * rel(dmg["m_star_powerlaw"] * teb["rows"][1]["H_inf_GeV"],
-                             m_psi)],
-                [0.05],
-                "m_star_powerlaw paired with the drifted treh_error_band H_inf "
-                "vs with bar.H_INF",
-            ))
 
     return checks
 
@@ -172,6 +121,9 @@ def main() -> None:
     A("Source: `README.md`.  Values recomputed from the scripts in this directory.")
     A("A pattern that no longer matches counts as a failure: the sentence was")
     A("reworded and this audit no longer covers it.")
+    A("")
+    A("Historical maintainer notes (if present as local `MAINTENANCE.md`) are")
+    A("outside this audit; they are gitignored and not part of the submission.")
     A("")
     A("| check | README says | recomputed | rel | tol | verdict |")
     A("|---|---|---|---|---|---|")
