@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 r"""
-psi_mode_oscillating.py 鈥?exact-background Dirac mode integration through the
+psi_mode_oscillating.py — exact-background Dirac mode integration through the
 oscillating-condensate era (closing the transition-only gap)
 =============================================================================
 Type:           PAPER
-Paper 搂:        搂V / App. D0 (psi abundance), Discussion #3, 搂IV L.390/L.392/L.476
+Paper §:        §V / App. D0 (psi abundance), Discussion #3, §IV L.390/L.392/L.476
 Experiment:     dark-matter absolute normalization: transition-only -> transition + condensate
 
 Purpose
